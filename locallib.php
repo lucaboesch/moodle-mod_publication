@@ -195,6 +195,18 @@ class publication {
             echo '    <td class="c1">' . userdate($extensionduedate) . '</td></tr>';
         }
 
+        $override = $this->override_get_currentuserorgroup();
+        if ($override) {
+            if ($override->approvaloverride) {
+                echo '<tr><td class="c0">' . get_string('approvaloverride', 'publication') . ':</td>';
+                echo '    <td class="c1">' . $override->approvaloverride . '</td></tr>';
+            }
+            if ($override->submissionoverride) {
+                echo '<tr><td class="c0">' . get_string('submissionoverride', 'publication') . ':</td>';
+                echo '    <td class="c1">' . $override->submissionoverride . '</td></tr>';
+            }
+        }
+
         echo '</table>';
 
         echo $OUTPUT->box_end();
@@ -320,6 +332,17 @@ class publication {
             $due = $extensionduedate;
         }
 
+        $override = $this->override_get_currentuserorgroup();
+
+        if ($override && $override->submissionoverride) {
+            if ($override->allowsubmissionsfromdate > 0) {
+                $from = $override->allowsubmissionsfromdate;
+            }
+            if ($override->duedate > 0) {
+                $due = $override->duedate;
+            }
+        }
+
         if (($from == 0 || $from < $now) &&
                 ($due == 0 || $due > $now)) {
             return true;
@@ -341,6 +364,19 @@ class publication {
         if ($to != 0 && $extensionduedate) {
             $to = $extensionduedate;
         }
+
+
+        $override = $this->override_get_currentuserorgroup();
+
+        if ($override && $override->approvaloverride) {
+            if ($override->approvalfromdate > 0) {
+                $from = $override->approvalfromdate;
+            }
+            if ($override->approvaltodate > 0) {
+                $to = $override->approvaltodate;
+            }
+        }
+
         if (($from == 0 || $from < $now) && ($to == 0 || $to > $now)) {
             return true;
         }
@@ -2292,5 +2328,177 @@ class publication {
 
             calendar_event::create($event);
         }
+    }
+
+    public function overrides_export_for_template() {
+        global $DB;
+        $context = new stdClass;
+
+        $editurl = new moodle_url('/mod/publication/overrides_edit.php', ['id' => $this->coursemodule->id]);
+        $deleteurl = new moodle_url('/mod/publication/overrides_delete.php', ['id' => $this->coursemodule->id]);
+
+
+        $context->newoverrideurl = (new moodle_url($editurl, ['overrideid' => -1]))->out(false);
+
+        $overrides = $DB->get_records('publication_overrides', ['publication' => $this->instance->id]);
+        $context->overridesempty = count($overrides) == 0;
+        $context->overrides = [];
+        $isgroupmode = $this->mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION;
+        if ($isgroupmode) {
+            $context->usergroupcoltitle = get_string('group');
+        } else {
+            $context->usergroupcoltitle = get_string('user');
+        }
+
+        $userurl = new moodle_url('/user/view.php', ['course' => $this->course->id]);
+
+        if (!empty($overrides)) {
+            foreach ($overrides as $override) {
+                if ($isgroupmode) {
+                    $group = $DB->get_record('groups', ['id' => $override->groupid]);
+                    $override->fullname = $group->name;
+                } else {
+                    $user = $DB->get_record('user', ['id' => $override->userid]);
+                    $override->fullname = fullname($user);
+                    $userurl->param('id', $override->userid);
+                    $override->userurl = $userurl->out(false);
+                }
+                $override->editurl = (new moodle_url($editurl, ['overrideid' => $override->id]))->out(false);
+                $override->deleteurl = (new moodle_url($deleteurl, ['overrideid' => $override->id]))->out(false);
+                $override = $this->override_export_for_template_single($override);
+                $context->overrides[] = $override;
+            }
+        }
+        return $context;
+    }
+
+    public function override_export_for_template_single($override) {
+        $override->submissionoverride = null;
+        $override->approvaloverride = null;
+        if ($this->mode == PUBLICATION_MODE_FILEUPLOAD && ($override->allowsubmissionsfromdate > 0 || $override->duedate > 0)) {
+            $fromto = (object)[
+                'from' =>  userdate($override->allowsubmissionsfromdate),
+                'to' => userdate($override->duedate)
+            ];
+            if ($override->allowsubmissionsfromdate > 0 && $override->duedate > 0) {
+                $override->submissionoverride = get_string('override:submission:fromto', 'mod_publication', $fromto);
+            } else if ($override->allowsubmissionsfromdate > 0) {
+                $override->submissionoverride = get_string('override:submission:from', 'mod_publication', $fromto);
+            } else if ($override->duedate > 0) {
+                $override->submissionoverride = get_string('override:submission:to', 'mod_publication', $fromto);
+            }
+        }
+        if ($this->instance->obtainstudentapproval == 1 && ($override->approvalfromdate > 0 || $override->approvaltodate > 0)) {
+            $fromto = (object)[
+                'from' =>  userdate($override->approvalfromdate),
+                'to' => userdate($override->approvaltodate)
+            ];
+            if ($override->approvalfromdate > 0 && $override->approvaltodate > 0) {
+                $override->approvaloverride = get_string('override:approval:fromto', 'mod_publication', $fromto);
+            } else if ($override->approvalfromdate > 0) {
+                $override->approvaloverride = get_string('override:approval:from', 'mod_publication', $fromto);
+            } else if ($override->approvaltodate > 0) {
+                $override->approvaloverride = get_string('override:approval:to', 'mod_publication', $fromto);
+            }
+        }
+        return $override;
+    }
+
+    public function override_save($formdata) {
+        global $DB;
+        $overrideresult = new stdClass();
+        $overrideresult->overrideid = 0;
+        $overrideresult->newoverride = false;
+        if ((!isset($formdata->allowsubmissionsfromdate) || $formdata->allowsubmissionsfromdate == 0) &&
+            (!isset($formdata->duedate) || $formdata->duedate == 0) &&
+            (!isset($formdata->approvalfromdate) || $formdata->approvalfromdate == 0) &&
+            (!isset($formdata->approvaltodate) || $formdata->approvaltodate == 0)) {
+            return null;
+        }
+        if ($formdata->overrideid != -1) {
+            $override = $DB->get_record('publication_overrides', ['id' => $formdata->overrideid, 'publication' => $this->instance->id]);
+            unset($formdata->id);
+            unset($formdata->overrideid);
+            if (!$override) {
+                $formdata->publication = $this->instance->id;
+                $overrideresult->overrideid = $DB->insert_record('publication_overrides', $formdata);
+                $overrideresult->newoverride = true;
+            } else {
+                $formdata->id = $override->id;
+                $formdata->publication = $this->instance->id;
+                $DB->update_record('publication_overrides', $formdata);
+                $overrideresult->overrideid = $override->id;
+            }
+        } else {
+            $override = $DB->get_record('publication_overrides', ['publication' => $this->instance->id, 'userid' => $formdata->userid, 'groupid' => $formdata->groupid]);
+            unset($formdata->id);
+            unset($formdata->overrideid);
+            if (!$override) {
+                $formdata->publication = $this->instance->id;
+                $overrideresult->overrideid = $DB->insert_record('publication_overrides', $formdata);
+                $overrideresult->newoverride = true;
+            } else {
+                $formdata->id = $override->id;
+                $formdata->publication = $this->instance->id;
+                $DB->update_record('publication_overrides', $formdata);
+                $overrideresult->overrideid = $override->id;
+            }
+        }
+        return $overrideresult;
+    }
+
+    public function override_get($overrideid) {
+        global $DB;
+        $override = $DB->get_record('publication_overrides', ['id' => $overrideid, 'publication' => $this->instance->id]);
+        if ($override) {
+            return $this->override_export_for_template_single($override);
+        }
+        return null;
+    }
+
+    public function override_delete($overrideid) {
+        global $DB;
+        $override = $DB->get_record('publication_overrides', ['id' => $overrideid, 'publication' => $this->instance->id]);
+        if ($override) {
+            $DB->delete_records('publication_overrides', ['id' => $overrideid]);
+            return true;
+        }
+        return false;
+    }
+
+    public function override_getformdata($overrideid) {
+        global $DB;
+        if ($overrideid == -1 || $overrideid == 0) {
+            $formdata = new stdClass();
+            $formdata->overrideid = -1;
+            $formdata->id = $this->coursemodule->id;
+            return $formdata;
+        }
+        $override = $DB->get_record('publication_overrides', ['id' => $overrideid, 'publication' => $this->instance->id]);
+        if ($override) {
+            $override->overrideid = $override->id;
+            $override->id = $this->coursemodule->id;
+        }
+
+        return $override;
+    }
+
+    public function override_get_currentuserorgroup() {
+        global $DB, $USER;
+        $override = null;
+        if ($this->mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+
+            $groups = groups_get_all_groups($this->course->id, $USER->id);
+            if (!empty($groups)) {
+                $group = reset($groups);
+                $override = $DB->get_record('publication_overrides', ['publication' => $this->instance->id, 'groupid' => $group->id]);
+            }
+        } else {
+                $override = $DB->get_record('publication_overrides', ['publication' => $this->instance->id, 'userid' => $USER->id]);
+        }
+        if ($override) {
+            return $this->override_export_for_template_single($override);
+        }
+        return null;
     }
 }

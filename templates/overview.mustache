@@ -13,7 +13,6 @@
 
     {{/isteacher}}
     <table class="table table-striped w-100">
-
         {{#isteacher}}
             <tr>
                 <th>{{#str}}mode,publication{{/str}}</th>
@@ -36,7 +35,7 @@
             </tr>
             <tr>
                 <th>{{#str}}submitted,assign{{/str}}</th>
-                <td>{{allfilescount}}</td>
+                <td>{{^allfiles_empty}}<a href="{{allfiles_url}}">{{allfilescount}}</a>{{/allfiles_empty}}{{#allfiles_empty}}0{{/allfiles_empty}}</td>
             </tr>
             {{#showapprovalrequired}}
                 <tr>
@@ -45,7 +44,6 @@
                 </tr>
             {{/showapprovalrequired}}
         {{/isteacher}}
-
     </table>
 </div>
 {{#isteacher}}

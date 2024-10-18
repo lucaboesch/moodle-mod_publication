@@ -41,6 +41,7 @@ $string['publication:view'] = 'View student folder';
 $string['publication:upload'] = 'Upload files to a student folder';
 $string['publication:approve'] = 'Decide if files should be published (visible for all participants)';
 $string['publication:grantextension'] = 'Grant extension';
+$string['publication:manageoverrides'] = 'Manage overrides';
 $string['publication:receiveteachernotification'] = 'Receive notifications for teachers';
 $string['search:activity'] = 'Student folder - activity information';
 
@@ -371,6 +372,25 @@ $string['filter:rejected'] = 'Rejected file submissions';
 $string['filter:approvalrequired'] = 'Decision pending';
 $string['filter:nofiles'] = 'No file submission';
 
+// Overrides.
+$string['eventoverridecreated'] = 'Publication override created';
+$string['eventoverridedeleted'] = 'Publication override deleted';
+$string['eventoverrideupdated'] = 'Publication override updated';
+$string['override:add'] = 'Add group/user override';
+$string['overrides:empty'] = 'No overrides';
+$string['override:save:success'] = 'Override saved successfully';
+$string['override:invalidid'] = 'Invalid override ID';
+$string['override:submission:fromto'] = 'Allow submissions from {$a->from} until {$a->to}';
+$string['override:submission:from'] = 'Allow submissions from {$a->from}';
+$string['override:submission:to'] = 'Allow submissions until {$a->to}';
+$string['override:approval:fromto'] = 'Approval from {$a->from} until {$a->to}';
+$string['override:approval:from'] = 'Approval from {$a->from}';
+$string['override:approval:to'] = 'Approval until {$a->to}';
+$string['override:group:choose'] = 'Choose a group';
+$string['override:user:choose'] = 'Choose a group';
+$string['override:nothingtochange'] = 'There are no settings that can be overriden with the current activity settings!';
+$string['override:delete:ask'] = 'Are you sure you want to delete the override for {$a->userorgroup} {$a->fullname}?';
+$string['override:delete:success'] = 'Override deleted successfully!';
 
 
 // Deprecated since Moodle 2.9!

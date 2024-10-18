@@ -94,7 +94,7 @@ class mod_publication_mod_form extends moodleform_mod {
         // Publication mode import specific elements.
         $choices = [];
         $choices[-1] = get_string('choose', 'publication');
-        $assigninstances = $DB->get_records('assign', ['course' => $COURSE->id]);
+        $assigninstances = $DB->get_records('assign', ['course' => $COURSE->id], 'name ASC');
         $module = $DB->get_record('modules', ['name' => 'assign']);
         $select = $mform->createElement('select', 'importfrom', get_string('assignment', 'publication'), $choices, $disabled);
         $notteamassigns = [-1];

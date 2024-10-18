@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+
+4.5.0 (2024-10-18)
+-------------------
+* Moodle 4.5.0 compatible version
+* [UPDATE] #8012 - code clean up
+* [BUG] #8027 - fix import from assignment sorting 
+* [FEAUTRE] #8028 - make numbers on summary page clickable
+* [FEATURE] #7605 - implement overrides for groups as well
+
 4.4.1 (2024-08-07)
 -------------------
 * [BUG] #8034 - fix bug with undefined constant during upgrade - github #84 - thanks to Benjamin-unige &  github pull request #85 - lucaboesch

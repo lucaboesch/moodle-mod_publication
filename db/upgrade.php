@@ -334,5 +334,34 @@ function xmldb_publication_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2024080200, 'publication');
     }
 
+    if ($oldversion < 2024100400) {
+
+        // Define table publication_overrides to be created.
+        $table = new xmldb_table('publication_overrides');
+
+        // Adding fields to table publication_overrides.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('publication', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('groupid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('allowsubmissionsfromdate', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('duedate', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('approvalfromdate', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('approvaltodate', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+
+        // Adding keys to table publication_overrides.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('publication', XMLDB_KEY_FOREIGN, ['publication'], 'publication', ['id']);
+        $table->add_key('groupid', XMLDB_KEY_FOREIGN, ['groupid'], 'groups', ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        // Conditionally launch create table for publication_overrides.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Publication savepoint reached.
+        upgrade_mod_savepoint(true, 2024100400, 'publication');
+    }
     return true;
 }
