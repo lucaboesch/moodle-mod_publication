@@ -55,6 +55,12 @@ class dates extends activity_dates {
         $textsuffix = ($instance->mode == PUBLICATION_MODE_IMPORT) ? "_import" : "_upload";
         $dates = [];
 
+        $override = $publication->override_get_currentuserorgroup();
+
+        if ($override && $override->submissionoverride) {
+            $instance->duedate = $override->duedate;
+            $instance->allowsubmissionsfromdate = $override->allowsubmissionsfromdate;
+        }
         if ($instance->allowsubmissionsfromdate) {
             $dates[] = [
                 'label' => get_string('allowsubmissionsfromdate' . $textsuffix, 'publication') . ':',
@@ -75,6 +81,25 @@ class dates extends activity_dates {
                 'label' => get_string('extensionto', 'publication') . ':',
                 'timestamp' => $extensionduedate,
             ];
+        }
+
+        if ($instance->obtainstudentapproval) {
+            if ($override && $override->approvaloverride) {
+                $instance->approvalfromdate = $override->approvalfromdate;
+                $instance->approvaltodate = $override->approvaltodate;
+            }
+            if ($instance->approvalfromdate) {
+                $dates[] = [
+                    'label' => get_string('approvalfromdate', 'publication') . ':',
+                    'timestamp' => $instance->approvalfromdate,
+                ];
+            }
+            if ($instance->approvaltodate) {
+                $dates[] = [
+                    'label' => get_string('approvaltodate', 'publication') . ':',
+                    'timestamp' => $instance->approvaltodate,
+                ];
+            }
         }
         return $dates;
     }

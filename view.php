@@ -255,6 +255,9 @@ if (has_capability('mod/publication:approve', $context)) {
     $templatecontext->studentcount = count($publication->get_users([], true));
     $allfilestable = $publication->get_allfilestable(PUBLICATION_FILTER_ALLFILES, true);
     $templatecontext->allfilescount = $allfilestable->get_count();
+    $templatecontext->allfiles_url = (new moodle_url('/mod/publication/view.php',
+        ['id' => $cm->id, 'filter' => PUBLICATION_FILTER_ALLFILES, 'allfilespage' => 1]))->out(false);
+    $templatecontext->allfiles_empty = $templatecontext->allfilescount == 0;
     $templatecontext->assign = $publication->get_importlink();
     if ($publicationinstance->obtainteacherapproval == 1) {
         $templatecontext->viewall_approvalneeded_url = (new moodle_url('/mod/publication/view.php',

@@ -264,7 +264,9 @@ function publication_reset_userdata($data) {
  * @return void
  */
 function publication_extend_settings_navigation(settings_navigation $settings, navigation_node $navref) {
-    global $DB;
+    global $DB, $CFG;
+
+    require_once($CFG->dirroot . '/mod/publication/locallib.php');
 
     // We want to add these new nodes after the Edit settings node, and before the
     // Locally assigned roles node. Of course, both of those are controlled by capabilities.
@@ -297,6 +299,21 @@ function publication_extend_settings_navigation(settings_navigation $settings, n
             navigation_node::TYPE_SETTING, null, 'mod_publication_allfiles');
         $navref->add_node($node, $beforekey);
     }
+
+
+    if (has_capability('mod/publication:manageoverrides', $settings->get_page()->cm->context)) {
+        $publication = new publication($cm, $course, $context);
+        $mode = $publication->get_mode();
+        if ($mode != PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION || true) {
+            $url = new moodle_url('/mod/publication/overrides.php', ['id' => $settings->get_page()->cm->id]);
+
+            $node = navigation_node::create(get_string('overrides', 'assign'),
+                $url,
+                navigation_node::TYPE_SETTING, null, 'mod_publication_useroverrides');
+            $navref->add_node($node, $beforekey);
+        }
+    }
+
 
 }
 
