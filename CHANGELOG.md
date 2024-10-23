@@ -9,6 +9,7 @@ CHANGELOG
 * [BUG] #8027 - fix import from assignment sorting 
 * [FEAUTRE] #8028 - make numbers on summary page clickable
 * [FEATURE] #7605 - implement overrides for groups as well
+* [BUG] #8087 - fix bug with students can bypass date restriction / the submission setting ‘To’
 
 4.4.1 (2024-08-07)
 -------------------
