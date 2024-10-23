@@ -126,14 +126,6 @@ class mod_publication_files_form extends moodleform {
         $mode = $publication->get_mode();
         $timeremaining = false;
         $publicationinstance = $publication->get_instance();
-        if ($publicationinstance->duedate > 0) {
-            $timeremainingdiff = $publicationinstance->duedate - time();
-            if ($timeremainingdiff > 0) {
-                $timeremaining = format_time($publicationinstance->duedate - time());
-            } else {
-                $timeremaining = get_string('overdue', 'publication');
-            }
-        }
 
         $extensionduedate = $publication->user_extensionduedate($USER->id);
         $override = $publication->override_get_currentuserorgroup();
@@ -144,6 +136,21 @@ class mod_publication_files_form extends moodleform {
             $approvalfromdate = $publicationinstance->approvalfromdate > 0 ? userdate($publicationinstance->approvalfromdate) : false;
             $approvaltodate = $publicationinstance->approvaltodate > 0 ? userdate($publicationinstance->approvaltodate) : false;
         }
+
+
+        if ($publicationinstance->duedate > 0 || ($override && $override->submissionoverride && $override->duedate > 0)) {
+            if ($override && $override->submissionoverride && $override->duedate > 0) {
+                $timeremainingdiff = $override->duedate - time();
+            } else {
+                $timeremainingdiff = $publicationinstance->duedate - time();
+            }
+            if ($timeremainingdiff > 0) {
+                $timeremaining = format_time($publicationinstance->duedate - time());
+            } else {
+                $timeremaining = get_string('overdue', 'publication');
+            }
+        }
+
         $extensionduedate = $extensionduedate > 0 ? userdate($extensionduedate) : false;
         if (!$publicationinstance->obtainstudentapproval) {
             $approvalfromdate = false;

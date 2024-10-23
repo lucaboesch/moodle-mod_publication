@@ -135,6 +135,7 @@ $string['configmaxfiles'] = 'Default maximum number of attachments allowed per u
 $string['maxbytes'] = 'Maximum attachment size';
 $string['maxbytes_help'] = 'Files uploaded by students may be up to this size.';
 $string['configmaxbytes'] = 'Default maximum size for all files in the student folder.';
+$string['uploadnotopen'] = 'File upload is closed!';
 
 $string['reset_userdata'] = 'All data';
 

@@ -30,7 +30,7 @@ require_once($CFG->dirroot . '/mod/publication/locallib.php');
 $id = required_param('id', PARAM_INT);   // We need a course!
 
 if (!$course = $DB->get_record('course', ['id' => $id])) {
-    print_error('invalidcourseid');
+    throw new \moodle_exception('coursemisconf');
 }
 
 require_course_login($course);

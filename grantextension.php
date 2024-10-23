@@ -36,11 +36,11 @@ $userids = required_param_array('userids', PARAM_INT); // User id.
 
 $url = new moodle_url('/mod/publication/grantextension.php', ['id' => $id]);
 if (!$cm = get_coursemodule_from_id('publication', $id, 0, false, MUST_EXIST)) {
-    print_error('invalidcoursemodule');
+    throw new \moodle_exception('invalidcoursemodule');
 }
 
 if (!$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST)) {
-    print_error('coursemisconf');
+    throw new \moodle_exception('coursemisconf');
 }
 
 require_login($course, false, $cm);

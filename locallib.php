@@ -1167,7 +1167,7 @@ class publication {
             }
             die();
         } else {
-            print_error('You are not allowed to see this file'); // TODO ge_string().
+            throw new \moodle_exception('You are not allowed to see this file', 'mod_publication'); // TODO get_string().
         }
     }
 
