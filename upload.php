@@ -32,11 +32,11 @@ $cmid = required_param('cmid', PARAM_INT); // Course Module ID.
 $id = optional_param('id', 0, PARAM_INT); // EntryID.
 
 if (!$cm = get_coursemodule_from_id('publication', $cmid)) {
-    print_error('invalidcoursemodule');
+    throw new \moodle_exception('invalidcoursemodule');
 }
 
 if (!$course = $DB->get_record('course', ['id' => $cm->course])) {
-    print_error('coursemisconf');
+    throw new \moodle_exception('coursemisconf');
 }
 
 require_login($course, false, $cm);
@@ -52,6 +52,10 @@ if (!empty($id)) {
     $url->param('id', $id);
 }
 $PAGE->set_url($url);
+
+if (!$publication->is_open()) {
+    redirect(new moodle_url('/mod/publication/view.php', ['id' => $cm->id]), get_string('uploadnotopen', 'mod_publication'));
+}
 
 $entry = new stdClass();
 $entry->id = $USER->id;
