@@ -749,7 +749,7 @@ class publication {
 
         $attributes = [];
 
-        $attributes['onChange'] = "$('form.optionspref').submit();";
+        $attributes['onChange'] = "document.querySelector('form.optionspref').submit()";
 
         $mform->addElement('hidden', 'updatepref');
         $mform->setDefault('updatepref', 1);
@@ -2344,10 +2344,13 @@ class publication {
         $context->overridesempty = count($overrides) == 0;
         $context->overrides = [];
         $isgroupmode = $this->mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION;
+        $context->isgroupmode = $isgroupmode;
         if ($isgroupmode) {
             $context->usergroupcoltitle = get_string('group');
+            $context->addoverridetitle = get_string('override:add:group', 'mod_publication');
         } else {
             $context->usergroupcoltitle = get_string('user');
+            $context->addoverridetitle = get_string('override:add:user', 'mod_publication');
         }
 
         $userurl = new moodle_url('/user/view.php', ['course' => $this->course->id]);
