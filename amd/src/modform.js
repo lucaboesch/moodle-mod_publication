@@ -83,7 +83,7 @@ define(['jquery'], function($) {
     };
 
     const init = function() {
-        teamAssignIds = $(TEAMASSIGNIDS).data('assignids').split(',');
+        teamAssignIds = $(TEAMASSIGNIDS).data('assignids').toString().split(',');
         $selectObtainStudentApproval.on('change', changeObtainStudentApproval);
         $selectObtainGroupApproval.on('change', changeObtainStudentApproval);
         $radioMode.on('change', changeMode);
