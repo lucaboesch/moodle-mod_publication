@@ -61,7 +61,6 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('overrides', 'mod_assign'), 2);
 
 $publicationinstance = $publication->get_instance();
-$publicationmode = $publication->get_mode();
 $templatecontext = $publication->overrides_export_for_template();
 
 $mode = $publication->get_mode();

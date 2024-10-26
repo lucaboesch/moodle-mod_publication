@@ -36,7 +36,7 @@ define(['jquery'], function($) {
     const GROUP_AUTOMATIC = '-1';
     const STUDENT_AUTOMATIC = '0';
     const MODE_IMPORT = '1';
-    const teamAssignIds = $(TEAMASSIGNIDS).data('assignids').split(',');
+    let teamAssignIds = [];
 
     const $approvalFromDate = $(FITEM_APPROVALFROM);
     const $approvalToDate = $(FITEM_APPROVALTO);
@@ -81,9 +81,17 @@ define(['jquery'], function($) {
             $approvalToDate.removeAttr('hidden').css('display', 'flex');
         }
     };
-    $selectObtainStudentApproval.on('change', changeObtainStudentApproval);
-    $selectObtainGroupApproval.on('change', changeObtainStudentApproval);
-    $radioMode.on('change', changeMode);
-    $selectImportFrom.on('change', changeMode);
-    changeMode();
+
+    const init = function() {
+        teamAssignIds = $(TEAMASSIGNIDS).data('assignids').toString().split(',');
+        $selectObtainStudentApproval.on('change', changeObtainStudentApproval);
+        $selectObtainGroupApproval.on('change', changeObtainStudentApproval);
+        $radioMode.on('change', changeMode);
+        $selectImportFrom.on('change', changeMode);
+        changeMode();
+    };
+
+    $(document).ready(function() {
+        init();
+    });
 });
