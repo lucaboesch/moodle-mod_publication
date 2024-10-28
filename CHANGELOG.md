@@ -6,10 +6,10 @@ CHANGELOG
 -------------------
 * Moodle 4.5.0 compatible version
 * [UPDATE] #8012 - code clean up
-* [BUG] #8027 - fix import from assignment sorting 
-* [FEAUTRE] #8028 - make numbers on summary page clickable
-* [FEATURE] #7605 - implement overrides for groups as well
-* [BUG] #8087 - fix bug with students can bypass date restriction / the submission setting ‘To’
+* [BUG] #8027 - import from assignment: change sort order of activites in the list
+* [BUG] #8087 - fix bug with students can bypass date restriction for upload by adapting the url of an activity
+* [FEATURE] #8028 - link some count values on the summary page to the corresponding filter on the submission page
+* [FEATURE] #7605 - implement general page for overrides and link it in the activity navigation
 
 4.4.1 (2024-08-07)
 -------------------
