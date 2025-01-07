@@ -268,6 +268,12 @@ class mod_publication_mod_form extends moodleform_mod {
         $mform->addElement('hidden', 'alwaysshowdescription', true);
         $mform->setType('alwaysshowdescription', PARAM_BOOL);
 
+        // Apply availability restrictions.
+        $mform->addElement('select', 'availabilityrestriction', get_string('availabilityrestriction', 'publication'),
+                [get_string('no'), get_string('yes')]);
+        $mform->setDefault('availabilityrestriction', get_config('publication', 'availabilityrestriction'));
+        $mform->addHelpButton('availabilityrestriction', 'availabilityrestriction', 'publication');
+
         $mform->addElement('header', 'notifications', get_string('notifications', 'publication'));
 
         $options = [

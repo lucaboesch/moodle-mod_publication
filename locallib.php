@@ -538,7 +538,11 @@ class publication {
         $modinfo = get_fast_modinfo($this->course->id);
 
         $info = new \core_availability\info_module($modinfo->get_cm($this->coursemodule->id));
-        $filtered = $info->filter_user_list($users);
+        if ($this->get_instance()->availabilityrestriction) {
+            $filtered = $info->filter_user_list($users);
+        } else {
+            $filtered = $users;
+        }
         if (empty($filtered)) {
             return [-1];
         }
@@ -1041,7 +1045,10 @@ class publication {
         } else {
             $groupmembers = [];
         }
-        $groupmembers = $availabilityinfo->filter_user_list($groupmembers);
+
+        if ($this->get_instance()->availabilityrestriction) {
+            $groupmembers = $availabilityinfo->filter_user_list($groupmembers);
+        }
 
         return $groupmembers;
     }
