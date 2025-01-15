@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+4.5.1 (2025-01-15)
+-------------------
+* [FEAUTRE] #8188 - merge pull request #92 - add admin setting for availability restrictions
+* [BUG] #8101 - fix sql query that fetches users to work under MSSQL
 
 4.5.0 (2024-10-18)
 -------------------
