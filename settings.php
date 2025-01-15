@@ -77,4 +77,7 @@ if ($ADMIN->fulltree) {
         $settings->add(new admin_setting_configselect('publication/maxbytes', get_string('maxbytes', 'publication'),
                 get_string('configmaxbytes', 'publication'), 5242880, get_max_upload_sizes($CFG->maxbytes)));
     }
+
+    $settings->add(new admin_setting_configselect('publication/availabilityrestriction', get_string('availabilityrestriction_admin', 'publication'),
+            get_string('availabilityrestriction_admin_desc', 'publication'), 1, [get_string('no'), get_string('yes')]));
 }

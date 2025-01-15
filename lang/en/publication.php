@@ -23,7 +23,13 @@
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+$string['availabilityrestriction'] = 'Apply availability restrictions';
+$string['availabilityrestriction_admin'] = 'Default setting for availability restrictions';
+$string['availabilityrestriction_help'] =
+$string['availabilityrestriction_admin_desc'] =
+        'Users who cannot access the activity due to availability restrictions will be removed from the list.<br> 
+        This only includes conditions which are marked as being applied to user lists. 
+        For example, group conditions are included but date conditions are not included.';
 $string['modulename'] = 'Student folder';
 $string['pluginname'] = 'Student folder';
 $string['modulename_help'] = 'The student folder offers the following features:<br><ul><li>Students can upload files or import them from an assignment activity.</li><li>The files will be published (will be made visible to everyone) automatically or after students and/ or teachers approval for publishing.</li><li>Students and/or teachers will receive a notification when students upload or change a file or when a file is imported or updated from an assignment activity. Furthermore students and/ or teachers will receive a notification about any changes of the publication status.</li></ul>';
