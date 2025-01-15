@@ -363,5 +363,20 @@ function xmldb_publication_upgrade($oldversion) {
         // Publication savepoint reached.
         upgrade_mod_savepoint(true, 2024100400, 'publication');
     }
+
+    if ($oldversion < 2024101801) {
+        $table = new xmldb_table('publication');
+
+        // Add field availabilityrestriction.
+        $field = new xmldb_field('availabilityrestriction', XMLDB_TYPE_INTEGER, '1', false, true, false, '1', 'notifyfilechange');
+
+        // Conditionally launch add field availabilityrestriction.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Organizer savepoint reached.
+        upgrade_mod_savepoint(true, 2024101801, 'publication');
+    }
     return true;
 }
