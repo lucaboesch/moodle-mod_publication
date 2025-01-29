@@ -55,9 +55,11 @@ class backup_publication_activity_structure_step extends backup_activity_structu
                 'alwaysshowdescription',
                 'duedate',
                 'allowsubmissionsfromdate',
-                'timemodified',
                 'completionupload',
+                'timemodified',
                 'cutoffdate',
+                'approvalfromdate',
+                'approvaltodate',
                 'mode',
                 'importfrom',
                 'obtainstudentapproval',
@@ -65,8 +67,11 @@ class backup_publication_activity_structure_step extends backup_activity_structu
                 'maxbytes',
                 'allowedfiletypes',
                 'obtainteacherapproval',
-                'notifyteacher',
-                'notifystudents',
+                'autoimport',
+                'groupapproval',
+                'notifystatuschange',
+                'notifyfilechange',
+                'availabilityrestriction',
         ]);
 
         $extduedates = new backup_nested_element('extduedates');
