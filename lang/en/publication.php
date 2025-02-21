@@ -23,8 +23,8 @@
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-$string['availabilityrestriction'] = 'Apply availability restrictions';
-$string['availabilityrestriction_admin'] = 'Default setting for availability restrictions';
+$string['availabilityrestriction'] = 'Apply availability restrictions to user list';
+$string['availabilityrestriction_admin'] = 'Default setting for availability restrictions to user list';
 $string['availabilityrestriction_help'] =
 $string['availabilityrestriction_admin_desc'] = 'Users who cannot access the activity due to availability restrictions will be removed from the list.<br>This only includes conditions which are marked as being applied to user lists.         For example, group conditions are included but date conditions are not included.';
 $string['modulename'] = 'Student folder';
