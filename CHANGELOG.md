@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+4.5.2 (2025-02-21)
+-------------------
+* [BUG] #8237 - fix for AMOS to be able to manage language strings of the current version
+
 4.5.1 (2025-01-15)
 -------------------
 * [FEATURE] #8188 - implement new setting for availability restrictions for userlist - github #92 & github pull request #93 - melanietreitinger
