@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+4.5.2 (2025-03-05)
+-------------------
+* [BUG] #8249 - further fix for AMOS to be able to manage language strings of the current version
+
 4.5.2 (2025-02-21)
 -------------------
 * [BUG] #8237 - fix for AMOS to be able to manage language strings of the current version
