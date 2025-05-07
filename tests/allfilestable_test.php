@@ -28,9 +28,7 @@ use Exception;
 use mod_assign_generator;
 use coding_exception;
 
-if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.'); // It must be included from a Moodle page!
-}
+defined('MOODLE_INTERNAL') || die();
 
 // Make sure the code being tested is accessible.
 global $CFG;

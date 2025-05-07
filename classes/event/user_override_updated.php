@@ -24,8 +24,6 @@
 
 namespace mod_publication\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_publication user override updated event class.
  *
@@ -76,7 +74,7 @@ class user_override_updated extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/publication/overrides_edit.php', array('id' => $this->objectid));
+        return new \moodle_url('/mod/publication/overrides_edit.php', ['id' => $this->objectid]);
     }
 
     /**
@@ -101,15 +99,15 @@ class user_override_updated extends \core\event\base {
      * Get objectid mapping
      */
     public static function get_objectid_mapping() {
-        return array('db' => 'publication_overrides', 'restore' => 'publication_override');
+        return ['db' => 'publication_overrides', 'restore' => 'publication_override'];
     }
 
     /**
      * Get other mapping
      */
     public static function get_other_mapping() {
-        $othermapped = array();
-        $othermapped['publication'] = array('db' => 'publication', 'restore' => 'publication');
+        $othermapped = [];
+        $othermapped['publication'] = ['db' => 'publication', 'restore' => 'publication'];
 
         return $othermapped;
     }

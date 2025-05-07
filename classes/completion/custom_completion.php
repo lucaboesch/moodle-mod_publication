@@ -19,12 +19,12 @@ namespace mod_publication\completion;
 use core_completion\activity_custom_completion;
 
 /**
- * Activity custom completion subclass for the assign activity.
+ * Activity custom completion subclass for the publication activity.
  *
- * Class for defining mod_assign's custom completion rules and fetching the completion statuses
- * of the custom completion rules for a given assign instance and a user.
+ * Class for defining mod_publication's custom completion rules and fetching the completion statuses
+ * of the custom completion rules for a given publication instance and a user.
  *
- * @package mod_assign
+ * @package   mod_publication
  * @copyright Simey Lameze <simey@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
