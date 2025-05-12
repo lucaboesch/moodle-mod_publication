@@ -25,8 +25,6 @@
 
 namespace mod_publication\local\allfilestable;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Table showing all imported files
  *
@@ -68,18 +66,6 @@ class import extends base {
                 $headers[] = get_string('studentapproval', 'publication');
                 $helpicons[] = new \help_icon('studentapproval', 'publication');
             }
-            /*
-            $columns[] = 'teacherapproval';
-            if ($this->publication->get_instance()->obtainstudentapproval) {
-                $headers[] = get_string('obtainstudentapproval', 'publication');
-            } else {
-                $headers[] = get_string('teacherapproval', 'publication');
-            }
-            $helpicons[] = new \help_icon('teacherapproval', 'publication');
-
-            $columns[] = 'visibleforstudents';
-            $headers[] = get_string('visibleforstudents', 'publication');
-            $helpicons[] = null;*/
             $columns[] = 'publicationstatus';
             $headers[] = get_string('publicationstatus', 'publication');
             $helpicons[] = new \help_icon('publicationstatus', 'publication');

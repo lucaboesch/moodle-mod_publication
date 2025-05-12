@@ -25,8 +25,6 @@
 
 namespace mod_publication\local\filestable;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Table showing my uploaded files
  *
@@ -54,16 +52,19 @@ class upload extends base {
             // Teacher has to approve: show all status.
             if (is_null($teacherapproval) || $teacherapproval == 0) {
                 $templatecontext->icon = $this->questionmark;
-                $templatecontext->hint = get_string('hidden', 'publication') . ' (' . get_string('teacher_pending', 'publication') . ')';
+                $templatecontext->hint = get_string('hidden', 'publication') .
+                    ' (' . get_string('teacher_pending', 'publication') . ')';
             } else if ($teacherapproval == 1) {
                 $templatecontext->icon = $this->valid;
                 $templatecontext->hint = get_string('visible', 'publication');
             } else if ($teacherapproval == 3) {
                 $templatecontext->icon = $this->questionmark;
-                $templatecontext->hint = get_string('hidden', 'publication') . ' (' . get_string('teacher_pending', 'publication') . ')';
+                $templatecontext->hint = get_string('hidden', 'publication')
+                    . ' (' . get_string('teacher_pending', 'publication') . ')';
             } else {
                 $templatecontext->icon = $this->invalid;
-                $templatecontext->hint = get_string('hidden', 'publication') . ' (' . get_string('teacher_rejected', 'publication') . ')';
+                $templatecontext->hint = get_string('hidden', 'publication')
+                    . ' (' . get_string('teacher_rejected', 'publication') . ')';
             }
         } else {
             // Teacher doenst have to approve: only show when rejected.
@@ -75,7 +76,8 @@ class upload extends base {
                 $templatecontext->hint = get_string('visible', 'publication');
             } else {
                 $templatecontext->icon = $this->invalid;
-                $templatecontext->hint = get_string('hidden', 'publication') . ' (' . get_string('teacher_rejected', 'publication') . ')';
+                $templatecontext->hint = get_string('hidden', 'publication')
+                    . ' (' . get_string('teacher_rejected', 'publication') . ')';
             }
         }
         $data[] = $OUTPUT->render_from_template('mod_publication/approval_icon', $templatecontext);

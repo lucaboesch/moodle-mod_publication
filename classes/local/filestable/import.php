@@ -25,8 +25,6 @@
 
 namespace mod_publication\local\filestable;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Table showing my imported files
  *

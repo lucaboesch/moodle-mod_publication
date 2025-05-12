@@ -54,9 +54,13 @@ class base extends \html_table {
     protected $changepossible = false;
     /** @var string[] select options */
     protected $options = [];
+    /** @var string approval icon check */
     protected $valid = '';
+    /** @var string approval icon questionmark */
     protected $questionmark = '';
+    /** @var string approval icon x */
     protected $invalid = '';
+    /** @var int last modified timestamp */
     public $lastmodified = 0;
 
     /**
@@ -138,6 +142,12 @@ class base extends \html_table {
         return $data;
     }
 
+    /**
+     * Get the approval status for a file
+     *
+     * @param \stored_file $file file to get the approval status for
+     * @return string HTML for the approval status with icon
+     */
     public function get_approval_status_for_file($file) {
         global $OUTPUT;
         $templatecontext = new \stdClass;
@@ -194,7 +204,6 @@ class base extends \html_table {
             $hint .= get_string('teacher_approved_automatically', 'publication');
         }
 
-
         if ($studentapproved && $teacherapproved) {
             $templatecontext->icon = $this->valid;
         } else if ($studentdenied || $teacherdenied) {
@@ -204,48 +213,6 @@ class base extends \html_table {
         }
         $templatecontext->hint = $hint;
         return $OUTPUT->render_from_template('mod_publication/approval_icon', $templatecontext);
-/*
-        if ($teacherapproval && $this->publication->get_instance()->obtainstudentapproval) {
-            $studentapproval = $this->publication->student_approval($file);
-            if ($this->publication->is_open() && $studentapproval == 0) {
-                $this->changepossible = true;
-                $data[] = \html_writer::select($this->options, 'studentapproval[' . $file->get_id() . ']', $studentapproval);
-                $templatecontext = false;
-            } else {
-                switch ($studentapproval) {
-                    case 2:
-                        $templatecontext->icon = $this->valid;
-                        $templatecontext->hint = get_string('student_approved', 'publication');
-                        break;
-                    case 1:
-                        $templatecontext->icon = $this->invalid;
-                        $templatecontext->hint = get_string('student_rejected', 'publication');
-                        break;
-                    default:
-                        $templatecontext->icon = $this->questionmark;
-                        $templatecontext->hint = get_string('student_pending', 'publication');
-                }
-            }
-        } else {
-            switch ($teacherapproval) {
-                case 1:
-                    $templatecontext->icon = $this->valid;
-                    $templatecontext->hint = get_string('teacher_approved', 'publication');
-                    break;
-                case 3:
-                    $templatecontext->icon = $this->questionmark;
-                    $templatecontext->hint = get_string('hidden', 'publication') . ' (' . get_string('teacher_pending', 'publication') . ')';
-                    break;
-                default:
-                    $templatecontext->icon = $this->questionmark;
-                    $templatecontext->hint = get_string('student_pending', 'publication');
-            }
-        }
-
-        if ($templatecontext) {
-            return $OUTPUT->render_from_template('mod_publication/approval_icon', $templatecontext);
-        }
-        return '';*/
     }
 
     /**

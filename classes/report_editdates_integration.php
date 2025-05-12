@@ -24,8 +24,6 @@
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class needed for report-editdates support
  *
@@ -56,16 +54,22 @@ extends report_editdates_mod_date_extractor {
     public function get_settings(cm_info $cm) {
         $publication = $this->mods[$cm->instance];
 
-        return array(
-                'allowsubmissionsfromdate' => new report_editdates_date_setting(
-                        get_string('allowsubmissionsfromdate', 'publication'),
-                        $publication->allowsubmissionsfromdate,
-                        self::DATETIME, true, 5),
-                'duedate' => new report_editdates_date_setting(
-                        get_string('duedate', 'publication'),
-                        $publication->duedate,
-                        self::DATETIME, true, 5),
-                );
+        return [
+            'allowsubmissionsfromdate' => new report_editdates_date_setting(
+                get_string('allowsubmissionsfromdate', 'publication'),
+                $publication->allowsubmissionsfromdate,
+                self::DATETIME,
+                true,
+                5
+            ),
+            'duedate' => new report_editdates_date_setting(
+                get_string('duedate', 'publication'),
+                $publication->duedate,
+                self::DATETIME,
+                true,
+                5
+            ),
+        ];
     }
 
     /**
@@ -76,7 +80,7 @@ extends report_editdates_mod_date_extractor {
      * @throws coding_exception
      */
     public function validate_dates(cm_info $cm, array $dates) {
-        $errors = array();
+        $errors = [];
         if ($dates['allowsubmissionsfromdate'] && $dates['duedate']
                 && $dates['duedate'] < $dates['allowsubmissionsfromdate']) {
             $errors['duedate'] = get_string('duedatevalidation', 'publication');

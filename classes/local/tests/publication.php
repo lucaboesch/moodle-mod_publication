@@ -30,8 +30,6 @@ use dml_exception;
 use required_capability_exception;
 use Exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Test subclass that makes all the protected methods we want to test public.
  *
