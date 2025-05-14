@@ -24,8 +24,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * publication module data generator class
  *
@@ -44,31 +42,31 @@ class mod_publication_generator extends testing_module_generator {
      * @param array $options (optional) general options for course module. Can be merged into $record
      * @return stdClass record from module-defined table with additional field cmid (corresponding id in course_modules table)
      */
-    public function create_instance($record = null, array $options = null) {
+    public function create_instance($record = null, array|null $options = null) {
         $record = (object)(array)$record;
 
         $timecreated = time();
 
         $defaultsettings = [
-                'name' => 'publication',
-                'intro' => 'Introtext',
-                'introformat' => 1,
-                'alwaysshowdescription' => 1,
-                'timecreated' => $timecreated,
-                'timemodified' => $timecreated,
-                'duedate' => $timecreated + 604800, // 1 week later!
-                'allowsubmissionsfromdate' => $timecreated,
-                'cutoffdate' => 0,
-                'mode' => 0, // Equals PUBLICATION_MODE_UPLOAD!
-                'importfrom' => -1,
-                'autoimport' => 1,
-                'obtainstudentapproval' => 1,
-                'groupapproval' => 0, // Equals PUBLICATION_APPROVAL_ALL!
-                'maxfiles' => 5,
-                'maxbytes' => 2,
-                'allowedfiletypes' => '',
-                'obtainteacherapproval' => 1,
-                'groupmode' => SEPARATEGROUPS,
+            'name' => 'publication',
+            'intro' => 'Introtext',
+            'introformat' => 1,
+            'alwaysshowdescription' => 1,
+            'timecreated' => $timecreated,
+            'timemodified' => $timecreated,
+            'duedate' => $timecreated + 604800, // 1 week later!
+            'allowsubmissionsfromdate' => $timecreated,
+            'cutoffdate' => 0,
+            'mode' => 0, // Equals PUBLICATION_MODE_UPLOAD!
+            'importfrom' => -1,
+            'autoimport' => 1,
+            'obtainstudentapproval' => 1,
+            'groupapproval' => 0, // Equals PUBLICATION_APPROVAL_ALL!
+            'maxfiles' => 5,
+            'maxbytes' => 2,
+            'allowedfiletypes' => '',
+            'obtainteacherapproval' => 1,
+            'groupmode' => SEPARATEGROUPS,
         ];
 
         foreach ($defaultsettings as $name => $value) {

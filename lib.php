@@ -300,7 +300,6 @@ function publication_extend_settings_navigation(settings_navigation $settings, n
         $navref->add_node($node, $beforekey);
     }
 
-
     if (has_capability('mod/publication:manageoverrides', $settings->get_page()->cm->context)) {
         $publication = new publication($cm, $course, $context);
         $mode = $publication->get_mode();
@@ -313,8 +312,6 @@ function publication_extend_settings_navigation(settings_navigation $settings, n
             $navref->add_node($node, $beforekey);
         }
     }
-
-
 }
 
 /**
@@ -373,9 +370,9 @@ function mod_publication_core_calendar_provide_event_action(calendar_event $even
     $courseinstance = get_fast_modinfo($event->courseid)->instances['publication'][$event->instance];
     $instance = new publication($courseinstance);
 
-    // Only show this instance if it's open
+    // Only show this instance if it's open.
     if ($instance->is_open()) {
-        // Also don't show this instance when the user already uploaded one or more files
+        // Also don't show this instance when the user already uploaded one or more files.
         $files = $DB->count_records('publication_file', ['publication' => $event->instance, 'userid' => $USER->id]);
 
         if ($files >= 1) {
@@ -383,9 +380,9 @@ function mod_publication_core_calendar_provide_event_action(calendar_event $even
         }
 
         return $factory->create_instance(
-            get_string('add_uploads', 'publication'), // Name of the action button
-            new \moodle_url('/mod/publication/view.php', ['id' => $courseinstance->id]), // URL of the instance
-            1, // Count of necessary actions
+            get_string('add_uploads', 'publication'), // Name of the action button.
+            new \moodle_url('/mod/publication/view.php', ['id' => $courseinstance->id]), // URL of the instance.
+            1, // Count of necessary actions.
             true // Whether the user can take action on this folder.
         );
     }

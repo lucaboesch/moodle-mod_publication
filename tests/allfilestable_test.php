@@ -22,8 +22,9 @@
  * @copyright 2017 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace mod_publication\local\tests;
+namespace mod_publication;
 
+use mod_publication\local\tests\base;
 use Exception;
 use mod_assign_generator;
 use coding_exception;
@@ -41,8 +42,11 @@ require_once($CFG->dirroot . '/mod/publication/locallib.php'); // Include the co
  * @author    Philipp Hager
  * @copyright 2017 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers    \mod_publication\publication::get_allfilestable
+ * @covers    \mod_publication\publication::display_allfilesform
+ * @covers    \mod_publication\publication::importfiles
  */
-class allfilestable_testcase extends base {
+final class allfilestable_test extends base {
     /*
      * The base test class already contains a setUp-method setting up a course including users and groups.
      */
@@ -50,7 +54,7 @@ class allfilestable_testcase extends base {
     /**
      * Tests the basic creation of a publication instance with standardized settings!
      */
-    public function test_create_instance() {
+    public function test_create_instance(): void {
         self::assertNotEmpty($this->create_instance());
     }
 
@@ -59,7 +63,7 @@ class allfilestable_testcase extends base {
      *
      * @throws Exception
      */
-    public function test_allfilestable_upload() {
+    public function test_allfilestable_upload(): void {
         // Setup fixture!
         $publication = $this->create_instance([
             'mode' => PUBLICATION_MODE_UPLOAD,
@@ -80,7 +84,7 @@ class allfilestable_testcase extends base {
      *
      * @throws coding_exception
      */
-    public function test_allfilestable_import() {
+    public function test_allfilestable_import(): void {
         // Setup fixture!
         /** @var mod_assign_generator $generator */
         $generator = self::getDataGenerator()->get_plugin_generator('mod_assign');
@@ -106,10 +110,8 @@ class allfilestable_testcase extends base {
      *
      * @throws coding_exception
      */
-    public function test_allfilestable_group() {
+    public function test_allfilestable_group(): void {
         // Setup fixture!
-        /** @var \mod_assign_generator $generator */
-
         $this->resetAfterTest();
         $this->setAdminUser();
         // Create course and enrols.
@@ -139,7 +141,6 @@ class allfilestable_testcase extends base {
             $groups[$groupname] = $group;
         }
 
-
         $params = [
             'course' => $course,
             'assignsubmission_file_enabled' => 1,
@@ -148,7 +149,7 @@ class allfilestable_testcase extends base {
             'teamsubmission' => 1,
             'preventsubmissionnotingroup' => false,
             'requireallteammemberssubmit' => false,
-            'groupmode' => 1
+            'groupmode' => 1,
         ];
 
         $assign = $this->getDataGenerator()->create_module('assign', $params);
@@ -156,7 +157,7 @@ class allfilestable_testcase extends base {
         $context = \context_module::instance($cm->id);
         $files = [
             "mod/assign/tests/fixtures/submissionsample01.txt",
-            "mod/assign/tests/fixtures/submissionsample02.txt"
+            "mod/assign/tests/fixtures/submissionsample02.txt",
         ];
         $generator = self::getDataGenerator()->get_plugin_generator('mod_assign');
 
@@ -169,7 +170,6 @@ class allfilestable_testcase extends base {
             ]);
         }
 
-
         $this->setAdminUser();
         $publication = $this->create_instance([
             'mode' => PUBLICATION_MODE_IMPORT,
@@ -180,7 +180,6 @@ class allfilestable_testcase extends base {
             'duedate' => 0,
             'groupmode' => NOGROUPS,
         ]);
-
 
         $publication->importfiles();
         $publication->set_allfilespage(true);

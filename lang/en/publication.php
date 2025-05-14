@@ -97,6 +97,7 @@ $string['eventpublicationduedateextended'] = 'Publication due-date extended';
 $string['eventpublicationfiledeleted'] = 'Publication file delete';
 $string['eventpublicationfileimported'] = 'Publication file import';
 $string['eventpublicationfileuploaded'] = 'Publication file upload';
+$string['exception_file'] = 'You are not allowed to see this file';
 $string['extensionduedate'] = 'Extension due date';
 $string['extensionnotafterduedate'] = 'Extension date must be after the due date';
 $string['extensionnotafterfromdate'] = 'Extension date must be after the allow submissions from date';

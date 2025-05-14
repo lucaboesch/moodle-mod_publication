@@ -172,7 +172,7 @@ if ($mform->is_cancelled()) {
         }
     }
 
-    // Update competion status - if filescount == 0 => activity not completed, else => activity completed
+    // Update competion status - if filescount == 0 => activity not completed, else => activity completed !
 
     $completion = new completion_info($course);
     if ($completion->is_enabled($cm) && $publication->get_instance()->completionupload) {
