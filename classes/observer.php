@@ -24,7 +24,6 @@
  */
 namespace mod_publication;
 
-use mod_assign\event\base;
 use publication;
 
 /**
@@ -61,12 +60,12 @@ class observer {
     }
 
     /**
-     * \mod_assign\event\assessable_submitted
+     * Event observer for \mod_assign\event\assessable_submitted
      *
      * @param \mod_assign\event\assessable_submitted $e Event object containing useful data
      * @return bool true if success
      */
-    public static function import_assessable(base $e) {
+    public static function import_assessable(\mod_assign\event\assessable_submitted $e) {
         global $DB, $CFG, $OUTPUT;
 
         // Keep other page calls slimmed down!

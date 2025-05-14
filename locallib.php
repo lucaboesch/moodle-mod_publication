@@ -488,6 +488,7 @@ class publication {
      * Get userids to fetch files for, when displaying all submitted files or downloading them as ZIP
      *
      * @param int[] $users (optional) user ids for which the returned user ids have to filter
+     * @param bool $ignoreallfilespage (optional) ignore the all files page flag
      * @return int[] array of userids
      */
     public function get_users($users = [], $ignoreallfilespage = false) {
@@ -1361,7 +1362,7 @@ class publication {
     /**
      * Changes teacher approval for the specified files
      *
-     * @param $files array of fileids and new approval status, fileid => teacher approval status
+     * @param array $files array of fileids and new approval status, fileid => teacher approval status
      * @return void
      * @throws coding_exception
      * @throws dml_exception
@@ -1814,7 +1815,6 @@ class publication {
     /**
      * Send a notification about the change of the approval status to a student
      * @param stdClass $cm coursemodule
-     * @param object $user the where the notification should go
      * @param object $userfrom who cahnged the approval status
      * @param string $newstatus whats the new status
      * @param object $pubfile the publication-file on which the status change took place
@@ -2193,6 +2193,9 @@ class publication {
      * Creates the text content for emails to teachers
      *
      * @param object $info The info used by the 'emailteachermail' language string
+     * @param string $lang The language to use
+     * @param string $stridentifier The identifier for the string
+     * @param bool $includeheader Whether to include the header or not
      * @return string Plain-Text snippet to use in messages
      */
     public function email_filechange_text($info, $lang, $stridentifier, $includeheader = true) {
@@ -2212,6 +2215,9 @@ class publication {
      * Creates the html content for emails to teachers
      *
      * @param object $info The info used by the 'emailteachermailhtml' language string
+     * @param string $lang The language to use
+     * @param string $stridentifier The identifier for the string
+     * @param bool $includeheader Whether to include the header or not
      * @return string HTML snippet to use in messages
      */
     public function email_filechange_html($info, $lang, $stridentifier, $includeheader = true) {
@@ -2237,6 +2243,8 @@ class publication {
      * Creates the text content for emails to students
      *
      * @param object $info The info used by the 'emailteachermail' language string
+     * @param string $lang The language to use
+     * @param bool $includeheader Whether to include the header or not
      * @return string Plain-Text snippet to use in messages
      */
     public function email_statuschange_text($info, $lang, $includeheader = true) {
@@ -2257,6 +2265,8 @@ class publication {
      * Creates the html content for emails to students
      *
      * @param object $info The info used by the 'emailstudentsmailhtml' language string
+     * @param string $lang The language to use
+     * @param bool $includeheader Whether to include the header or not
      * @return string HTML snippet to use in messages
      */
     public function email_statuschange_html($info, $lang, $includeheader = true) {

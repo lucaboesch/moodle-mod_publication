@@ -40,6 +40,7 @@ class import extends base {
      * @param string $uniqueid a string identifying this table.Used as a key in session  vars.
      *                         It gets set automatically with the helper methods!
      * @param \publication $publication publication object
+     * @param string $filter filter for this table
      */
     public function __construct($uniqueid, \publication $publication, $filter) {
         global $PAGE;
