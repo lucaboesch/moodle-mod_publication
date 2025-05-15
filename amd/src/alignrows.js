@@ -23,10 +23,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- /**
-  * @module mod_publication/alignrows
-      */
-    define(['jquery'], function($) {
+/**
+ * @module mod_publication/alignrows
+ */
+define(['jquery'], function($) {
 
     /**
      * @constructor
@@ -38,9 +38,9 @@
 
     var instance = new Alignrows();
     instance.initializer = function() {
-        $("#attempts").ready(function () {
+        $("#attempts").ready(function() {
             var alltds = $("#attempts > tbody > tr > td > table > tbody > tr > td");
-            var maxHeight = Math.max.apply(null, alltds.map(function () {
+            var maxHeight = Math.max.apply(null, alltds.map(function() {
                 return $(this).height();
             }).get());
             alltds.height(maxHeight).css('vertical-align', 'middle');
