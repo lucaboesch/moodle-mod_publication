@@ -40,16 +40,21 @@
     }
 }}
 
-<tr>
-    <th>{{#str}}assignment,publication{{/str}}</th>
-
-        {{#notset}}
-            <td class="alert-warning">{{#str}}assignment_notset,publication{{/str}}</td>
-        {{/notset}}
-        {{#notfound}}
-            <td class="alert-warning">{{#str}}assignment_notfound,publication{{/str}}</td>
-        {{/notfound}}
-        {{#assign}}
-            <td><a href="{{url}}">{{name}}</a></td>
-        {{/assign}}
-</tr>
+{{#notset}}
+    <tr>
+        <th>{{#str}}assignment,publication{{/str}}</th>
+        <td class="alert-warning">{{#str}}assignment_notset,publication{{/str}}</td>
+    </tr>
+{{/notset}}
+{{#notfound}}
+    <tr>
+        <th>{{#str}}assignment,publication{{/str}}</th>
+        <td class="alert-warning">{{#str}}assignment_notfound,publication{{/str}}</td>
+    </tr>
+{{/notfound}}
+{{#assign}}
+    <tr>
+        <th>{{#str}}assignment,publication{{/str}}</th>
+        <td><a href="{{url}}">{{name}}</a></td>
+    </tr>
+{{/assign}}
