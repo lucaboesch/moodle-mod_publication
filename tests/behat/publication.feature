@@ -18,10 +18,10 @@ Feature: Create publication instance
     When I log in as "teacher1"
     And I am on "Course 1" course homepage
     And I turn editing mode on
-    And I add a "Student folder" to section "1" and I fill the form with:
-      | Student folder name | Test studentfolder name |
-      | Description         | Test description        |
-      | ID number           | Test studentfolder name |
+    And I add a "publication" activity to course "Course 1" section "1" and I fill the form with:
+      | Name          | Test studentfolder name |
+      | Description   | Test description        |
+      | ID number     | Test studentfolder name |
     And I am on the "Test studentfolder name" activity page logged in as teacher1
     And I press "Edit/upload files"
     Then I should see "Own files"
