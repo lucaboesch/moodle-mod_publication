@@ -260,7 +260,7 @@ if (has_capability('mod/publication:approve', $context)) {
     $templatecontext->allfiles_url = (new moodle_url('/mod/publication/view.php',
         ['id' => $cm->id, 'filter' => PUBLICATION_FILTER_ALLFILES, 'allfilespage' => 1]))->out(false);
     $templatecontext->allfiles_empty = $templatecontext->allfilescount == 0;
-    $templatecontext->assign = $publication->get_importlink();
+    $templatecontext->assign = $publication->get_importlink_context();
     if ($publicationinstance->obtainteacherapproval == 1) {
         $templatecontext->viewall_approvalneeded_url = (new moodle_url('/mod/publication/view.php',
             ['id' => $cm->id, 'filter' => PUBLICATION_FILTER_APPROVALREQUIRED, 'allfilespage' => 1]))->out(false);

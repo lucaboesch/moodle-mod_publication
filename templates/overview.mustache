@@ -35,6 +35,10 @@
     * allfiles_url URL to view all files
     * allfiles_empty Boolean indicating if there are no files
     * assign Assignment object
+    * notset Boolean indicating if the assignment is not set
+    * notfound Boolean indicating if the assignment is not found
+    * url URL for the assignment
+    * name Name of the assignment
     * myfilestitle Title for the user's files
     * myfiles Array of user's files
     * hasmyfiles Boolean indicating if the user has files
@@ -52,7 +56,12 @@
         "allfilescount": 1,
         "allfiles_url": "http://example.com",
         "allfiles_empty": false,
-        "assign": null,
+        "assign": {
+            "notset": false,
+            "notfound": false,
+            "url": "http://example.com",
+            "name": "Assignment 1"
+        },
         "myfilestitle": "Own files",
         "myfiles": [
             [
@@ -86,7 +95,20 @@
                 <td>{{mode}}</td>
             </tr>
             {{#assign}}
-                {{{.}}}
+                <tr>
+                    <th>{{#str}}assignment,publication{{/str}}</th>
+                    <td>
+                        {{#name}}
+                            <a href="{{url}}">{{name}}</a>
+                        {{/name}}
+                        {{#notset}}
+                            <span class="alert-warning">{{#str}}assignment_notset,publication{{/str}}</span>
+                        {{/notset}}
+                        {{#notfound}}
+                            <span class="alert-warning">{{#str}}assignment_notfound,publication{{/str}}</span>
+                        {{/notfound}}
+                    </td>
+                </tr>
             {{/assign}}
             <tr>
                 <th>{{#str}}obtainteacherapproval,publication{{/str}}</th>

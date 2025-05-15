@@ -222,42 +222,38 @@ class publication {
      * If the mode is set to import then the link to the corresponding
      * assignment will be displayed
      */
-    public function get_importlink() {
-        global $DB, $OUTPUT;
+    public function get_importlink_context() {
+        global $DB;
 
         if ($this->instance->mode == PUBLICATION_MODE_IMPORT) {
-            $context = new stdClass;
+            $context = new \stdClass;
 
             if ($this->get_instance()->importfrom == -1) {
                 $context->notset = true;
             } else {
                 $assign = $DB->get_record('assign', ['id' => $this->instance->importfrom]);
-
                 $assignmoduleid = $DB->get_field('modules', 'id', ['name' => 'assign']);
-
                 if ($assign) {
                     $assigncm = $DB->get_record('course_modules', [
-                            'course' => $assign->course,
-                            'module' => $assignmoduleid,
-                            'instance' => $assign->id,
+                        'course' => $assign->course,
+                        'module' => $assignmoduleid,
+                        'instance' => $assign->id,
                     ]);
                 } else {
                     $assigncm = false;
                 }
                 if ($assign && $assigncm) {
-                    $assignurl = new moodle_url('/mod/assign/view.php', ['id' => $assigncm->id]);
-                    $context->assign = true;
+                    $assignurl = new \moodle_url('/mod/assign/view.php', ['id' => $assigncm->id]);
                     $context->name = $assign->name;
                     $context->url = $assignurl->out(false);
                 } else {
                     $context->notfound = true;
                 }
             }
-            return $OUTPUT->render_from_template('mod_publication/partial_assignlink', $context);
+            return $context;
         }
         return null;
     }
-
 
     /**
      * Display Link to upload form if submission date is open

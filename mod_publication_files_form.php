@@ -164,7 +164,7 @@ class mod_publication_files_form extends moodleform {
             'approvalfromdate' => $approvalfromdate,
             'approvaltodate' => $approvaltodate,
             'extensionduedate' => $extensionduedate,
-            'assign' => $publication->get_importlink(),
+            'assign' => $publication->get_importlink_context(),
             'myfilestitle' => $mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION ?
                 get_string('mygroupfiles', 'publication') : get_string('myfiles', 'publication'),
         ];
