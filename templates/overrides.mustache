@@ -17,6 +17,47 @@
 {{!
     @template mod_publication/overrides
     This template renders the overrides table for the publication module.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * newoverrideurl URL for adding a new override
+    * overridesempty Boolean indicating if there are no overrides
+    * overrides Array of override objects
+    * isgroupmode Boolean indicating if group mode is enabled
+    * usergroupcoltitle Title for the user/group column
+    * addoverridetitle Title for the add override button
+
+    Example context (json):
+    {
+        "newoverrideurl": "http://example.com",
+        "overridesempty": false,
+        "overrides": [
+            {
+                "id": "1",
+                "publication": "1",
+                "groupid": "0",
+                "userid": "2",
+                "allowsubmissionsfromdate": "1747318800",
+                "duedate": "1747923600",
+                "approvalfromdate": null,
+                "approvaltodate": null,
+                "fullname": "Example User",
+                "userurl": "http://example.com",
+                "editurl": "http://example.com",
+                "deleteurl": "http://example.com",
+                "submissionoverride": "Allow submissions from Thursday, 15 May 2025, 2:20 PM until Thursday, 22 May 2025, 2:20 PM",
+                "approvaloverride": null
+            }
+        ],
+        "isgroupmode": false,
+        "usergroupcoltitle": "User",
+        "addoverridetitle": "Add user override"
+    }
 }}
 
 <div class="">

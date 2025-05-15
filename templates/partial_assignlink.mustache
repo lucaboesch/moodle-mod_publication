@@ -16,6 +16,28 @@
 }}
 {{!
     @template mod_publication/partial_assignlink
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * notset Boolean indicating if the assignment is not set
+    * notfound Boolean indicating if the assignment is not found
+    * assign Boolean indicating if the assignment is assigned
+    * url URL for the assignment
+    * name Name of the assignment
+
+    Example context (json):
+    {
+        "notset": false,
+        "notfound": false,
+        "assign": true,
+        "url": "http://example.com",
+        "name": "Assignment 1"
+    }
 }}
 
 <tr>

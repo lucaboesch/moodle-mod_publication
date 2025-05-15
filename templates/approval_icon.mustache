@@ -17,14 +17,21 @@
 {{!
     @template mod_publication/approval_icon
     This template renders an icon for approval status in the publication module.
-    Example context (JSON):
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * icon Icon HTML
+    * hint Title text for the icon
+
+    Example context (json):
     {
-        "icon": {
-            "fontawesomeicon": "check",
-            "bootsrapcolor": "text-success",
-            "title": "Approved by student."
-        },
-        "hint": "Approved by student.",
+        "icon": "<i class='fa fa-check fa-fw text-success' ></i>",
+        "hint": "Approved by student."
     }
 }}
 

@@ -16,6 +16,54 @@
 }}
 {{!
     @template mod_publication/overview
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * obtainstudentapprovaltitle Title for the student approval
+    * obtainteacherapproval Description of the teacher approval
+    * mode Mode of the publication (team, individual, etc.)
+    * obtainstudentapproval Description of the student approval
+    * timeremaining Time remaining for the assignment
+    * isteacher Boolean indicating if the user is a teacher
+    * studentcount Number of students in the publication
+    * allfilescount Total number of files submitted
+    * allfiles_url URL to view all files
+    * allfiles_empty Boolean indicating if there are no files
+    * assign Assignment object
+    * myfilestitle Title for the user's files
+    * myfiles Array of user's files
+    * hasmyfiles Boolean indicating if the user has files
+    * myfilesform Form for the user's files
+
+    Example context (json):
+    {
+        "obtainstudentapprovaltitle": "Student approval",
+        "obtainteacherapproval": "Automatic",
+        "mode": "Upload files directly in the current activity",
+        "obtainstudentapproval": "Automatic",
+        "timeremaining": "Deadline of editing period passed",
+        "isteacher": true,
+        "studentcount": 2,
+        "allfilescount": 1,
+        "allfiles_url": "http://example.com",
+        "allfiles_empty": false,
+        "assign": null,
+        "myfilestitle": "Own files",
+        "myfiles": [
+            [
+                "",
+                "<a href='filepath'>file.pdf</a>",
+                "<span class='' title='Approved by student automatically. Approved by teacher automatically.'><i class='fa fa-check fa-fw text-success' ></i></span>"
+            ]
+        ],
+        "hasmyfiles": true,
+        "myfilesform": "<form>...</form>"
+    }
 }}
 
 {{#isteacher}}

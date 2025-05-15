@@ -16,6 +16,42 @@
 }}
 {{!
     @template mod_publication/myfiles
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * myfiles Array of files
+    * hasmyfiles Boolean indicating if there are files
+    * timeremaining Time remaining for the assignment
+    * lastmodified Last modified date of the files
+    * approvalfromdate Approval start date
+    * approvaltodate Approval end date
+    * extensionduedate Extension due date
+    * assign Assignment object
+    * myfilestitle Title for the files section
+
+    Example context (json):
+    {
+        "myfiles": [
+            [
+                "",
+                "<a href='filepath'>file.pdf</a>",
+                "<span class='' title='Approved by student automatically. Approved by teacher automatically.'><i class='fa fa-check fa-fw text-success' ></i></span>"
+            ]
+        ],
+        "hasmyfiles": true,
+        "timeremaining": "Deadline of editing period passed",
+        "lastmodified": "Wednesday, 7 May 2025, 9:36 PM",
+        "approvalfromdate": false,
+        "approvaltodate": false,
+        "extensionduedate": false,
+        "assign": null,
+        "myfilestitle": "Own files"
+    }
 }}
 
 {{#assign}}
