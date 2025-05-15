@@ -169,7 +169,6 @@ class mod_publication_files_form extends moodleform {
                 get_string('mygroupfiles', 'publication') : get_string('myfiles', 'publication'),
         ];
         $myfilestable = $OUTPUT->render_from_template('mod_publication/myfiles', $tablecontext);
-        $myfilestable = '<table class="table table-striped w-100">' . $myfilestable . '</table>';
         $mform->addElement('html', $myfilestable);
 
         // Display submit buttons if necessary.
