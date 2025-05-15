@@ -25,8 +25,6 @@
 
 namespace mod_publication\local\allfilestable;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Table showing all uploaded files
  *
@@ -45,15 +43,6 @@ class upload extends base {
         list($columns, $headers, $helpicons) = parent::get_columns();
 
         if (has_capability('mod/publication:approve', $this->context) && $this->allfilespage) {
-            /*
-            $columns[] = 'teacherapproval';
-            $headers[] = get_string('teacherapproval', 'publication');
-            $helpicons[] = new \help_icon('teacherapproval', 'publication');
-
-            $columns[] = 'visibleforstudents';
-            $headers[] = get_string('visibleforstudents', 'publication');
-            $helpicons[] = null;*/
-
             if ($this->obtainstudentapproval) {
                 $columns[] = 'studentapproval';
                 $headers[] = get_string('studentapproval', 'publication');

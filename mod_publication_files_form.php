@@ -133,10 +133,10 @@ class mod_publication_files_form extends moodleform {
             $approvalfromdate = $override->approvalfromdate > 0 ? userdate($override->approvalfromdate) : false;
             $approvaltodate = $override->approvaltodate > 0 ? userdate($override->approvaltodate) : false;
         } else {
-            $approvalfromdate = $publicationinstance->approvalfromdate > 0 ? userdate($publicationinstance->approvalfromdate) : false;
+            $approvalfromdate = $publicationinstance->approvalfromdate > 0 ?
+                userdate($publicationinstance->approvalfromdate) : false;
             $approvaltodate = $publicationinstance->approvaltodate > 0 ? userdate($publicationinstance->approvaltodate) : false;
         }
-
 
         if ($publicationinstance->duedate > 0 || ($override && $override->submissionoverride && $override->duedate > 0)) {
             if ($override && $override->submissionoverride && $override->duedate > 0) {
@@ -164,11 +164,11 @@ class mod_publication_files_form extends moodleform {
             'approvalfromdate' => $approvalfromdate,
             'approvaltodate' => $approvaltodate,
             'extensionduedate' => $extensionduedate,
-            'assign' => $publication->get_importlink(),
-            'myfilestitle' => $mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION ? get_string('mygroupfiles', 'publication') : get_string('myfiles', 'publication'),
+            'assign' => $publication->get_importlink_context(),
+            'myfilestitle' => $mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION ?
+                get_string('mygroupfiles', 'publication') : get_string('myfiles', 'publication'),
         ];
         $myfilestable = $OUTPUT->render_from_template('mod_publication/myfiles', $tablecontext);
-        $myfilestable = '<table class="table table-striped w-100">' . $myfilestable . '</table>';
         $mform->addElement('html', $myfilestable);
 
         // Display submit buttons if necessary.
@@ -188,7 +188,6 @@ class mod_publication_files_form extends moodleform {
                 $mform->addElement('static', 'approvaltimeover', '', get_string('approval_timeover', 'publication'));
             }
         }
-
 
         if ($publication->get_instance()->mode == PUBLICATION_MODE_UPLOAD
             && has_capability('mod/publication:upload', $publication->get_context())) {

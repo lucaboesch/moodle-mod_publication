@@ -24,9 +24,6 @@
  */
 
 namespace mod_publication\event;
-use phpDocumentor\Reflection\Types\Object_;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * A file was uploaded for this event
@@ -55,12 +52,12 @@ class publication_file_uploaded extends \core\event\base {
      */
     public static function create_from_object(\stdClass $cm, $dobj) {
         // Trigger overview event.
-        $event = self::create(array(
+        $event = self::create([
             'objectid'      => $dobj->id,
             'context'       => \context_module::instance($cm->id),
             'relateduserid' => $dobj->userid,
             'other'         => (Array)$dobj,
-        ));
+        ]);
         return $event;
     }
     // You might need to override get_url() and get_legacy_log_data() if view mode needs to be stored as well.
@@ -90,6 +87,6 @@ class publication_file_uploaded extends \core\event\base {
      */
     public function get_url() {
         $moduleid = get_coursemodule_from_instance('publication', $this->data['other']['publication'])->id;
-        return new \moodle_url("/mod/publication/view.php", array('id'  => $moduleid));
+        return new \moodle_url("/mod/publication/view.php", ['id'  => $moduleid]);
     }
 }

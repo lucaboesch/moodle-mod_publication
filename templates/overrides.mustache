@@ -1,3 +1,65 @@
+{{!
+    This file is part of mod_publication for Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_publication/overrides
+    This template renders the overrides table for the publication module.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * newoverrideurl URL for adding a new override
+    * overridesempty Boolean indicating if there are no overrides
+    * overrides Array of override objects
+    * isgroupmode Boolean indicating if group mode is enabled
+    * usergroupcoltitle Title for the user/group column
+    * addoverridetitle Title for the add override button
+
+    Example context (json):
+    {
+        "newoverrideurl": "http://example.com",
+        "overridesempty": false,
+        "overrides": [
+            {
+                "id": "1",
+                "publication": "1",
+                "groupid": "0",
+                "userid": "2",
+                "allowsubmissionsfromdate": "1747318800",
+                "duedate": "1747923600",
+                "approvalfromdate": null,
+                "approvaltodate": null,
+                "fullname": "Example User",
+                "userurl": "http://example.com",
+                "editurl": "http://example.com",
+                "deleteurl": "http://example.com",
+                "submissionoverride": "Allow submissions from Thursday, 15 May 2025, 2:20 PM until Thursday, 22 May 2025, 2:20 PM",
+                "approvaloverride": null
+            }
+        ],
+        "isgroupmode": false,
+        "usergroupcoltitle": "User",
+        "addoverridetitle": "Add user override"
+    }
+}}
+
 <div class="">
     <a href="{{newoverrideurl}}" class="btn btn-primary">{{addoverridetitle}}</a>
     <table class="table w-100 mt-2">

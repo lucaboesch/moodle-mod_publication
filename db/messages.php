@@ -31,6 +31,6 @@ defined('MOODLE_INTERNAL') || die;
  *
  */
 
-$messageproviders = array (
+$messageproviders = [
     'publication_updates' => [],
-);
+];

@@ -25,8 +25,6 @@
 
 namespace mod_publication\local\filestable;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Table showing my group files
  *
@@ -39,8 +37,12 @@ class group extends base {
     /** @var int $groupingid saves the team-assignments submission grouping id */
     protected $groupingid = 0;
 
-
-
+    /**
+     * Get the approval status for a file
+     *
+     * @param \stored_file $file file to get the approval status for
+     * @return string HTML for the approval status with icon
+     */
     public function get_approval_status_for_file($file) {
         global $OUTPUT, $DB, $USER;
 
@@ -60,8 +62,6 @@ class group extends base {
         $studentdenied = false;
         $studentpending = false;
         $hint = '';
-
-
 
         if ($obtainstudentapproval == 1) {
 
@@ -91,7 +91,6 @@ class group extends base {
                 }
             } else if ($studentapproval == 2 || !empty($rejectedstudents)) {
                 $studentdenied = true;
-               // $hint = get_string('student_rejected', 'publication');
                 $hint = $rejected;
             } else {
                 $hint = $pending;
@@ -115,8 +114,6 @@ class group extends base {
                     }
                 }
             }
-
-
 
         } else {
             $studentapproved = true;
@@ -145,7 +142,6 @@ class group extends base {
             $hint .= get_string('teacher_approved_automatically', 'publication');
         }
 
-
         if ($studentapproved && $teacherapproved) {
             $templatecontext->icon = $this->valid;
         } else if ($studentdenied || $teacherdenied) {
@@ -157,98 +153,6 @@ class group extends base {
         return $OUTPUT->render_from_template('mod_publication/approval_icon', $templatecontext);
     }
 
-    /**
-     * Add a single file to the table
-     *
-     * @param \stored_file $file Stored file instance
-     * @return string[] Array of table cell contents
-     */
-/*
-    public function add_file2(\stored_file $file) {
-        global $USER, $DB, $OUTPUT;
-
-        // The common columns!
-        $data = parent::add_file($file);
-        $templatecontext = new \stdClass;
-
-        // Now add the specific data to the table!
-        $teacherapproval = $this->publication->teacher_approval($file);
-        if ($teacherapproval && $this->publication->get_instance()->obtainstudentapproval) {
-            $pubfileid = $DB->get_field('publication_file', 'id', [
-                    'publication' => $this->publication->get_instance()->id,
-                    'fileid' => $file->get_id(),
-            ]);
-            list($studentapproval, $approvaldetails) = $this->publication->group_approval($pubfileid);
-            if ($this->publication->is_open()
-                    && (!key_exists($USER->id, $approvaldetails) || ($approvaldetails[$USER->id]->approval === null))) {
-                $this->changepossible = true;
-                if (!key_exists($USER->id, $approvaldetails)) {
-                    $checked = 0;
-                } else {
-                    $checked = $approvaldetails[$USER->id]->approval === null ? 0 : $approvaldetails[$USER->id]->approval + 1;
-                }
-                $templatecontext = false;
-                $data[] = \html_writer::select($this->options, 'studentapproval[' . $file->get_id() . ']', $checked);
-            } else {
-                if ($studentapproval === null) {
-                    $templatecontext->icon = $this->questionmark;
-                    $templatecontext->hint = get_string('student_pending', 'publication');
-                } else if ($studentapproval) {
-                    $templatecontext->icon = $this->valid;
-                    $templatecontext->hint = get_string('student_approved', 'publication');
-                } else {
-                    $rejected = [];
-                    $pending = [];
-                    foreach ($approvaldetails as $cur) {
-                        if ($cur->approval === 0) {
-                            $rejected[] = fullname($cur);
-                        } else if ($cur->approval === null) {
-                            $pending[] = fullname($cur);
-                        }
-                    }
-                    $templatecontext->icon = $this->questionmark;
-                    $templatecontext->hint = get_string('student_pending', 'publication');
-                    if (count($rejected) > 0) {
-                        $templatecontext->icon = $this->invalid;
-                        $rejected = get_string('rejected', 'publication') . ': ' . implode(', ', $rejected);
-                        $templatecontext->hint = get_string('student_rejected', 'publication') . $rejected;
-                    } else if ($this->publication->get_instance()->groupapproval == PUBLICATION_APPROVAL_ALL) {
-                        if (count($pending) > 0) {
-                            $rejected = get_string('pending', 'publication') . ': ' . implode(', ', $pending);
-                            $templatecontext->hint .= $rejected;
-                        }
-                    } else {
-                            $rejected = '';
-                        }
-                    } else {
-                        $rejected = '';
-                    }
-                    //$templatecontext->hint = get_string('student_rejected', 'publication')  . $rejected;
-
-                }
-            }
-        } else {
-            switch ($teacherapproval) {
-                case 1:
-                    $templatecontext->icon = $this->valid;
-                    $templatecontext->hint = get_string('teacher_approved', 'publication');
-                    break;
-                case 3:
-                    $templatecontext->icon = $this->questionmark;
-                    $templatecontext->hint = get_string('teacher_pending', 'publication');
-                    break;
-                default:
-                    $templatecontext->icon = $this->questionmark;
-                    $templatecontext->hint = get_string('student_pending', 'publication');
-            }
-        }
-        if ($templatecontext) {
-            $data[] = $OUTPUT->render_from_template('mod_publication/approval_icon', $templatecontext);
-        }
-
-        return $data;
-    }
-*/
     /**
      * Get all files, in which the current user's groups are involved
      *

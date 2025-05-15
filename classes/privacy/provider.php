@@ -206,7 +206,6 @@ LEFT JOIN {groups_members} gm ON g.id = gm.groupid AND gm.userid = :guserid
                  WHERE ctx.id = :contextid AND ctx.contextlevel = :contextlevel AND p.mode = :import
                        AND (p.importfrom > 0 AND a.teamsubmission = 0)";
         $userlist->add_from_sql('userid', $sql, $params);
-        // TODO: std-Group-Members may be missing here!
 
         // Get all who got an extension!
         $sql = "SELECT e.userid
@@ -391,7 +390,7 @@ LEFT JOIN {groups_members} gm ON g.id = gm.groupid AND gm.userid = :guserid
         $ext = $pub->user_extensionduedate($user->id);
         // Overrides returns an array with data in it, but an override with actual data will have the assign ID set.
         if ($ext > 0) {
-            $data = (object)[get_string('privacy:extensionduedate', 'mod_publication') => transform::datetime($ext)];
+            $data = (object)[get_string('privacy:metadata:extensionduedate', 'mod_publication') => transform::datetime($ext)];
             writer::with_context($context)->export_data([], $data);
         }
     }

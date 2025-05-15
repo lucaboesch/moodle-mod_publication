@@ -41,7 +41,13 @@ require_once($CFG->dirroot . '/mod/publication/locallib.php');
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_publication_mod_form extends moodleform_mod {
+    /**
+     * @var array List of assignment IDs that have team submissions enabled.
+     */
     private $_teamassigns;
+    /**
+     * @var array List of assignment IDs that do not have team submissions enabled.
+     */
     private $_notteamassigns;
 
     /**
@@ -141,7 +147,6 @@ class mod_publication_mod_form extends moodleform_mod {
         $mform->addHelpButton('allowedfiletypes', 'allowedfiletypes', 'publication');
         $mform->hideIf('allowedfiletypes', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
-
         $name = get_string('allowsubmissionsfromdate', 'publication');
         $options = ['optional' => true];
         $mform->addElement('date_time_selector', 'allowsubmissionsfromdate', $name, $options);
@@ -155,15 +160,12 @@ class mod_publication_mod_form extends moodleform_mod {
         $mform->setDefault('duedate', time() + 7 * 24 * 3600);
         $mform->hideIf('duedate', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
-
-
         $mform->addElement('hidden', 'cutoffdate', false);
         $mform->setType('cutoffdate', PARAM_BOOL);
 
         // Approval settings start.
         $mform->addElement('header', 'approvalsettings', get_string('approvalsettings', 'publication'));
         $mform->setExpanded('approvalsettings', true);
-
 
         // Teacher approval.
         $attributes = [];
@@ -177,8 +179,6 @@ class mod_publication_mod_form extends moodleform_mod {
         $mform->setDefault('obtainteacherapproval', get_config('publication', 'obtainteacherapproval'));
         $mform->addHelpButton('obtainteacherapproval', 'obtainteacherapproval', 'publication');
 
-
-
         // Student approval.
         $attributes = [];
         $options = [
@@ -186,11 +186,10 @@ class mod_publication_mod_form extends moodleform_mod {
             '1' => get_string('obtainapproval_required', 'publication'),
         ];
 
-        $mform->addElement('select', 'obtainstudentapproval', get_string('obtainstudentapproval', 'publication'), $options, $attributes);
+        $mform->addElement('select', 'obtainstudentapproval',
+            get_string('obtainstudentapproval', 'publication'), $options, $attributes);
         $mform->setDefault('obtainstudentapproval', get_config('publication', 'obtainstudentapproval'));
         $mform->addHelpButton('obtainstudentapproval', 'obtainstudentapproval', 'publication');
-       // $mform->hideIf('obtainstudentapproval', 'importfrom', 'in', $teamassigns);
-
 
         // Group approval.
         $attributes = [];
@@ -200,67 +199,18 @@ class mod_publication_mod_form extends moodleform_mod {
             PUBLICATION_APPROVAL_ALL => get_string('obtaingroupapproval_all', 'publication'),
         ];
 
-        $mform->addElement('select', 'obtaingroupapproval', get_string('obtaingroupapproval', 'publication'), $options, $attributes);
+        $mform->addElement('select', 'obtaingroupapproval',
+            get_string('obtaingroupapproval', 'publication'), $options, $attributes);
         $mform->setDefault('obtaingroupapproval',  get_config('publication', 'obtaingroupapproval'));
         $mform->addHelpButton('obtaingroupapproval', 'obtaingroupapproval', 'publication');
-       // $mform->hideIf('obtaingroupapproval', 'importfrom', 'in', $notteamassigns);
 
-        /*foreach ($notteamassigns as $cur) {
-            $mform->hideIf('obtaingroupapproval', 'importfrom', 'eq', $cur);
-        }*/
-
-
-       // $mform->hideIf('obtainstudentapproval', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
-
-
-       /* $radioarray = [];
-        $radioarray[] = $mform->createElement('radio', 'groupapproval', '', get_string('obtaingroupapproval_all', 'publication'),
-            PUBLICATION_APPROVAL_ALL, $attributes);
-        $radioarray[] = $mform->createElement('radio', 'groupapproval', '', get_string('obtaingroupapproval_single', 'publication'),
-            PUBLICATION_APPROVAL_SINGLE, $attributes);
-        $mform->addGroup($radioarray, 'groupapprovalarray', get_string('obtaingroupapproval', 'publication'),
-            [html_writer::empty_tag('br')], false);
-        $mform->addHelpButton('groupapprovalarray', 'obtaingroupapproval', 'publication');
-        $mform->setDefault('groupapproval', PUBLICATION_APPROVAL_ALL);
-        $mform->hideIf('groupapprovalarray', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
-        $mform->hideIf('groupapprovalarray', 'obtainstudentapproval', 'eq', 0);
-        foreach ($notteamassigns as $cur) {
-            $mform->hideIf('groupapprovalarray', 'importfrom', 'eq', $cur);
-        }
-
-
-      //  $mform->hideIf('obtainteacherapproval', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
-
-     /*   $infostrings = [
-            'notice_obtainapproval_import_both',
-            'notice_obtainapproval_import_studentonly',
-            'notice_obtainapproval_upload_teacher',
-            'notice_obtainapproval_upload_automatic',
-        ];
-        foreach ($infostrings as $infostring) {
-            $infohtml = html_writer::start_tag('div', ['class' => 'alert alert-info']);
-            $infohtml .= get_string($infostring, 'publication');
-            $infohtml .= html_writer::end_tag('div');
-            $infogroupimport =& $mform->createElement('static', $infostring, '', $infohtml);
-            $mform->addGroup([$infogroupimport], $infostring . '_group', '', ' ', false);
-        }
-        $mform->hideIf('notice_obtainapproval_import_both_group', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
-        $mform->hideIf('notice_obtainapproval_import_both_group', 'obtainstudentapproval', 'neq', '1');
-        $mform->hideIf('notice_obtainapproval_import_studentonly_group', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
-        $mform->hideIf('notice_obtainapproval_import_studentonly_group', 'obtainstudentapproval', 'neq', '0');
-
-        $mform->hideIf('notice_obtainapproval_upload_teacher_group', 'obtainteacherapproval', 'neq', '0');
-        $mform->hideIf('notice_obtainapproval_upload_teacher_group', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
-        $mform->hideIf('notice_obtainapproval_upload_automatic_group', 'obtainteacherapproval', 'neq', '1');
-        $mform->hideIf('notice_obtainapproval_upload_automatic_group', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);*/
-
-
-
-        $mform->addElement('date_time_selector', 'approvalfromdate', get_string('approvalfromdate', 'publication'), ['optional' => true]);
+        $mform->addElement('date_time_selector', 'approvalfromdate',
+            get_string('approvalfromdate', 'publication'), ['optional' => true]);
         $mform->addHelpButton('approvalfromdate', 'approvalfromdate', 'publication');
         $mform->setDefault('approvalfromdate', time());
 
-        $mform->addElement('date_time_selector', 'approvaltodate', get_string('approvaltodate', 'publication'), ['optional' => true]);
+        $mform->addElement('date_time_selector', 'approvaltodate',
+            get_string('approvaltodate', 'publication'), ['optional' => true]);
         $mform->addHelpButton('approvaltodate', 'approvaltodate', 'publication');
         $mform->setDefault('approvaltodate', time() + 7 * 24 * 3600);
         // Approval code end.
@@ -291,18 +241,6 @@ class mod_publication_mod_form extends moodleform_mod {
         $mform->addHelpButton('notifystatuschange', 'notify:statuschange', 'publication');
         $mform->setDefault('notifystatuschange', get_config('publication', 'notifystatuschange'));
 
-
-
-/*
-        $name = get_string('notifyteacher', 'publication');
-        $mform->addElement('selectyesno', 'notifyteacher', $name);
-        $mform->addHelpButton('notifyteacher', 'notifyteacher', 'publication');
-        $mform->setDefault('notifyteacher', 0);
-
-        $name = get_string('notifystudents', 'publication');
-        $mform->addElement('selectyesno', 'notifystudents', $name);
-        $mform->addHelpButton('notifystudents', 'notifystudents', 'publication');
-        $mform->setDefault('notifystudents', 0);*/
         // Standard coursemodule elements.
         $this->standard_coursemodule_elements();
 
@@ -330,7 +268,12 @@ class mod_publication_mod_form extends moodleform_mod {
         return [$completionuploadlabel];
     }
 
-
+    /**
+     * Determines whether the custom completion rule is enabled based on the provided data.
+     *
+     * @param array $data The form data to check.
+     * @return bool True if the completion rule is enabled, false otherwise.
+     */
     public function completion_rule_enabled($data) {
         $suffix = $this->get_suffix();
         $completionuploadlabel = 'completionupload' . $suffix;
@@ -340,6 +283,12 @@ class mod_publication_mod_form extends moodleform_mod {
         return false;
     }
 
+    /**
+     * Processes form data after submission to adjust values as needed before saving.
+     *
+     * @param object $data The submitted form data object.
+     * @return void
+     */
     public function data_postprocessing($data) {
         global $DB;
         parent::data_postprocessing($data);
@@ -365,17 +314,23 @@ class mod_publication_mod_form extends moodleform_mod {
 
     }
 
-    public function data_preprocessing(&$default_values) {
+    /**
+     * Prepares default values for the form before it is displayed to the user.
+     *
+     * @param array $defaultvalues The array of default values to preprocess (passed by reference).
+     * @return void
+     */
+    public function data_preprocessing(&$defaultvalues) {
         global $DB;
-        parent::data_preprocessing($default_values); // TODO: Change the autogenerated stub
+        parent::data_preprocessing($defaultvalues); // TODO: Change the autogenerated stub.
 
-        if (isset($default_values['mode']) && $default_values['mode'] == PUBLICATION_MODE_IMPORT) {
-            $assign = $DB->get_record('assign', ['id' => $default_values['importfrom']]);
+        if (isset($defaultvalues['mode']) && $defaultvalues['mode'] == PUBLICATION_MODE_IMPORT) {
+            $assign = $DB->get_record('assign', ['id' => $defaultvalues['importfrom']]);
             if ($assign && $assign->teamsubmission) {
-                if ($default_values['obtainstudentapproval'] == 0) {
-                    $default_values['obtaingroupapproval'] = PUBLICATION_APPROVAL_GROUPAUTOMATIC;
+                if ($defaultvalues['obtainstudentapproval'] == 0) {
+                    $defaultvalues['obtaingroupapproval'] = PUBLICATION_APPROVAL_GROUPAUTOMATIC;
                 } else {
-                    $default_values['obtaingroupapproval'] = $default_values['groupapproval'];
+                    $defaultvalues['obtaingroupapproval'] = $defaultvalues['groupapproval'];
                 }
             }
         }

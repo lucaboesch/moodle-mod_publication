@@ -68,23 +68,31 @@ require_once($CFG->dirroot . '/mod/publication/mod_publication_allfiles_form.php
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class publication {
-    // TODO replace $instance with proper properties + PHPDoc comments?!?
-    /** @var object instance */
+    /** @var stdClass The publication instance record */
     protected $instance;
-    /** @var object context */
+
+    /** @var context_module The context of the publication module */
     protected $context;
-    /** @var object course */
+
+    /** @var stdClass The course record */
     protected $course;
-    /** @var object coursemodule */
+
+    /** @var stdClass The course module record */
     protected $coursemodule;
-    /** @var bool requiregroup if mode = import and group membership is required for submission in assign to import from */
+
+    /** @var bool Flag indicating if group membership is required for submission when mode = import */
     protected $requiregroup = 0;
 
+    /** @var string The mode of the publication (PUBLICATION_MODE_FILEUPLOAD, PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION, PUBLICATION_MODE_ASSIGN_IMPORT) */
     protected $mode;
 
+    /** @var bool Flag indicating if the current view is the all files page */
     protected $allfilespage = false;
 
+    /** @var bool Flag indicating if team submission is enabled for the imported assignment */
     protected $teamsubmission = false;
+
+    /** @var array Static array to store pending notifications before sending them */
     protected static $pendingnotifications = [];
 
     /**
@@ -112,8 +120,6 @@ class publication {
         }
 
         $this->instance = $DB->get_record("publication", ["id" => $cm->instance]);
-
-       // $this->instance->obtainteacherapproval = !$this->instance->obtainteacherapproval;
 
         if ($this->instance->mode == PUBLICATION_MODE_IMPORT) {
             $cond = ['id' => $this->instance->importfrom];
@@ -216,42 +222,38 @@ class publication {
      * If the mode is set to import then the link to the corresponding
      * assignment will be displayed
      */
-    public function get_importlink() {
-        global $DB, $OUTPUT;
+    public function get_importlink_context() {
+        global $DB;
 
         if ($this->instance->mode == PUBLICATION_MODE_IMPORT) {
-            $context = new stdClass;
+            $context = new \stdClass;
 
             if ($this->get_instance()->importfrom == -1) {
                 $context->notset = true;
             } else {
                 $assign = $DB->get_record('assign', ['id' => $this->instance->importfrom]);
-
                 $assignmoduleid = $DB->get_field('modules', 'id', ['name' => 'assign']);
-
                 if ($assign) {
                     $assigncm = $DB->get_record('course_modules', [
-                            'course' => $assign->course,
-                            'module' => $assignmoduleid,
-                            'instance' => $assign->id,
+                        'course' => $assign->course,
+                        'module' => $assignmoduleid,
+                        'instance' => $assign->id,
                     ]);
                 } else {
                     $assigncm = false;
                 }
                 if ($assign && $assigncm) {
-                    $assignurl = new moodle_url('/mod/assign/view.php', ['id' => $assigncm->id]);
-                    $context->assign = true;
+                    $assignurl = new \moodle_url('/mod/assign/view.php', ['id' => $assigncm->id]);
                     $context->name = $assign->name;
                     $context->url = $assignurl->out(false);
                 } else {
                     $context->notfound = true;
                 }
             }
-            return $OUTPUT->render_from_template('mod_publication/partial_assignlink', $context);
+            return $context;
         }
         return null;
     }
-
 
     /**
      * Display Link to upload form if submission date is open
@@ -301,10 +303,20 @@ class publication {
         return $extensionduedate;
     }
 
+    /**
+     * Set the flag indicating if the current view is the all files page.
+     *
+     * @param bool $allfilespage True if it's the all files page, false otherwise.
+     */
     public function set_allfilespage($allfilespage) {
         $this->allfilespage = $allfilespage;
     }
 
+    /**
+     * Get the flag indicating if the current view is the all files page.
+     *
+     * @return bool True if it's the all files page, false otherwise.
+     */
     public function get_allfilespage() {
         return $this->allfilespage;
     }
@@ -351,7 +363,11 @@ class publication {
         return false;
     }
 
-
+    /**
+     * Check if the approval period is currently open.
+     *
+     * @return bool True if the approval period is open, false otherwise.
+     */
     public function is_approval_open() {
         global $USER;
 
@@ -364,7 +380,6 @@ class publication {
         if ($to != 0 && $extensionduedate) {
             $to = $extensionduedate;
         }
-
 
         $override = $this->override_get_currentuserorgroup();
 
@@ -383,6 +398,11 @@ class publication {
         return false;
     }
 
+    /**
+     * Get a string representation of the approval period.
+     *
+     * @return string A string indicating the approval period.
+     */
     public function is_approval_open_string() {
         $fromstr = '';
         if ($this->get_instance()->approvalfromdate > 0) {
@@ -464,6 +484,7 @@ class publication {
      * Get userids to fetch files for, when displaying all submitted files or downloading them as ZIP
      *
      * @param int[] $users (optional) user ids for which the returned user ids have to filter
+     * @param bool $ignoreallfilespage (optional) ignore the all files page flag
      * @return int[] array of userids
      */
     public function get_users($users = [], $ignoreallfilespage = false) {
@@ -502,10 +523,6 @@ class publication {
             if ($this->get_instance()->obtainteacherapproval == 1) {
                 // Need teacher approval.
                 $where = 'files.teacherapproval = 1';
-            } else {
-                // No need for teacher approval.
-                // Teacher only hasnt rejected.
-                //$where = '(files.teacherapproval = 1 OR files.teacherapproval IS NULL)';
             }
             if ($this->get_instance()->obtainstudentapproval == 1) {
                 // No need to ask student and teacher has approved.
@@ -513,16 +530,7 @@ class publication {
                     $where .= ' AND ';
                 }
                 $where .= 'files.studentapproval = 1';
-            } else {
-                // Student and teacher have approved.
-                //$where = 'files.teacherapproval = 1 AND files.studentapproval = 1';
             }
-            /*if ($this->get_instance()->mode == PUBLICATION_MODE_UPLOAD) {
-                // Mode upload.
-            } else {
-                // TODO group mode!
-                // Mode import.
-            }*/
 
             if (mb_strlen($where) > 0) {
                 $sql .= 'AND ' . $where . ' ';
@@ -549,10 +557,23 @@ class publication {
         return array_keys($filtered);
     }
 
+    /**
+     * Get the current mode of the publication.
+     *
+     * @return string The current mode (PUBLICATION_MODE_FILEUPLOAD, PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION,
+     *                or PUBLICATION_MODE_ASSIGN_IMPORT).
+     */
     public function get_mode() {
         return $this->mode;
     }
 
+    /**
+     * Get the all files table instance based on the current mode.
+     *
+     * @param string $filter The filter to apply to the table.
+     * @param bool $ignoreallfilespage (optional) Whether to ignore the all files page flag.
+     * @return \mod_publication\local\allfilestable\base The all files table instance.
+     */
     public function get_allfilestable($filter, $ignoreallfilespage = false) {
         global $DB;
         $mode = $this->get_mode();
@@ -572,6 +593,11 @@ class publication {
         return $table;
     }
 
+    /**
+     * Get the files table instance based on the current mode.
+     *
+     * @return \mod_publication\local\filestable\base The files table instance.
+     */
     public function get_filestable() {
         global $DB;
         $mode = $this->get_mode();
@@ -586,9 +612,12 @@ class publication {
     }
 
     /**
-     * Display form with table containing all files
+     * Display the form with the table containing all files.
      *
-     * TODO: for Moodle 3.6 we should replace old form classes with a nice bootstrap based form layout!
+     * This method generates the HTML output for the all files form, including the table
+     * of submitted files, filtering options, and bulk actions.
+     *
+     * @return string The HTML output for the all files form.
      */
     public function display_allfilesform() {
         global $CFG, $DB;
@@ -635,7 +664,7 @@ class publication {
         $output .= html_writer::start_div('fcontainer clearfix mb-3');
 
         $f = groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
-        $mf = new mod_publication_allfiles_form(null, array('form' => $f));
+        $mf = new mod_publication_allfiles_form(null, ['form' => $f]);
         $output .= $mf->render();
 
         $table = $this->get_allfilestable($filter);
@@ -748,7 +777,8 @@ class publication {
                 html_writer::end_tag('form');
 
         // Mini form for setting user preference.
-        $formaction = new moodle_url('/mod/publication/view.php', ['id' => $this->coursemodule->id, 'allfilespage' => $this->allfilespage]);
+        $formaction = new moodle_url('/mod/publication/view.php',
+            ['id' => $this->coursemodule->id, 'allfilespage' => $this->allfilespage]);
         $mform = new MoodleQuickForm('optionspref', 'post', $formaction, '', ['class' => 'optionspref']);
 
         $attributes = [];
@@ -777,9 +807,12 @@ class publication {
             ];
             if ($this->get_instance()->obtainteacherapproval || $this->get_instance()->obtainstudentapproval) {
                 $filteroptions += [
-                    PUBLICATION_FILTER_APPROVED => get_string('filter:' . PUBLICATION_FILTER_APPROVED, 'publication'),
-                    PUBLICATION_FILTER_REJECTED => get_string('filter:' . PUBLICATION_FILTER_REJECTED, 'publication'),
-                    PUBLICATION_FILTER_APPROVALREQUIRED => get_string('filter:' . PUBLICATION_FILTER_APPROVALREQUIRED, 'publication'),
+                    PUBLICATION_FILTER_APPROVED =>
+                        get_string('filter:' . PUBLICATION_FILTER_APPROVED, 'publication'),
+                    PUBLICATION_FILTER_REJECTED =>
+                        get_string('filter:' . PUBLICATION_FILTER_REJECTED, 'publication'),
+                    PUBLICATION_FILTER_APPROVALREQUIRED =>
+                        get_string('filter:' . PUBLICATION_FILTER_APPROVALREQUIRED, 'publication'),
                 ];
             }
             $filteroptions += [
@@ -837,34 +870,9 @@ class publication {
             $teacherapproval = $filepermissions->teacherapproval;
             $studentapproval = $filepermissions->studentapproval;
 
-            $haspermission = $haspermission || ((!$obtainteacherapproval || $teacherapproval == 1) && (!$obtainstudentapproval || $studentapproval == 1));
-/*
-            if ($this->get_instance()->mode == PUBLICATION_MODE_UPLOAD) {
-                // Mode upload.
-                if ($this->get_instance()->obtainteacherapproval) {
-                    // Need teacher approval.
-                    if ($filepermissions->teacherapproval == 1) {
-                        // Teacher has approved.
-                        $haspermission = true;
-                    }
-                } else {
-                    // No need for teacher approval.
-                    if (is_null($filepermissions->teacherapproval) || $filepermissions->teacherapproval == 1) {
-                        // Teacher only hasnt rejected.
-                        $haspermission = true;
-                    }
-                }
-            } else {
-                // Mode import.
-                if (!$this->get_instance()->obtainstudentapproval && $filepermissions->teacherapproval == 1) {
-                    // No need to ask student and teacher has approved.
-                    $haspermission = true;
-                } else if ($this->get_instance()->obtainstudentapproval &&
-                        $filepermissions->teacherapproval == 1 && $filepermissions->studentapproval == 1) {
-                    // Student and teacher have approved.
-                    $haspermission = true;
-                }
-            }*/
+            $haspermission = $haspermission || (
+                (!$obtainteacherapproval || $teacherapproval == 1) && (!$obtainstudentapproval || $studentapproval == 1)
+            );
         }
 
         return $haspermission;
@@ -883,19 +891,13 @@ class publication {
     public function set_group_approval($approval, $pubfileid, $userid) {
         global $DB;
 
-        // Normalize approval value!
-        /*if ($approval !== null) {
-            $approval = empty($approval) ? 0 : 1;
-        }*/
-
-
-        $approvalforgroupapproval = $approval == 1 ? 1 : 0; // $approval == 2 => $approvalforgroupapproval = 0...
+        $approvalforgroupapproval = $approval == 1 ? 1 : 0; // If $approval is 2, also set to 0!
 
         $record = $DB->get_record('publication_groupapproval', ['fileid' => $pubfileid, 'userid' => $userid]);
         $filerec = $DB->get_record('publication_file', ['id' => $pubfileid]);
         if (!empty($record)) {
             if ($record->approval === $approvalforgroupapproval) {
-                // Nothing changed, return!
+                // Nothing changed, so return!
                 return $filerec->studentapproval;
             }
             $record->approval = $approvalforgroupapproval;
@@ -914,7 +916,7 @@ class publication {
         // Calculate new cumulated studentapproval for caching in file table!
         // Get group members!
         $groupmembers = $this->get_submissionmembers($filerec->userid);
-        $stats = array();
+        $stats = [];
         $stats['approving'] = 0;
         $stats['needed'] = count($groupmembers);
         if (!empty($groupmembers)) {
@@ -951,7 +953,7 @@ class publication {
                 }
             }
         } else {
-            // Group without members, so no one could approve! (Should never happen, never ever!)
+            // Group without members, so no one could approve! Should never happen, never ever!
             $approval = 2;
         }
 
@@ -1002,8 +1004,6 @@ class publication {
         $conditions['fileid'] = $file->get_id();
 
         $studentapproval = $DB->get_field('publication_file', 'studentapproval', $conditions);
-
-        //$studentapproval = (!is_null($studentapproval)) ? $studentapproval + 1 : null;
 
         return $studentapproval;
     }
@@ -1102,7 +1102,6 @@ class publication {
             $groupdata = [];
         }
 
-       // return [$studentapproval, $groupdata];
         return [$filerec->studentapproval, $groupdata];
     }
 
@@ -1174,7 +1173,7 @@ class publication {
             }
             die();
         } else {
-            throw new \moodle_exception('You are not allowed to see this file', 'mod_publication'); // TODO get_string().
+            throw new \moodle_exception(get_string('exception_file', 'publication'), 'mod_publication');
         }
     }
 
@@ -1336,6 +1335,12 @@ class publication {
         }
     }
 
+    /**
+     * Update the teacher approval status for the specified users or groups.
+     *
+     * @param int[] $userorgroupids An array of user or group IDs.
+     * @param string $action The action to perform (e.g., 'approveusers', 'rejectusers', 'resetstudentapproval').
+     */
     public function update_users_or_groups_teacherapproval($userorgroupids, $action) {
         global $DB;
 
@@ -1344,7 +1349,6 @@ class publication {
         $select = ' publication=:pubid AND userid ' . $usersql;
         $records = $DB->get_records_select('publication_file', $select, $params);
         $files = [];
-        //$teacherapproval = $action == 'approveusers' ? '1' : ($action == 'rejectusers' ? '2' : null);
         foreach ($records as $record) {
             $files[$record->fileid] = $action;
         }
@@ -1354,7 +1358,7 @@ class publication {
     /**
      * Changes teacher approval for the specified files
      *
-     * @param $files array of fileids and new approval status, fileid => teacher approval status
+     * @param array $files array of fileids and new approval status, fileid => teacher approval status
      * @return void
      * @throws coding_exception
      * @throws dml_exception
@@ -1363,13 +1367,15 @@ class publication {
         global $DB, $USER;
 
         foreach ($files as $fileid => $newfileaction) {
-            $x = $DB->get_record('publication_file', array('fileid' => $fileid), $fields = "fileid,userid,teacherapproval,id,studentapproval,filename");
+            $file = $DB->get_record(
+                'publication_file',
+                ['fileid' => $fileid],
+                "fileid,userid,teacherapproval,id,studentapproval,filename"
+            );
 
-            $oldteacherapproval = $x->teacherapproval;
-            $oldstudentapproval = $x->studentapproval;
+            $oldteacherapproval = $file->teacherapproval;
+            $oldstudentapproval = $file->studentapproval;
 
-
-            $resetstudentapproval = false;
             $teacherapprove = false;
             $teacherreject = false;
             $newteacherapproval = 0;
@@ -1398,10 +1404,10 @@ class publication {
                     $newteacherapproval = 2;
                     break;
                 case 'resetstudentapproval':
-                    if ($oldstudentapproval != 1 && $oldstudentapproval != 2 && $this->mode != PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION)  {
+                    if ($oldstudentapproval != 1 && $oldstudentapproval != 2
+                        && $this->mode != PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
                         continue 2;
                     }
-                    $resetstudentapproval = true;
                     $newstatus = 'revoke';
                     $logstatus .= 'revoked';
                     break;
@@ -1409,28 +1415,8 @@ class publication {
                     continue 2;
             }
 
-           // $newteacherapproval = trim($newteacherapproval);
-          //  if ($newteacherapproval != $oldteacherapproval && !empty($newteacherapproval)) {
-                /*$newstatus = ($this->instance->obtainteacherapproval && $newteacherapproval == 1 ||
-                    $this->instance->obtainteacherapproval && $newteacherapproval != 2) ? '' : 'not';*/
+            $user = $DB->get_record('user', ['id' => $file->userid]);
 
-            $user = $DB->get_record('user', array('id' => $x->userid));
-            $group = false;
-            if ($this->mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
-                $group = $x->userid;
-            }
-           /* $logstatus = '';
-            if ($newteacherapproval == 1) {
-                $newstatus = '';
-                $logstatus .= 'approved';
-            } else if ($newteacherapproval == 2) {
-                $newstatus = 'not';
-                $logstatus .= 'rejected';
-            } else {
-                $newstatus = 'revoke';
-                $logstatus .= 'revoked';
-            }
-*/
             $dataforlog = new stdClass();
             $dataforlog->publication = $this->instance->id;
             $dataforlog->approval = $logstatus;
@@ -1450,10 +1436,10 @@ class publication {
 
             if ($teacherapprove || $teacherreject) {
                 $DB->set_field('publication_file', 'teacherapproval', $newteacherapproval, ['fileid' => $fileid]);
-            } else { // reset student approval
+            } else { // Reset student approval.
                 $DB->set_field('publication_file', 'studentapproval', 0, ['fileid' => $fileid]);
                 if ($this->mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
-                    $groupapprovals = $DB->get_records('publication_groupapproval', ['fileid' => $x->id]);
+                    $groupapprovals = $DB->get_records('publication_groupapproval', ['fileid' => $file->id]);
                     foreach ($groupapprovals as $groupapproval) {
                         $DB->set_field('publication_groupapproval', 'approval', null, ['id' => $groupapproval->id]);
                     }
@@ -1464,9 +1450,8 @@ class publication {
             if ($this->instance->notifystatuschange != 0) {
                 $cm = $this->coursemodule;
                 $cmid = $this->coursemodule->id;
-                self::send_notification_statuschange($cm, $USER, $newstatus, $x, $cmid, $this);
+                self::send_notification_statuschange($cm, $USER, $newstatus, $file, $cmid, $this);
             }
-           // }
         }
     }
 
@@ -1602,7 +1587,6 @@ class publication {
 
                     if ($this->get_instance()->notifyfilechange != 0) {
                         $cm = get_coursemodule_from_instance('publication', $this->get_instance()->id, 0, false, MUST_EXIST);
-                        // USER $user = $DB->get_record('user', ['id' => $submission->userid], '*', MUST_EXIST); Not needed!
                         self::send_notification_filechange($cm, $dataobject);
                     }
 
@@ -1660,7 +1644,10 @@ class publication {
             ]);
         } else {
             $records = $DB->get_records('assignsubmission_onlinetext', ['assignment' => $assigncm->instance]);
-            $currentonlinetexts = $DB->get_records('publication_file', ['publication' => $publicationid, 'type' => PUBLICATION_MODE_ONLINETEXT]);
+            $currentonlinetexts = $DB->get_records('publication_file', [
+                'publication' => $publicationid,
+                'type' => PUBLICATION_MODE_ONLINETEXT,
+            ]);
         }
         $filename = get_string('onlinetextfilename', 'assignsubmission_onlinetext');
 
@@ -1669,7 +1656,7 @@ class publication {
             $itemid = empty($teamsubmission) ? $submission->userid : $submission->groupid;
             $importtype = empty($teamsubmission) ? 'user' : 'group';
 
-            // First we fetch the resource files (embedded files in text!)
+            // First we fetch the resource files (embedded files in text)!
             $fsfiles = $fs->get_area_files($assigncontext->id,
                     'assignsubmission_onlinetext',
                     ASSIGNSUBMISSION_ONLINETEXT_FILEAREA,
@@ -1724,7 +1711,6 @@ class publication {
 
             $head = '<head><meta charset="UTF-8"></head>';
             $submissioncontent = '<!DOCTYPE html><html>' . $head . '<body>' . $formattedtext . '</body></html>';
-
 
             // Does the file exist... let's check it!
             $pathhash = $fs->get_pathname_hash($contextid, 'mod_publication', 'attachment', $itemid, '/', $filename);
@@ -1825,7 +1811,6 @@ class publication {
     /**
      * Send a notification about the change of the approval status to a student
      * @param stdClass $cm coursemodule
-     * @param object $user the where the notification should go
      * @param object $userfrom who cahnged the approval status
      * @param string $newstatus whats the new status
      * @param object $pubfile the publication-file on which the status change took place
@@ -1881,7 +1866,7 @@ class publication {
                 $posttext = $publication->email_statuschange_text($info, $receiver->lang, $includeheader);
                 $posthtml = $publication->email_statuschange_html($info, $receiver->lang, $includeheader);
 
-                //TODO maybe add check here is receiver is the same as user from. Unless already checked in get_graders
+                // TODO maybe add check here is receiver is the same as user from. Unless already checked in get_graders().
                 if (!isset(self::$pendingnotifications[PUBLICATION_NOTIFY_STATUSCHANGE][$cm->id][$receiver->id])) {
                     $message = new \core\message\message();
                     $message->component = 'mod_publication';
@@ -1972,7 +1957,7 @@ class publication {
                 $posttext = $publication->email_filechange_text($info, $receiver->lang, $stridentifier, $includeheader);
                 $posthtml = $publication->email_filechange_html($info, $receiver->lang, $stridentifier, $includeheader);
 
-                //TODO maybe add check here is receiver is the same as user from. Unless already checked in get_graders
+                // TODO maybe add check here is receiver is the same as user from. Unless already checked in get_graders().
 
                 if (!isset(self::$pendingnotifications[PUBLICATION_NOTIFY_FILECHANGE][$cm->id][$receiver->id])) {
                     $message = new \core\message\message();
@@ -1993,20 +1978,22 @@ class publication {
                 }
                 self::$pendingnotifications[PUBLICATION_NOTIFY_FILECHANGE][$cm->id][$receiver->id]->fullmessage .= $posttext;
                 self::$pendingnotifications[PUBLICATION_NOTIFY_FILECHANGE][$cm->id][$receiver->id]->fullmessagehtml .= $posthtml;
-
-               // message_send($message);
             }
         }
     }
 
+    /**
+     * Sends all queued notification messages for publication events.
+     */
     public static function send_all_pending_notifications() {
         $sm = get_string_manager();
         foreach (self::$pendingnotifications as $type => $cms) {
             foreach ($cms as $cmid => $users) {
                 foreach ($users as $userid => $message) {
                     if ($type == PUBLICATION_NOTIFY_FILECHANGE) {
-                        $message->fullmessage .= PHP_EOL . strip_tags($sm->get_string('email:filechange:footer', 'publication', null, $message->userto->lang));
-                        $message->fullmessagehtml .= $sm->get_string('email:filechange:footer', 'publication', null, $message->userto->lang);
+                        $footerstring = $sm->get_string('email:filechange:footer', 'publication', null, $message->userto->lang);
+                        $message->fullmessage .= PHP_EOL . strip_tags($footerstring);
+                        $message->fullmessagehtml .= $footerstring;
                     } else {
                         $message->fullmessage .= '';
                         $message->fullmessagehtml .= '</ul>';
@@ -2019,7 +2006,6 @@ class publication {
                 }
             }
         }
-
     }
 
     /**
@@ -2203,6 +2189,9 @@ class publication {
      * Creates the text content for emails to teachers
      *
      * @param object $info The info used by the 'emailteachermail' language string
+     * @param string $lang The language to use
+     * @param string $stridentifier The identifier for the string
+     * @param bool $includeheader Whether to include the header or not
      * @return string Plain-Text snippet to use in messages
      */
     public function email_filechange_text($info, $lang, $stridentifier, $includeheader = true) {
@@ -2215,7 +2204,6 @@ class publication {
             $posttext .= strip_tags($sm->get_string('email:' . $stridentifier . ':header', 'publication', $info, $lang))."\n";
         }
         $posttext .= $info->filename . "\n";
-        //$posttext .= $sm->get_string('email:' . $stridentifier . ':plaintext', 'publication', $info, $lang)."\n";
         return $posttext;
     }
 
@@ -2223,6 +2211,9 @@ class publication {
      * Creates the html content for emails to teachers
      *
      * @param object $info The info used by the 'emailteachermailhtml' language string
+     * @param string $lang The language to use
+     * @param string $stridentifier The identifier for the string
+     * @param bool $includeheader Whether to include the header or not
      * @return string HTML snippet to use in messages
      */
     public function email_filechange_html($info, $lang, $stridentifier, $includeheader = true) {
@@ -2241,9 +2232,6 @@ class publication {
 
         }
         $posthtml .= '<li>' . $info->filename . '</li>';
-        /*$posthtml .= '<span style="font-family: sans-serif; ">';
-        $posthtml .= ''.$sm->get_string('email:' . $stridentifier . ':plaintext', 'publication', $info, $lang).'';
-        $posthtml .= '</span>';*/
         return $posthtml;
     }
 
@@ -2251,6 +2239,8 @@ class publication {
      * Creates the text content for emails to students
      *
      * @param object $info The info used by the 'emailteachermail' language string
+     * @param string $lang The language to use
+     * @param bool $includeheader Whether to include the header or not
      * @return string Plain-Text snippet to use in messages
      */
     public function email_statuschange_text($info, $lang, $includeheader = true) {
@@ -2271,6 +2261,8 @@ class publication {
      * Creates the html content for emails to students
      *
      * @param object $info The info used by the 'emailstudentsmailhtml' language string
+     * @param string $lang The language to use
+     * @param bool $includeheader Whether to include the header or not
      * @return string HTML snippet to use in messages
      */
     public function email_statuschange_html($info, $lang, $includeheader = true) {
@@ -2288,8 +2280,6 @@ class publication {
             $posthtml .= ''.$sm->get_string('email:statuschange:header', 'publication', $info, $lang);
         }
         $posthtml .= $sm->get_string('email:statuschange:filename', 'publication', $info, $lang);
-       /* $posthtml .= '<hr /><span style="font-family: sans-serif; ">';
-        $posthtml .= '</span>';*/
         return $posthtml;
     }
 
@@ -2303,11 +2293,11 @@ class publication {
 
         $instance = $this->get_instance();
 
-        // Check whether the publication already has a event
+        // Check whether the publication already has a event.
         $result = $DB->get_record('event', ['modulename' => 'publication', 'instance' => $instance->id]);
 
         if ($result) {
-            // Check whether the publication still has a due date, if not delete the event
+            // Check whether the publication still has a due date, if not delete the event.
             if ($instance->duedate == null || $instance->duedate == 0) {
                 $DB->delete_records('event', ['modulename' => 'publication', 'instance' => $instance->id]);
             } else {
@@ -2320,7 +2310,7 @@ class publication {
         } else if ($instance->duedate != null && $instance->duedate != 0) {
             $event = new stdClass();
             $event->eventtype = PUBLICATION_EVENT_TYPE_DUE;
-            $event->type = CALENDAR_EVENT_TYPE_ACTION; // Necessary to enable this event in block_myoverview
+            $event->type = CALENDAR_EVENT_TYPE_ACTION; // Necessary to enable this event in block_myoverview.
             $event->name = $instance->name;
             $event->description = "";
             $event->courseid = $instance->course;
@@ -2330,20 +2320,24 @@ class publication {
             $event->instance = $instance->id;
             $event->visible = instance_is_visible('publication', $this->instance);
             $event->timestart = $instance->duedate;
-            $event->timesort = $instance->duedate; // Necessary for block_myoverview
+            $event->timesort = $instance->duedate; // Necessary for block_myoverview.
             $event->timeduration = 0;
 
             calendar_event::create($event);
         }
     }
 
+    /**
+     * Export overrides data for use in a template.
+     *
+     * @return stdClass An object containing overrides data for template rendering.
+     */
     public function overrides_export_for_template() {
         global $DB;
         $context = new stdClass;
 
         $editurl = new moodle_url('/mod/publication/overrides_edit.php', ['id' => $this->coursemodule->id]);
         $deleteurl = new moodle_url('/mod/publication/overrides_delete.php', ['id' => $this->coursemodule->id]);
-
 
         $context->newoverrideurl = (new moodle_url($editurl, ['overrideid' => -1]))->out(false);
 
@@ -2382,13 +2376,19 @@ class publication {
         return $context;
     }
 
+    /**
+     * Export a single override for use in a template.
+     *
+     * @param stdClass $override The override object.
+     * @return stdClass The override object with formatted submission and approval override strings.
+     */
     public function override_export_for_template_single($override) {
         $override->submissionoverride = null;
         $override->approvaloverride = null;
         if ($this->mode == PUBLICATION_MODE_FILEUPLOAD && ($override->allowsubmissionsfromdate > 0 || $override->duedate > 0)) {
             $fromto = (object)[
-                'from' =>  userdate($override->allowsubmissionsfromdate),
-                'to' => userdate($override->duedate)
+                'from' => userdate($override->allowsubmissionsfromdate),
+                'to' => userdate($override->duedate),
             ];
             if ($override->allowsubmissionsfromdate > 0 && $override->duedate > 0) {
                 $override->submissionoverride = get_string('override:submission:fromto', 'mod_publication', $fromto);
@@ -2400,8 +2400,8 @@ class publication {
         }
         if ($this->instance->obtainstudentapproval == 1 && ($override->approvalfromdate > 0 || $override->approvaltodate > 0)) {
             $fromto = (object)[
-                'from' =>  userdate($override->approvalfromdate),
-                'to' => userdate($override->approvaltodate)
+                'from' => userdate($override->approvalfromdate),
+                'to' => userdate($override->approvaltodate),
             ];
             if ($override->approvalfromdate > 0 && $override->approvaltodate > 0) {
                 $override->approvaloverride = get_string('override:approval:fromto', 'mod_publication', $fromto);
@@ -2414,6 +2414,13 @@ class publication {
         return $override;
     }
 
+    /**
+     * Save an override record.
+     *
+     * @param stdClass $formdata The form data containing override information.
+     * @return stdClass|null An object with the override ID and a flag indicating if it's a new override,
+     *                       or null if no override data is provided.
+     */
     public function override_save($formdata) {
         global $DB;
         $overrideresult = new stdClass();
@@ -2426,7 +2433,10 @@ class publication {
             return null;
         }
         if ($formdata->overrideid != -1) {
-            $override = $DB->get_record('publication_overrides', ['id' => $formdata->overrideid, 'publication' => $this->instance->id]);
+            $override = $DB->get_record('publication_overrides', [
+                'id' => $formdata->overrideid,
+                'publication' => $this->instance->id,
+            ]);
             unset($formdata->id);
             unset($formdata->overrideid);
             if (!$override) {
@@ -2440,7 +2450,11 @@ class publication {
                 $overrideresult->overrideid = $override->id;
             }
         } else {
-            $override = $DB->get_record('publication_overrides', ['publication' => $this->instance->id, 'userid' => $formdata->userid, 'groupid' => $formdata->groupid]);
+            $override = $DB->get_record('publication_overrides', [
+                'publication' => $this->instance->id,
+                'userid' => $formdata->userid,
+                'groupid' => $formdata->groupid,
+            ]);
             unset($formdata->id);
             unset($formdata->overrideid);
             if (!$override) {
@@ -2457,6 +2471,12 @@ class publication {
         return $overrideresult;
     }
 
+    /**
+     * Get an override record by its ID.
+     *
+     * @param int $overrideid The ID of the override record.
+     * @return stdClass|null The override object, or null if not found.
+     */
     public function override_get($overrideid) {
         global $DB;
         $override = $DB->get_record('publication_overrides', ['id' => $overrideid, 'publication' => $this->instance->id]);
@@ -2466,6 +2486,12 @@ class publication {
         return null;
     }
 
+    /**
+     * Delete an override record by its ID.
+     *
+     * @param int $overrideid The ID of the override record.
+     * @return bool True if the override was deleted, false otherwise.
+     */
     public function override_delete($overrideid) {
         global $DB;
         $override = $DB->get_record('publication_overrides', ['id' => $overrideid, 'publication' => $this->instance->id]);
@@ -2476,6 +2502,12 @@ class publication {
         return false;
     }
 
+    /**
+     * Get form data for an override.
+     *
+     * @param int $overrideid The ID of the override record, or -1 or 0 for a new override.
+     * @return stdClass The form data for the override.
+     */
     public function override_getformdata($overrideid) {
         global $DB;
         if ($overrideid == -1 || $overrideid == 0) {
@@ -2493,18 +2525,23 @@ class publication {
         return $override;
     }
 
+    /**
+     * Get the override record for the current user or group.
+     *
+     * @return stdClass|null The override object, or null if no override exists for the current user or group.
+     */
     public function override_get_currentuserorgroup() {
         global $DB, $USER;
         $override = null;
         if ($this->mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
-
             $groups = groups_get_all_groups($this->course->id, $USER->id);
             if (!empty($groups)) {
                 $group = reset($groups);
-                $override = $DB->get_record('publication_overrides', ['publication' => $this->instance->id, 'groupid' => $group->id]);
+                $override = $DB->get_record('publication_overrides',
+                    ['publication' => $this->instance->id, 'groupid' => $group->id]);
             }
         } else {
-                $override = $DB->get_record('publication_overrides', ['publication' => $this->instance->id, 'userid' => $USER->id]);
+            $override = $DB->get_record('publication_overrides', ['publication' => $this->instance->id, 'userid' => $USER->id]);
         }
         if ($override) {
             return $this->override_export_for_template_single($override);

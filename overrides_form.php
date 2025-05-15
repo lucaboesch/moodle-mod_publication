@@ -18,20 +18,40 @@
  * Settings form for overrides in the publication module.
  *
  * @package    mod_publication
- * @copyright  2024 Academic Moodle Cooperation
- * @author     Simeon Naydenov (moninaydenov@gmail.com)
+ * @author     Simeon Naydenov
+ * @copyright  2024 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
-
+/**
+ * Form for editing overrides in the publication module.
+ *
+ * This form allows teachers to set user or group-specific overrides for submission and approval dates
+ * in the mod_publication activity.
+ *
+ * @package    mod_publication
+ * @author     Simeon Naydenov
+ * @copyright  2024 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class publication_overrides_form extends moodleform {
+    /**
+     * @var publication The publication instance used to retrieve context and settings.
+     */
     private $_publication;
 
+    /**
+     * Defines the form elements for the overrides form.
+     *
+     * Adds fields for selecting a user or group, and for setting override dates for submissions and approvals.
+     * Fields are shown or hidden depending on the publication mode and settings.
+     *
+     * @return void
+     */
     public function definition() {
         global $DB;
         $mform = $this->_form;
@@ -54,11 +74,10 @@ class publication_overrides_form extends moodleform {
             foreach ($groups as $group) {
                 $groupsclean[$group->id] = $group->name;
             }
-            $options = array(
+            $options = [
                 'multiple' => false,
                 'noselectionstring' => get_string('override:group:choose', 'publication'),
-
-            );
+            ];
             $mform->addElement('autocomplete', 'groupid', get_string('group'), $groupsclean, $options);
             $mform->addRule('groupid', null, 'required', null, 'client');
         } else {
@@ -76,10 +95,10 @@ class publication_overrides_form extends moodleform {
                 }
                 $usersclean[$user->id] = fullname($user);
             }
-            $options = array(
+            $options = [
                 'multiple' => false,
                 'noselectionstring' => get_string('override:user:choose', 'publication'),
-            );
+            ];
             $mform->addElement('autocomplete', 'userid', get_string('user'), $usersclean, $options);
             $mform->addRule('userid', null, 'required', null, 'client');
         }
@@ -108,20 +127,22 @@ class publication_overrides_form extends moodleform {
             $mform->addElement('header', 'approvalsettings', get_string('approvalsettings', 'publication'));
             $mform->setExpanded('approvalsettings', true);
 
-            $mform->addElement('date_time_selector', 'approvalfromdate', get_string('approvalfromdate', 'publication'), ['optional' => true]);
+            $mform->addElement('date_time_selector', 'approvalfromdate',
+                get_string('approvalfromdate', 'publication'), ['optional' => true]);
             $mform->addHelpButton('approvalfromdate', 'approvalfromdate', 'publication');
             $mform->setDefault('approvalfromdate', time());
 
-            $mform->addElement('date_time_selector', 'approvaltodate', get_string('approvaltodate', 'publication'), ['optional' => true]);
+            $mform->addElement('date_time_selector', 'approvaltodate',
+                get_string('approvaltodate', 'publication'), ['optional' => true]);
             $mform->addHelpButton('approvaltodate', 'approvaltodate', 'publication');
             $mform->setDefault('approvaltodate', time() + 7 * 24 * 3600);
             $itemsadded = true;
         }
 
         if (!$itemsadded) {
-            $mform->addElement('html', '<div class="alert alert-info">' . get_string('override:nothingtochange', 'mod_publication') . '</div>');
+            $mform->addElement('html', '<div class="alert alert-info">' .
+                get_string('override:nothingtochange', 'mod_publication') . '</div>');
         }
         $this->add_action_buttons(true);
     }
-
 }

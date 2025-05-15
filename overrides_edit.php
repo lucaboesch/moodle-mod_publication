@@ -51,8 +51,8 @@ $overridesform = new publication_overrides_form($PAGE->url, ['publication' => $p
 $eventparams = [
     'context' => $context,
     'other' => [
-        'publication' => $publication->get_instance()->id
-    ]
+        'publication' => $publication->get_instance()->id,
+    ],
 ];
 
 if ($overridesform->is_cancelled()) {
@@ -103,7 +103,8 @@ $activityheader = $PAGE->activityheader;
 $activityheader->set_attrs([
     'description' => '',
     'hidecompletion' => true,
-    'title' => $activityheader->is_title_allowed() ? format_string($publication->get_instance()->name, true, ['context' => $context]) : ""
+    'title' => $activityheader->is_title_allowed() ?
+        format_string($publication->get_instance()->name, true, ['context' => $context]) : "",
 ]);
 
 echo $OUTPUT->header();

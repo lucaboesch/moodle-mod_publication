@@ -23,8 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_publication\local\tests;
+namespace mod_publication;
 
+use mod_publication\local\tests\base;
 use mod_publication\privacy\provider;
 use context_module;
 use stdClass;
@@ -37,11 +38,12 @@ require_once($CFG->dirroot . '/mod/publication/locallib.php');
 /**
  * Unit Tests for mod/publication's privacy providers! TODO: finish these unit tests here!
  *
- * @copyright  2019 Academic Moodle Cooperation https://www.academic-moodle-cooperation.org/
- * @author Philipp Hager <philipp.hager@tuwien.ac.at> strongly based on mod_assign's privacy unit tests!
+ * @author     Philipp Hager
+ * @copyright  2019 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers     \mod_publication\privacy\provider
  */
-class privacy_testcase extends base {
+final class privacy_test extends base {
     /** @var stdClass */
     private $course1;
     /** @var stdClass */
@@ -62,23 +64,23 @@ class privacy_testcase extends base {
     private $user3;
     /** @var stdClass */
     private $teacher1;
-    /** @var publication */
+    /** @var \publication */
     private $pubupload;
-    /** @var publication */
+    /** @var \publication */
     private $pubupload2;
     /** @var \testable_assign */
     private $assign;
     /** @var \testable_assign */
     private $assign2;
-    /** @var publication */
+    /** @var \publication */
     private $pubimport;
     /** @var \testable_assign */
     private $teamassign;
     /** @var \testable_assign */
     private $teamassign2;
-    /** @var publication */
+    /** @var \publication */
     private $pubteamimport;
-    /** @var publication */
+    /** @var \publication */
     private $pubteamimport2;
 
     /**
@@ -186,7 +188,7 @@ class privacy_testcase extends base {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function test_get_contexts_for_userid() {
+    public function test_get_contexts_for_userid(): void {
         // The user will be in these contexts.
         $usercontextids = [
             $this->pubimport->get_context()->id,
@@ -233,7 +235,7 @@ class privacy_testcase extends base {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function test_get_users_in_context() {
+    public function test_get_users_in_context(): void {
         // User 1 submits to assign1 and teamassign1 and uploads in pubupload1!
         $this->add_submission($this->user1, $this->assign, 'Textsubmission in assign1 by user1!', true);
         $this->add_submission($this->user1, $this->teamassign, 'Textsubmission in teamassign1 by user1!', true);
@@ -282,7 +284,7 @@ class privacy_testcase extends base {
     /**
      * Test that a student with multiple submissions and grades is returned with the correct data.
      */
-    public function test_export_user_data_student() {
+    public function test_export_user_data_student(): never {
         // Stop here and mark this test as incomplete.
         self::markTestIncomplete(
                 'This test has not been implemented yet.'
@@ -292,7 +294,7 @@ class privacy_testcase extends base {
     /**
      * Tests the data returned for a teacher.
      */
-    public function test_export_user_data_teacher() {
+    public function test_export_user_data_teacher(): never {
         // Stop here and mark this test as incomplete.
         self::markTestIncomplete(
                 'This test has not been implemented yet.'
@@ -302,7 +304,7 @@ class privacy_testcase extends base {
     /**
      * A test for deleting all user data for a given context.
      */
-    public function test_delete_data_for_all_users_in_context() {
+    public function test_delete_data_for_all_users_in_context(): never {
         // Stop here and mark this test as incomplete.
         self::markTestIncomplete(
                 'This test has not been implemented yet.'
@@ -312,7 +314,7 @@ class privacy_testcase extends base {
     /**
      * A test for deleting all user data for one user.
      */
-    public function test_delete_data_for_user() {
+    public function test_delete_data_for_user(): never {
         // Stop here and mark this test as incomplete.
         self::markTestIncomplete(
                 'This test has not been implemented yet.'
@@ -326,7 +328,7 @@ class privacy_testcase extends base {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function test_delete_data_for_users() {
+    public function test_delete_data_for_users(): void {
         global $DB;
 
         // User 1 submits to assign1 and teamassign1 and uploads in pubupload1!

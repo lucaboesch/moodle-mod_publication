@@ -103,7 +103,8 @@ if ($savevisibility) {
 
         echo $OUTPUT->header();
         echo $OUTPUT->heading(format_string($publication->get_instance()->name), 1);
-        echo $OUTPUT->confirm($message, 'view.php?id=' . $id . '&action=import&confirm=1&sesskey=' . sesskey(), 'view.php?id=' . $id);
+        echo $OUTPUT->confirm($message, 'view.php?id=' . $id . '&action=import&confirm=1&sesskey=' . sesskey(),
+            'view.php?id=' . $id);
         echo $OUTPUT->footer();
         exit;
     }
@@ -180,7 +181,8 @@ if ($data = $filesform->get_data()) {
                 $DB->set_field('publication_file', 'studentapproval', $approval, $conditions);
             }
             if (is_array($stats)) {
-                $dataforlog->approval = '(Students ' . $stats['approving'] . ' out of ' . $stats['needed'] . ') ' . $dataforlog->approval;
+                $dataforlog->approval = '(Students ' . $stats['approving'] .
+                    ' out of ' . $stats['needed'] . ') ' . $dataforlog->approval;
             }
             $dataforlog->publication = $conditions['publication'];
             $dataforlog->userid = $USER->id;
@@ -258,7 +260,7 @@ if (has_capability('mod/publication:approve', $context)) {
     $templatecontext->allfiles_url = (new moodle_url('/mod/publication/view.php',
         ['id' => $cm->id, 'filter' => PUBLICATION_FILTER_ALLFILES, 'allfilespage' => 1]))->out(false);
     $templatecontext->allfiles_empty = $templatecontext->allfilescount == 0;
-    $templatecontext->assign = $publication->get_importlink();
+    $templatecontext->assign = $publication->get_importlink_context();
     if ($publicationinstance->obtainteacherapproval == 1) {
         $templatecontext->viewall_approvalneeded_url = (new moodle_url('/mod/publication/view.php',
             ['id' => $cm->id, 'filter' => PUBLICATION_FILTER_APPROVALREQUIRED, 'allfilespage' => 1]))->out(false);
@@ -269,7 +271,8 @@ if (has_capability('mod/publication:approve', $context)) {
 }
 
 $mode = $publication->get_mode();
-$templatecontext->myfilestitle = $mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION ? get_string('mygroupfiles', 'publication') : get_string('myfiles', 'publication');
+$templatecontext->myfilestitle = $mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION ?
+    get_string('mygroupfiles', 'publication') : get_string('myfiles', 'publication');
 $filestable = $publication->get_filestable();
 $filestable->init();
 $templatecontext->myfiles = $filestable->data;

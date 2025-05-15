@@ -79,12 +79,15 @@ class base extends \table_sql {
     protected $options = [];
     /** @var int[] $users */
     protected $users = [];
+    /** @var string filter for this table */
     protected $filter = PUBLICATION_FILTER_NOFILTER;
+    /** @var bool flag for file submissions tab */
     protected $allfilespage = false;
-
+    /** @var bool whether teacher approval is required */
     protected $obtainteacherapproval;
+    /** @var bool whether student approval is required */
     protected $obtainstudentapproval;
-
+    /** @var int total files count */
     protected $totalfilescount = 0;
     /**
      * constructor
@@ -92,6 +95,7 @@ class base extends \table_sql {
      * @param string $uniqueid a string identifying this table.Used as a key in session  vars.
      *                         It gets set automatically with the helper methods!
      * @param \publication $publication publication object
+     * @param string $filter filter for this table
      */
     public function __construct($uniqueid, \publication $publication, $filter) {
         global $CFG, $OUTPUT;
@@ -221,6 +225,11 @@ class base extends \table_sql {
         $this->users = $users;
     }
 
+    /**
+     * Get the number of records in the table
+     *
+     * @return int
+     */
     public function get_count() {
         global $DB;
         $grandtotal = $DB->count_records_sql($this->countsql, $this->countparams);
@@ -290,10 +299,12 @@ class base extends \table_sql {
         } else {
             $this->set_count_sql(
                 "SELECT
-    COUNT(a.uid)
-FROM
-    (SELECT u.id AS uid, MAX(files.timecreated) AS timemodified FROM $from WHERE $where GROUP BY u.id) a WHERE a.timemodified IS NULL",
-                $params);
+                COUNT(a.uid)
+                FROM
+                (SELECT u.id AS uid, MAX(files.timecreated) AS timemodified
+                FROM $from WHERE $where GROUP BY u.id) a WHERE a.timemodified IS NULL",
+                $params
+            );
         }
 
     }
@@ -307,10 +318,10 @@ FROM
      * @param string $fields fields to fetch (SQL snippet)
      * @param string $from from where to fetch (SQL snippet)
      * @param string $where where conditions for SQL query (SQL snippet)
-     * @param array $params (optional) params for query
+     * @param null|array $params (optional) params for query
      * @param string $groupby (optional) groupby clause (SQL snippet)
      */
-    public function set_sql($fields, $from, $where, array $params = null, $groupby = '') {
+    public function set_sql($fields, $from, $where, null|array $params = null, $groupby = '') {
         parent::set_sql($fields, $from, $where, $params);
         $this->sql->groupby = $groupby;
     }
@@ -330,7 +341,8 @@ FROM
                 $this->countparams = $this->sql->params;
             }
             $grandtotal = $DB->count_records_sql($this->countsql, $this->countparams);
-            if ($useinitialsbar && !$this->is_downloading() && empty($this->get_initial_first()) && empty($this->get_initial_last())) {
+            if ($useinitialsbar && !$this->is_downloading() &&
+                    empty($this->get_initial_first()) && empty($this->get_initial_last())) {
                 $this->initialbars($grandtotal > $pagesize);
             }
 
@@ -444,6 +456,11 @@ FROM
         }
     }
 
+    /**
+     * Returns the amount of files displayed in this table
+     *
+     * @return int
+     */
     public function get_totalfilescount() {
         return $this->totalfilescount;
     }
@@ -652,10 +669,15 @@ FROM
             $lastmodified = \html_writer::span(userdate($values->timemodified), "timemodified");
         }
 
-        // TODO: download without tags?
         return $lastmodified;
     }
 
+    /**
+     * This function is called for each data row to allow processing of the files from the submission
+     *
+     * @param mixed $values
+     * @return string
+     */
     public function col_files($values) {
         list(, $files, ) = $this->get_files($values->id);
         global $OUTPUT;
@@ -679,12 +701,12 @@ FROM
         if ($this->totalfiles === null) {
             $this->totalfiles = 0;
         }
-        $lastmodified = '';
+        $files = '';
         if (count($filetable->data) > 0) {
-            $lastmodified = \html_writer::table($filetable);
+            $files = \html_writer::table($filetable);
             $this->totalfiles += count($filetable->data);
         }
-        return $lastmodified;
+        return $files;
     }
 
     /**
@@ -745,7 +767,6 @@ FROM
 
                 $checked = $this->publication->teacher_approval($file);
                 // Null if none found, DB-entry otherwise!
-                // TODO change that conversions and queue the real values! Everywhere!
                 $checked = ($checked === false || $checked === null) ? "" : $checked;
 
                 $sel = \html_writer::select($this->options, 'files[' . $file->get_id() . ']', (string)$checked);
@@ -781,7 +802,6 @@ FROM
             }
         }
 
-        // TODO: download without tags?
         if (count($table->data) > 0) {
             return \html_writer::table($table);
         } else {
@@ -789,6 +809,13 @@ FROM
         }
     }
 
+    /**
+     * This function is called for each data row to allow processing of the
+     * file publication approval status.
+     *
+     * @param mixed $values
+     * @return string
+     */
     public function col_publicationstatus($values) {
 
         list(, $files, ) = $this->get_files($values->id);
@@ -798,42 +825,20 @@ FROM
 
         foreach ($files as $file) {
             $row = [];
-            // studentapproval!
-            /*
-            if (!($this instanceof \mod_publication\local\allfilestable\upload)) {
-                if (has_capability('mod/publication:approve', $this->context)
-                    || $this->publication->has_filepermission($file->get_id())) {
-                    switch ($this->publication->student_approval($file)) {
-                        case 2:
-                            $symbol = $this->valid;
-                            break;
-                        case 1:
-                            $symbol = $this->invalid;
-                            break;
-                        default:
-                            $symbol = $this->questionmark;
-                    }
-                    $this->add_details_tooltip($symbol, $file);
-                    $row[] = $symbol;
 
-                }
-            }
-            */
-
-            // teacherapproval!
+            // Teacher approval!
 
             if ($this->obtainteacherapproval && ($this->publication->has_filepermission($file->get_id())
                 || has_capability('mod/publication:approve', $this->context))) {
 
                 $checked = $this->publication->teacher_approval($file);
                 // Null if none found, DB-entry otherwise!
-                // TODO change that conversions and queue the real values! Everywhere!
                 $checked = ($checked === false || $checked === null) ? "" : $checked;
 
                 $sel = \html_writer::select($this->options, 'files[' . $file->get_id() . ']', (string)$checked);
                 $row[] = $sel;
             }
-            // visibleforstudents
+            // Visible for students.
 
             if ($this->publication->has_filepermission($file->get_id())) {
                 $row[] = $this->studvisibleyes;
@@ -843,7 +848,6 @@ FROM
             $table->data[] = $row;
         }
 
-        // TODO: download without tags?
         if (count($table->data) > 0) {
             return \html_writer::table($table);
         } else {
@@ -884,6 +888,14 @@ FROM
         return $values->$colname;
     }
 
+    /**
+     * Returns the rendered HTML for the icon
+     *
+     * @param string $fontawesomeicon
+     * @param string $bootsrapcolor
+     * @param string $title
+     * @return string Rendered HTML for the icon
+     */
     public static function approval_icon($fontawesomeicon, $bootsrapcolor, $title) {
         global $OUTPUT;
         $templatecontext = [
@@ -894,6 +906,12 @@ FROM
         return $OUTPUT->render_from_template('mod_publication/approval_icon_fontawesome', $templatecontext);
     }
 
+    /**
+     * Returns the unique id for this table
+     *
+     * @param int|string $instanceid
+     * @return string
+     */
     public static function get_table_uniqueid($instanceid) {
         return 'mod-publication-allfiles-' . $instanceid;
     }

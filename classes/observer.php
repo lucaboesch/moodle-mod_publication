@@ -24,13 +24,7 @@
  */
 namespace mod_publication;
 
-use core\notification;
-use mod_assign\event\assessable_submitted;
-use mod_assign\event\base;
 use publication;
-use stdClass;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * mod_grouptool\observer handles events due to changes in moodle core which affect grouptool
@@ -41,10 +35,21 @@ defined('MOODLE_INTERNAL') || die;
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class observer {
+    /**
+     * Event observer for the 'course_module_created' event.
+     *
+     * This method is triggered when any course module is created. If the module is
+     * of type 'publication', it initializes the publication instance and, if its mode
+     * is set to PUBLICATION_MODE_IMPORT, automatically imports files. It also sends
+     * any pending notifications related to the publication module.
+     *
+     * @param \core\event\base $event The event data for the created course module.
+     */
     public static function course_module_created(\core\event\base $event) {
         global $DB;
         $eventdata = $event->get_data();
-        if (isset($eventdata['other']) && isset($eventdata['other']['modulename']) && $eventdata['other']['modulename'] == 'publication') {
+        if (isset($eventdata['other']) &&
+            isset($eventdata['other']['modulename']) && $eventdata['other']['modulename'] == 'publication') {
             $cm = get_coursemodule_from_instance('publication', $eventdata['other']['instanceid'], 0, false, MUST_EXIST);
             $publication = new publication($cm);
             if ($publication->get_instance()->mode == PUBLICATION_MODE_IMPORT) {
@@ -55,12 +60,12 @@ class observer {
     }
 
     /**
-     * \mod_assign\event\assessable_submitted
+     * Event observer for \mod_assign\event\assessable_submitted
      *
      * @param \mod_assign\event\assessable_submitted $e Event object containing useful data
      * @return bool true if success
      */
-    public static function import_assessable(base $e) {
+    public static function import_assessable(\mod_assign\event\assessable_submitted $e) {
         global $DB, $CFG, $OUTPUT;
 
         // Keep other page calls slimmed down!
@@ -103,126 +108,6 @@ class observer {
         }
 
         publication::send_all_pending_notifications();
-/*
-        $subfilerecords = $DB->get_records('assignsubmission_file', [
-                'assignment' => $assignid,
-                'submission' => $submission->id,
-        ]);
-        $fs = get_file_storage();
-
-        $allassignfileids = [];
-        $allassignfiles = [];
-        $itemid = empty($assign->get_instance()->teamsubmission) ? $submission->userid : $submission->groupid;
-        $importtype = empty($assign->get_instance()->teamsubmission) ? 'user' : 'group';
-
-        foreach ($subfilerecords as $record) {
-            $files = $fs->get_area_files($assigncontext->id,
-                "assignsubmission_file",
-                "submission_files",
-                $record->submission,
-                "id",
-                false);
-
-            foreach ($files as $file) {
-                $allassignfiles[$file->get_id()] = $file;
-                $allassignfileids[$file->get_id()] = $file->get_id();
-            }
-        }
-
-        foreach ($publications as $curpub) {
-            $cm = get_coursemodule_from_instance('publication', $curpub->id, 0, false, MUST_EXIST);
-            $context = \context_module::instance($cm->id);
-
-            $conditions = [];
-            $conditions['publication'] = $curpub->id;
-            $conditions['userid'] = $itemid;
-            // We look for regular imported files here!
-            $conditions['type'] = PUBLICATION_MODE_IMPORT;
-
-            $oldpubfiles = $DB->get_records('publication_file', $conditions);
-
-            $assignfileids = $allassignfileids;
-            $assignfiles = $allassignfiles;
-
-            foreach ($oldpubfiles as $oldpubfile) {
-
-                if (in_array($oldpubfile->filesourceid, $assignfileids)) {
-                    // File was in assign and is still there.
-                    unset($assignfileids[$oldpubfile->filesourceid]);
-
-                } else {
-                    // File has been removed from assign.
-                    // Remove from publication (file and db entry).
-                    if ($file = $fs->get_file_by_id($oldpubfile->fileid)) {
-                        $file->delete();
-                    }
-
-                    $conditions['id'] = $oldpubfile->id;
-                    $dataobject = $DB->get_record('publication_file', ['id' => $conditions['id']]);
-                    $dataobject->typ = $importtype;
-                    $dataobject->itemid = $itemid;
-                    \mod_publication\event\publication_file_deleted::create_from_object($cm, $dataobject)->trigger();
-                    $DB->delete_records('publication_file', $conditions);
-                }
-            }
-
-            // Add new files to publication.
-            foreach ($assignfileids as $assignfileid) {
-                $newfilerecord = new \stdClass();
-                $newfilerecord->contextid = $context->id;
-                $newfilerecord->component = 'mod_publication';
-                $newfilerecord->filearea = 'attachment';
-                $newfilerecord->itemid = $itemid;
-
-                try {
-                    if ($fs->file_exists($newfilerecord->contextid,
-                            $newfilerecord->component,
-                            $newfilerecord->filearea,
-                            $newfilerecord->itemid,
-                            $assignfiles[$assignfileid]->get_filepath(),
-                            $assignfiles[$assignfileid]->get_filename())) {
-                        notification::info($OUTPUT->box('File existed, skipped creation!', 'generalbox'));
-                        $newfile = $fs->get_file($newfilerecord->contextid,
-                                $newfilerecord->component,
-                                $newfilerecord->filearea,
-                                $newfilerecord->itemid,
-                                $assignfiles[$assignfileid]->get_filepath(),
-                                $assignfiles[$assignfileid]->get_filename());
-                    } else {
-                        $newfile = $fs->create_file_from_storedfile($newfilerecord, $assignfiles[$assignfileid]);
-                    }
-
-                    $dataobject = new \stdClass();
-                    $dataobject->publication = $curpub->id;
-                    $dataobject->userid = $itemid;
-                    $dataobject->timecreated = time();
-                    $dataobject->fileid = $newfile->get_id();
-                    $dataobject->filesourceid = $assignfileid;
-                    $dataobject->filename = $newfile->get_filename();
-                    $dataobject->contenthash = "666";
-                    $dataobject->type = \PUBLICATION_MODE_IMPORT;
-                    $DB->insert_record('publication_file', $dataobject);
-                    $dataobject->typ = $importtype;
-                    $dataobject->itemid = $itemid;
-                    \mod_publication\event\publication_file_imported::file_added($cm, $dataobject)->trigger();
-
-                    $publication = new publication($cm);
-                    if ($publication->get_instance()->notifyfilechange != 0) {
-                        publication::send_notification_filechange($cm, $dataobject, null, $publication);
-                    }
-
-                } catch (\Exception $ex) {
-                    // File could not be copied, maybe it does allready exist.
-                    // Should not happen.
-                    notification::error($OUTPUT->box($ex->getMessage(), 'generalbox'));
-                }
-
-            }
-
-            // And now the same for online texts!
-            \publication::update_assign_onlinetext($assigncm, $assigncontext, $curpub->id, $context->id, $submission->id);
-        }*/
         return true;
     }
-
 }

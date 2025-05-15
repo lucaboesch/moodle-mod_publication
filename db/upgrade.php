@@ -23,7 +23,6 @@
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Handles all the upgrade steps for mod_publication
@@ -241,7 +240,8 @@ function xmldb_publication_upgrade($oldversion) {
 
         // Define field completionupload to be added to publication.
         $table = new xmldb_table('publication');
-        $field = new xmldb_field('completionupload', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'allowsubmissionsfromdate');
+        $field = new xmldb_field('completionupload', XMLDB_TYPE_INTEGER, '2',
+            null, XMLDB_NOTNULL, null, '0', 'allowsubmissionsfromdate');
 
         // Conditionally launch add field completionupload.
         if (!$dbman->field_exists($table, $field)) {
@@ -263,14 +263,12 @@ function xmldb_publication_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-
         $field = new xmldb_field('approvaltodate', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'approvalfromdate');
 
         // Conditionally launch add field approvaltodate.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-
 
         // Publication savepoint reached.
         upgrade_mod_savepoint(true, 2024061900, 'publication');
@@ -318,7 +316,6 @@ function xmldb_publication_upgrade($oldversion) {
             $DB->update_record('publication', $publication, true);
         }
         $rs->close();
-
 
         $rs = $DB->get_recordset('publication_file');
         foreach ($rs as $file) {

@@ -18,7 +18,7 @@
  * Contains the class for fetching the important dates in mod_assign for a given module instance and a user.
  *
  * @package   mod_publication
- * @copyright 2022 Simeon Naydenov (moniNaydenov@gmail.com)
+ * @copyright Simeon Naydenov
  * @copyright 2022 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

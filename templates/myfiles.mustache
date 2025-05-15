@@ -1,48 +1,129 @@
-{{#assign}}
-    {{{.}}}
-{{/assign}}
-{{#timeremaining}}
+{{!
+    This file is part of mod_publication for Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_publication/myfiles
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * myfiles Array of files
+    * hasmyfiles Boolean indicating if there are files
+    * timeremaining Time remaining for the assignment
+    * lastmodified Last modified date of the files
+    * approvalfromdate Approval start date
+    * approvaltodate Approval end date
+    * extensionduedate Extension due date
+    * assign Assignment object
+    * notset Boolean indicating if the assignment is not set
+    * notfound Boolean indicating if the assignment is not found
+    * url URL for the assignment
+    * name Name of the assignment
+    * myfilestitle Title for the files section
+
+    Example context (json):
+    {
+        "myfiles": [
+            [
+                "",
+                "<a href='filepath'>file.pdf</a>",
+                "<span class='' title='Approved by student automatically. Approved by teacher automatically.'><i class='fa fa-check fa-fw text-success' ></i></span>"
+            ]
+        ],
+        "hasmyfiles": true,
+        "timeremaining": "Deadline of editing period passed",
+        "lastmodified": "Wednesday, 7 May 2025, 9:36 PM",
+        "approvalfromdate": false,
+        "approvaltodate": false,
+        "extensionduedate": false,
+        "assign": {
+            "notset": false,
+            "notfound": false,
+            "url": "http://example.com",
+            "name": "Assignment 1"
+        },
+        "myfilestitle": "Own files"
+    }
+}}
+
+<table class="table table-striped w-100">
+    {{#assign}}
+        <tr>
+            <th>{{#str}}assignment,publication{{/str}}</th>
+            <td>
+                {{#name}}
+                    <a href="{{url}}">{{name}}</a>
+                {{/name}}
+                {{#notset}}
+                    <span class="alert-warning">{{#str}}assignment_notset,publication{{/str}}</span>
+                {{/notset}}
+                {{#notfound}}
+                    <span class="alert-warning">{{#str}}assignment_notfound,publication{{/str}}</span>
+                {{/notfound}}
+            </td>
+        </tr>
+    {{/assign}}
+    {{#timeremaining}}
+        <tr>
+            <th>{{#str}}timeremaining,assign{{/str}}</th>
+            <td>{{.}}</td>
+        </tr>
+    {{/timeremaining}}
+    {{#approvalfromdate}}
+        <tr>
+            <th>{{#str}}approvalfromdate,publication{{/str}}</th>
+            <td>{{.}}</td>
+        </tr>
+    {{/approvalfromdate}}
+    {{#approvaltodate}}
+        <tr>
+            <th>{{#str}}approvaltodate,publication{{/str}}</th>
+            <td>{{.}}</td>
+        </tr>
+    {{/approvaltodate}}
+    {{#extensionduedate}}
+        <tr>
+            <th>{{#str}}extensionto,publication{{/str}}</th>
+            <td>{{.}}</td>
+        </tr>
+    {{/extensionduedate}}
+    {{#hasmyfiles}}
+        <tr>
+            <th>{{#str}}lastmodified{{/str}}</th>
+            <td>{{lastmodified}}</td>
+        </tr>
+    {{/hasmyfiles}}
     <tr>
-        <th>{{#str}}timeremaining,assign{{/str}}</th>
-        <td>{{.}}</td>
+        <th>{{myfilestitle}}</th>
+        <td>
+            {{#hasmyfiles}}
+                {{#myfiles}}
+                    {{#.}}
+                        {{{.}}}
+                    {{/.}}
+                    <br>
+                {{/myfiles}}
+            {{/hasmyfiles}}
+            {{^hasmyfiles}}
+                {{#str}}nofiles,publication{{/str}}
+            {{/hasmyfiles}}
+        </td>
     </tr>
-{{/timeremaining}}
-{{#approvalfromdate}}
-    <tr>
-        <th>{{#str}}approvalfromdate,publication{{/str}}</th>
-        <td>{{.}}</td>
-    </tr>
-{{/approvalfromdate}}
-{{#approvaltodate}}
-    <tr>
-        <th>{{#str}}approvaltodate,publication{{/str}}</th>
-        <td>{{.}}</td>
-    </tr>
-{{/approvaltodate}}
-{{#extensionduedate}}
-    <tr>
-        <th>{{#str}}extensionto,publication{{/str}}</th>
-        <td>{{.}}</td>
-    </tr>
-{{/extensionduedate}}
-{{#hasmyfiles}}
-    <tr>
-        <th>{{#str}}lastmodified{{/str}}</th>
-        <td>{{lastmodified}}</td>
-    </tr>
-{{/hasmyfiles}}
-<tr>
-    <th>{{myfilestitle}}</th>
-    <td>
-        {{#hasmyfiles}}
-            {{#myfiles}}
-                {{#.}}
-                    {{{.}}}
-                {{/.}} <br />
-            {{/myfiles}}
-        {{/hasmyfiles}}
-        {{^hasmyfiles}}
-            {{#str}}nofiles,publication{{/str}}
-        {{/hasmyfiles}}
-    </td>
-</tr>
+</table>

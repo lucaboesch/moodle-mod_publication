@@ -58,8 +58,8 @@ if ($confirm) {
     $eventparams = [
         'context' => $context,
         'other' => [
-            'publication' => $publication->get_instance()->id
-        ]
+            'publication' => $publication->get_instance()->id,
+        ],
     ];
     $eventparams['objectid'] = $override->id;
     if ($publication->get_mode() == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
@@ -84,7 +84,8 @@ $activityheader = $PAGE->activityheader;
 $activityheader->set_attrs([
     'description' => '',
     'hidecompletion' => true,
-    'title' => $activityheader->is_title_allowed() ? format_string($publication->get_instance()->name, true, ['context' => $context]) : ""
+    'title' => $activityheader->is_title_allowed() ?
+        format_string($publication->get_instance()->name, true, ['context' => $context]) : "",
 ]);
 
 echo $OUTPUT->header();

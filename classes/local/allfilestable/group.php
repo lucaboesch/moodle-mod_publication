@@ -25,8 +25,6 @@
 
 namespace mod_publication\local\allfilestable;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Table showing my group files
  *
@@ -54,7 +52,8 @@ class group extends base {
         $params = [];
 
         $fields = "g.id, g.name AS groupname, NULL AS groupmembers, COUNT(*) AS filecount,
-                   SUM(files.studentapproval) AS studentapproval, SUM(files.teacherapproval) AS teacherapproval, MAX(files.timecreated) AS timemodified ";
+                   SUM(files.studentapproval) AS studentapproval, SUM(files.teacherapproval) AS teacherapproval,
+                   MAX(files.timecreated) AS timemodified ";
 
         $groups = $this->publication->get_groups($this->groupingid);
         if (count($groups) > 0) {
@@ -78,11 +77,14 @@ class group extends base {
 
         $having = '';
         if ($this->filter == PUBLICATION_FILTER_NOFILTER) {
-            $from = $grouptable . " LEFT JOIN {publication_file} files ON g.id = files.userid AND files.publication = :publication ";
+            $from = $grouptable . " LEFT JOIN {publication_file} files
+                ON g.id = files.userid AND files.publication = :publication ";
         } else if ($this->filter == PUBLICATION_FILTER_ALLFILES) {
-            $from = $grouptable . " JOIN {publication_file} files ON g.id = files.userid AND files.publication = :publication ";
+            $from = $grouptable . " JOIN {publication_file} files
+                ON g.id = files.userid AND files.publication = :publication ";
         } else if ($this->filter == PUBLICATION_FILTER_APPROVED) {
-            $from = $grouptable . " JOIN {publication_file} files ON g.id = files.userid AND files.publication = :publication ";
+            $from = $grouptable . " JOIN {publication_file} files
+                ON g.id = files.userid AND files.publication = :publication ";
             if ($this->obtainteacherapproval) {
                 $from .= ' AND files.teacherapproval = 1 ';
             }
@@ -90,13 +92,16 @@ class group extends base {
                 $from .= ' AND files.studentapproval = 1 ';
             }
         } else if ($this->filter == PUBLICATION_FILTER_REJECTED) {
-            $from = $grouptable . " LEFT JOIN {publication_file} files ON g.id = files.userid AND files.publication = :publication " .
+            $from = $grouptable . " LEFT JOIN {publication_file} files
+                ON g.id = files.userid AND files.publication = :publication " .
                 "AND files.teacherapproval = 2 ";
         } else if ($this->filter == PUBLICATION_FILTER_APPROVALREQUIRED) {
-            $from = $grouptable . " LEFT JOIN {publication_file} files ON g.id = files.userid AND files.publication = :publication " .
+            $from = $grouptable . " LEFT JOIN {publication_file} files
+                ON g.id = files.userid AND files.publication = :publication " .
                 "AND (files.teacherapproval = 3 OR files.teacherapproval IS NULL OR files.teacherapproval = 0) ";
         } else if ($this->filter == PUBLICATION_FILTER_NOFILES) {
-            $from = $grouptable . " LEFT JOIN {publication_file} files ON g.id = files.userid AND files.publication = :publication ";
+            $from = $grouptable . " LEFT JOIN {publication_file} files
+                ON g.id = files.userid AND files.publication = :publication ";
             $having = ' HAVING timemodified IS NULL ';
         }
 
@@ -106,11 +111,13 @@ class group extends base {
         $this->set_sql($fields, $from, $where, $params, $groupby);
 
         if ($this->filter != PUBLICATION_FILTER_NOFILES) {
-            $this->set_count_sql("SELECT COUNT(a.gid) FROM (SELECT DISTINCT g.id AS gid  FROM " . $from . " WHERE " . $where . ') a', $params);
+            $this->set_count_sql("SELECT COUNT(a.gid)
+                FROM (SELECT DISTINCT g.id AS gid  FROM " . $from . " WHERE " . $where . ') a', $params);
         } else {
             $this->set_count_sql("SELECT
             COUNT(a.gid) FROM
-            (SELECT g.id AS gid, MAX(files.timecreated) AS timemodified FROM $from WHERE $where GROUP BY g.id) a WHERE a.timemodified IS NULL", $params);
+            (SELECT g.id AS gid, MAX(files.timecreated) AS timemodified
+                FROM $from WHERE $where GROUP BY g.id) a WHERE a.timemodified IS NULL", $params);
         }
     }
 
@@ -120,6 +127,7 @@ class group extends base {
      * @param string $uniqueid a string identifying this table.Used as a key in session  vars.
      *                         It gets set automatically with the helper methods!
      * @param \publication $publication publication object
+     * @param string $filter filter for this table
      */
     public function __construct($uniqueid, \publication $publication, $filter) {
         global $DB, $PAGE;
@@ -181,7 +189,8 @@ class group extends base {
         ]);
 
         $columns = ['selection', 'groupname', 'groupmembers', 'timemodified', 'files'];
-        $headers = [$selectallnone, get_string('group'), get_string('groupmembers'), get_string('lastmodified'), get_string('files')];
+        $headers = [$selectallnone, get_string('group'), get_string('groupmembers'),
+            get_string('lastmodified'), get_string('files')];
         $helpicons = [null, null, null, null, null];
 
         if (has_capability('mod/publication:approve', $this->context) && $this->allfilespage) {
@@ -189,18 +198,7 @@ class group extends base {
                 $columns[] = 'studentapproval';
                 $headers[] = get_string('studentapproval', 'publication');
                 $helpicons[] = new \help_icon('studentapproval', 'publication');
-            }/*
-            $columns[] = 'teacherapproval';
-            if ($this->publication->get_instance()->obtainstudentapproval) {
-                $headers[] = get_string('obtainstudentapproval', 'publication');
-            } else {
-                $headers[] = get_string('teacherapproval', 'publication');
             }
-            $helpicons[] = new \help_icon('teacherapproval', 'publication');
-
-            $columns[] = 'visibleforstudents';
-            $headers[] = get_string('visibleforstudents', 'publication');
-            $helpicons[] = null;*/
 
             $columns[] = 'publicationstatus';
             $headers[] = get_string('publicationstatus', 'publication');

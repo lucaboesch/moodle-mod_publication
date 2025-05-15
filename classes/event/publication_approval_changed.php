@@ -24,7 +24,6 @@
  */
 
 namespace mod_publication\event;
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Approval has changed for this event
@@ -54,12 +53,12 @@ class publication_approval_changed extends \core\event\base {
      */
     public static function approval_changed(\stdClass $cm, $do) {
         // Trigger overview event.
-        $event = self::create(array(
+        $event = self::create([
             'objectid'      => $do->publication,
             'context'       => \context_module::instance($cm->id),
             'relateduserid' => $do->reluser,
             'other'         => (Array)$do,
-        ));
+        ]);
         return $event;
     }
     // You might need to override get_url() and get_legacy_log_data() if view mode needs to be stored as well.
@@ -91,7 +90,7 @@ class publication_approval_changed extends \core\event\base {
      */
     public function get_url() {
         $moduleid = get_coursemodule_from_instance('publication', $this->data['other']['publication'])->id;
-        return new \moodle_url("/mod/publication/view.php", array('id'  => $moduleid));
+        return new \moodle_url("/mod/publication/view.php", ['id'  => $moduleid]);
     }
 
     /**
