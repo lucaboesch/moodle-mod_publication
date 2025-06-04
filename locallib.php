@@ -399,23 +399,6 @@ class publication {
     }
 
     /**
-     * Get a string representation of the approval period.
-     *
-     * @return string A string indicating the approval period.
-     */
-    public function is_approval_open_string() {
-        $fromstr = '';
-        if ($this->get_instance()->approvalfromdate > 0) {
-            $fromstr = get_string('from') . ' ' . userdate($this->get_instance()->approvalfromdate);
-        }
-        $tostr = '';
-        if ($this->get_instance()->approvaltodate > 0) {
-            $tostr = get_string('until') . ' ' . userdate($this->get_instance()->approvaltodate);
-        }
-        return $fromstr . ' ' . $tostr;
-    }
-
-    /**
      * Instance getter
      *
      * @return object instance object
@@ -1070,34 +1053,15 @@ class publication {
 
         // Get group members!
         $groupmembers = $this->get_submissionmembers($filerec->userid);
-        $studentapproval = 0;
-        $groupapproval = $this->get_instance()->groupapproval;
         if (!empty($groupmembers)) {
             list($usersql, $userparams) = $DB->get_in_or_equal(array_keys($groupmembers), SQL_PARAMS_NAMED, 'user');
             $sql = "SELECT u.*, ga.approval, ga.timemodified AS approvaltime, ga.userid, ga.fileid
-                      FROM {publication_groupapproval} ga
-                 JOIN {user} u ON u.id = ga.userid
-                     WHERE  ga.fileid = :fileid AND u.id " . $usersql;
+                FROM {user} u
+            LEFT JOIN {publication_groupapproval} ga
+                ON u.id = ga.userid AND ga.fileid = :fileid
+                WHERE u.id $usersql";
             $params = ['fileid' => $filerec->id] + $userparams;
             $groupdata = $DB->get_records_sql($sql, $params);
-            $allconfirmed = true;
-            foreach ($groupdata as $gd) {
-                if ($gd->approval === 0 || $gd->approval === '0') {
-                    $studentapproval = 2;
-                    $allconfirmed = false;
-                    break;
-                }
-                if ($groupapproval == PUBLICATION_APPROVAL_SINGLE && $gd->approval == 1) {
-                    $studentapproval = 1;
-                } else if ($groupapproval == PUBLICATION_APPROVAL_ALL) {
-                    if ($gd->approval != 1) {
-                        $allconfirmed = false;
-                    }
-                }
-            }
-            if ($groupapproval == PUBLICATION_APPROVAL_ALL && $allconfirmed) {
-                $studentapproval = 1;
-            }
         } else {
             $groupdata = [];
         }
@@ -2547,5 +2511,59 @@ class publication {
             return $this->override_export_for_template_single($override);
         }
         return null;
+    }
+
+    /**
+     * This function checks and updates the group approval status for all files in a publication.
+     * It checks if the group approval mode is set and updates the approval status of each file
+     * based on the group members' approval status.
+     * This is especially needed when the group approval mode is changed.
+     *
+     * @throws \coding_exception
+     * @return void
+     */
+    public function check_and_update_group_approval() {
+        global $DB;
+
+        if ($this->get_mode() != PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+            throw new coding_exception('Group approval can only be used in team submission mode.');
+        }
+
+        $approvalmode = $this->get_instance()->groupapproval;
+        $publicationid = $this->get_instance()->id;
+        $allfiles = $DB->get_records('publication_file', ['publication' => $publicationid]);
+        foreach ($allfiles as $file) {
+            $approval = false;
+            $fileid = $file->id;
+            $groupapprovalrecords = $DB->get_records('publication_groupapproval', ['fileid' => $fileid]);
+            if ($approvalmode == PUBLICATION_APPROVAL_SINGLE) {
+                // Single approval mode, check if any group member has approved.
+                foreach ($groupapprovalrecords as $groupapproval) {
+                    if ($groupapproval->approval == 1) {
+                        $approval = true;
+                        break;
+                    }
+                }
+            } else if ($approvalmode == PUBLICATION_APPROVAL_ALL) {
+                $approval = true;
+                $groupmembers = $this->get_submissionmembers($file->userid);
+                $groupapproval = $this->get_instance()->groupapproval;
+                if (count($groupapprovalrecords) < count($groupmembers)) {
+                    // If there are less group approvals than group members, not all group members have approved!
+                    $approval = false;
+                } else {
+                    foreach ($groupapprovalrecords as $groupapproval) {
+                        if ($groupapproval->approval != 1) {
+                            $approval = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            // Update the file's approval status.
+            if ($file->studentapproval != $approval) {
+                $DB->set_field('publication_file', 'studentapproval', $approval, ['id' => $fileid]);
+            }
+        }
     }
 }
