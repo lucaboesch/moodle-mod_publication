@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+5.0.0 (2025-06-11)
+-------------------
+* Moodle 5.0.0 compatible version
+* [FEATURE] #8116 - Admin settings for default dates added
+* [FEATURE] #8286 - Accessibility improvements
+
 4.5.3 (2025-03-05)
 -------------------
 * [BUG] #8249 - further fix for AMOS to be able to manage language strings of the current version
