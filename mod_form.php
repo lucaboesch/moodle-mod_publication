@@ -132,14 +132,12 @@ class mod_publication_mod_form extends moodleform_mod {
         }
 
         $mform->addElement('select', 'maxfiles', get_string('maxfiles', 'publication'), $maxfiles);
-        $mform->setDefault('maxfiles', get_config('publication', 'maxfiles'));
         $mform->addHelpButton('maxfiles', 'maxfiles', 'publication');
         $mform->hideIf('maxfiles', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
         $choices = get_max_upload_sizes($CFG->maxbytes, $COURSE->maxbytes);
         $choices[0] = get_string('courseuploadlimit', 'publication') . ' (' . display_size($COURSE->maxbytes) . ')';
         $mform->addElement('select', 'maxbytes', get_string('maxbytes', 'publication'), $choices);
-        $mform->setDefault('maxbytes', get_config('publication', 'maxbytes'));
         $mform->addHelpButton('maxbytes', 'maxbytes', 'publication');
         $mform->hideIf('maxbytes', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
@@ -148,16 +146,13 @@ class mod_publication_mod_form extends moodleform_mod {
         $mform->hideIf('allowedfiletypes', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
         $name = get_string('allowsubmissionsfromdate', 'publication');
-        $options = ['optional' => true];
-        $mform->addElement('date_time_selector', 'allowsubmissionsfromdate', $name, $options);
+        $mform->addElement('date_time_selector', 'allowsubmissionsfromdate', $name, ['optional' => true]);
         $mform->addHelpButton('allowsubmissionsfromdate', 'allowsubmissionsfromdate', 'publication');
-        $mform->setDefault('allowsubmissionsfromdate', time());
         $mform->hideIf('allowsubmissionsfromdate', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
         $name = get_string('duedate', 'publication');
         $mform->addElement('date_time_selector', 'duedate', $name, ['optional' => true]);
         $mform->addHelpButton('duedate', 'duedate', 'publication');
-        $mform->setDefault('duedate', time() + 7 * 24 * 3600);
         $mform->hideIf('duedate', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
         $mform->addElement('hidden', 'cutoffdate', false);
@@ -176,7 +171,6 @@ class mod_publication_mod_form extends moodleform_mod {
 
         $mform->addElement('select', 'obtainteacherapproval',
             get_string('obtainteacherapproval', 'publication'), $options, $attributes);
-        $mform->setDefault('obtainteacherapproval', get_config('publication', 'obtainteacherapproval'));
         $mform->addHelpButton('obtainteacherapproval', 'obtainteacherapproval', 'publication');
 
         // Student approval.
@@ -188,7 +182,6 @@ class mod_publication_mod_form extends moodleform_mod {
 
         $mform->addElement('select', 'obtainstudentapproval',
             get_string('obtainstudentapproval', 'publication'), $options, $attributes);
-        $mform->setDefault('obtainstudentapproval', get_config('publication', 'obtainstudentapproval'));
         $mform->addHelpButton('obtainstudentapproval', 'obtainstudentapproval', 'publication');
 
         // Group approval.
@@ -201,18 +194,15 @@ class mod_publication_mod_form extends moodleform_mod {
 
         $mform->addElement('select', 'obtaingroupapproval',
             get_string('obtaingroupapproval', 'publication'), $options, $attributes);
-        $mform->setDefault('obtaingroupapproval',  get_config('publication', 'obtaingroupapproval'));
         $mform->addHelpButton('obtaingroupapproval', 'obtaingroupapproval', 'publication');
 
         $mform->addElement('date_time_selector', 'approvalfromdate',
             get_string('approvalfromdate', 'publication'), ['optional' => true]);
         $mform->addHelpButton('approvalfromdate', 'approvalfromdate', 'publication');
-        $mform->setDefault('approvalfromdate', time());
 
         $mform->addElement('date_time_selector', 'approvaltodate',
             get_string('approvaltodate', 'publication'), ['optional' => true]);
         $mform->addHelpButton('approvaltodate', 'approvaltodate', 'publication');
-        $mform->setDefault('approvaltodate', time() + 7 * 24 * 3600);
         // Approval code end.
 
         $mform->addElement('hidden', 'alwaysshowdescription', true);
@@ -221,7 +211,6 @@ class mod_publication_mod_form extends moodleform_mod {
         // Apply availability restrictions.
         $mform->addElement('select', 'availabilityrestriction', get_string('availabilityrestriction', 'publication'),
                 [get_string('no'), get_string('yes')]);
-        $mform->setDefault('availabilityrestriction', get_config('publication', 'availabilityrestriction'));
         $mform->addHelpButton('availabilityrestriction', 'availabilityrestriction', 'publication');
 
         $mform->addElement('header', 'notifications', get_string('notifications', 'publication'));
@@ -235,14 +224,14 @@ class mod_publication_mod_form extends moodleform_mod {
 
         $mform->addElement('select', 'notifyfilechange', get_string('notify:filechange', 'publication'), $options);
         $mform->addHelpButton('notifyfilechange', 'notify:filechange', 'publication');
-        $mform->setDefault('notifyfilechange', get_config('publication', 'notifyfilechange'));
 
         $mform->addElement('select', 'notifystatuschange', get_string('notify:statuschange', 'publication'), $options);
         $mform->addHelpButton('notifystatuschange', 'notify:statuschange', 'publication');
-        $mform->setDefault('notifystatuschange', get_config('publication', 'notifystatuschange'));
 
         // Standard coursemodule elements.
         $this->standard_coursemodule_elements();
+
+        $this->apply_admin_defaults();
 
         // Buttons.
         $this->add_action_buttons();

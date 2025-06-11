@@ -28,39 +28,31 @@ defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
 
+$settings = new admin_settingpage('modpublication', get_string('pluginname', 'publication'));
+
 if ($ADMIN->fulltree) {
 
     require_once(__DIR__ . '/locallib.php');
 
-    $settings->add(new admin_setting_configtext(
-        'publication/maxfiles',
-        get_string('maxfiles', 'publication'),
-        get_string('configmaxfiles', 'publication'),
-        5,
-        PARAM_INT
-    ));
+    $name = new lang_string('maxfiles', 'publication');
+    $description = new lang_string('configmaxfiles', 'publication');
+    $setting = new admin_setting_configtext('publication/maxfiles', $name, $description, 5, PARAM_INT);
+    $settings->add($setting);
 
     $options = [
         '0' => get_string('obtainapproval_automatic', 'publication'),
         '1' => get_string('obtainapproval_required', 'publication'),
     ];
 
-    $settings->add(new admin_setting_configselect(
-        'publication/obtainteacherapproval',
-        get_string('obtainteacherapproval_admin', 'publication'),
-        get_string('obtainteacherapproval_admin_desc', 'publication'),
-        0,
-        $options
-    ));
+    $name = new lang_string('obtainteacherapproval_admin', 'publication');
+    $description = new lang_string('obtainteacherapproval_admin_desc', 'publication');
+    $setting = new admin_setting_configselect('publication/obtainteacherapproval', $name, $description, 0, $options);
+    $settings->add($setting);
 
-    $settings->add(new admin_setting_configselect(
-        'publication/obtainstudentapproval',
-        get_string('obtainstudentapproval_admin', 'publication'),
-        get_string('obtainstudentapproval_admin_desc', 'publication'),
-        0,
-        $options
-    ));
-
+    $name = new lang_string('obtainstudentapproval_admin', 'publication');
+    $description = new lang_string('obtainstudentapproval_admin_desc', 'publication');
+    $setting = new admin_setting_configselect('publication/obtainstudentapproval', $name, $description, 0, $options);
+    $settings->add($setting);
 
     $options = [
         PUBLICATION_APPROVAL_GROUPAUTOMATIC => get_string('obtainapproval_automatic', 'publication'),
@@ -68,14 +60,10 @@ if ($ADMIN->fulltree) {
         PUBLICATION_APPROVAL_ALL => get_string('obtaingroupapproval_all', 'publication'),
     ];
 
-    $settings->add(new admin_setting_configselect(
-        'publication/obtaingroupapproval',
-        get_string('obtaingroupapproval_admin', 'publication'),
-        get_string('obtaingroupapproval_admin_desc', 'publication'),
-        0,
-        $options
-    ));
-
+    $name = new lang_string('obtaingroupapproval_admin', 'publication');
+    $description = new lang_string('obtaingroupapproval_admin_desc', 'publication');
+    $setting = new admin_setting_configselect('publication/obtaingroupapproval', $name, $description, 0, $options);
+    $settings->add($setting);
 
     $options = [
         PUBLICATION_NOTIFY_NONE => get_string('notify:setting:0', 'publication'),
@@ -84,38 +72,79 @@ if ($ADMIN->fulltree) {
         PUBLICATION_NOTIFY_ALL => get_string('notify:setting:3', 'publication'),
     ];
 
-    $settings->add(new admin_setting_configselect(
-        'publication/notifyfilechange',
-        get_string('notify:filechange_admin', 'publication'),
-        get_string('notify:filechange_help', 'publication'),
-        PUBLICATION_NOTIFY_STUDENT,
-        $options
-    ));
+    $name = new lang_string('notify:filechange_admin', 'publication');
+    $description = new lang_string('notify:filechange_help', 'publication');
+    $setting = new admin_setting_configselect('publication/notifyfilechange',
+                                        $name,
+                                        $description,
+                                        PUBLICATION_NOTIFY_STUDENT,
+                                        $options);
+    $settings->add($setting);
 
-    $settings->add(new admin_setting_configselect(
-        'publication/notifystatuschange',
-        get_string('notify:statuschange_admin', 'publication'),
-        get_string('notify:statuschange_help', 'publication'),
-        PUBLICATION_NOTIFY_ALL,
-        $options
-    ));
+    $name = new lang_string('notify:statuschange_admin', 'publication');
+    $description = new lang_string('notify:statuschange_help', 'publication');
+    $setting = new admin_setting_configselect('publication/notifystatuschange',
+                                        $name,
+                                        $description,
+                                        PUBLICATION_NOTIFY_ALL,
+                                        $options);
+    $settings->add($setting);
 
 
     if (isset($CFG->maxbytes)) {
-        $settings->add(new admin_setting_configselect(
-            'publication/maxbytes',
-            get_string('maxbytes', 'publication'),
-            get_string('configmaxbytes', 'publication'),
-            5242880,
-            get_max_upload_sizes($CFG->maxbytes)
-        ));
+        $name = new lang_string('maxbytes', 'publication');
+        $description = new lang_string('configmaxbytes', 'publication');
+        $setting = new admin_setting_configselect('publication/maxbytes',
+                                        $name,
+                                        $description,
+                                        5242880,
+                                        get_max_upload_sizes($CFG->maxbytes));
+        $settings->add($setting);
     }
 
-    $settings->add(new admin_setting_configselect(
-        'publication/availabilityrestriction',
-        get_string('availabilityrestriction_admin', 'publication'),
-        get_string('availabilityrestriction_admin_desc', 'publication'),
-        1,
-        [get_string('no'), get_string('yes')]
-    ));
+    $options = [
+        0 => get_string('no'),
+        1 => get_string('yes'),
+    ];
+
+    $name = new lang_string('availabilityrestriction_admin', 'publication');
+    $description = new lang_string('availabilityrestriction_admin_desc', 'publication');
+    $setting = new admin_setting_configselect('publication/availabilityrestriction', $name, $description, 1, $options);
+    $settings->add($setting);
+
+    $name = new lang_string('allowsubmissionsfromdate', 'publication');
+    $description = new lang_string('allowsubmissionsfromdate_help', 'publication');
+    $setting = new admin_setting_configduration('publication/allowsubmissionsfromdate',
+                                                    $name,
+                                                    $description,
+                                                    0);
+    $setting->set_enabled_flag_options(admin_setting_flag::ENABLED, true);
+    $settings->add($setting);
+
+    $name = new lang_string('duedate', 'publication');
+    $description = new lang_string('duedate_help', 'publication');
+    $setting = new admin_setting_configduration('publication/duedate',
+                                                    $name,
+                                                    $description,
+                                                    604800);
+    $setting->set_enabled_flag_options(admin_setting_flag::ENABLED, true);
+    $settings->add($setting);
+
+    $name = new lang_string('approvalfromdate', 'publication');
+    $description = new lang_string('approvalfromdate_help', 'publication');
+    $setting = new admin_setting_configduration('publication/approvalfromdate',
+                                                    $name,
+                                                    $description,
+                                                    0);
+    $setting->set_enabled_flag_options(admin_setting_flag::ENABLED, true);
+    $settings->add($setting);
+
+    $name = new lang_string('approvaltodate', 'publication');
+    $description = new lang_string('approvaltodate_help', 'publication');
+    $setting = new admin_setting_configduration('publication/approvaltodate',
+                                                    $name,
+                                                    $description,
+                                                    604800);
+    $setting->set_enabled_flag_options(admin_setting_flag::ENABLED, true);
+    $settings->add($setting);
 }

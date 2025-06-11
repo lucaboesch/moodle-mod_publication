@@ -186,11 +186,11 @@ class publication {
         echo $OUTPUT->box_start('generalbox boxaligncenter', 'dates');
         echo '<table>';
         if ($this->instance->allowsubmissionsfromdate) {
-            echo '<tr><td class="c0">' . get_string('allowsubmissionsfromdate' . $textsuffix, 'publication') . ':</td>';
+            echo '<tr><td class="c0">' . get_string('datefrom' . $textsuffix, 'publication') . ':</td>';
             echo '    <td class="c1">' . userdate($this->instance->allowsubmissionsfromdate) . '</td></tr>';
         }
         if ($this->instance->duedate) {
-            echo '<tr><td class="c0">' . get_string('duedate' . $textsuffix, 'publication') . ':</td>';
+            echo '<tr><td class="c0">' . get_string('dateto' . $textsuffix, 'publication') . ':</td>';
             echo '    <td class="c1">' . userdate($this->instance->duedate) . '</td></tr>';
         }
 
@@ -406,11 +406,11 @@ class publication {
     public function is_approval_open_string() {
         $fromstr = '';
         if ($this->get_instance()->approvalfromdate > 0) {
-            $fromstr = get_string('from') . ' ' . userdate($this->get_instance()->approvalfromdate);
+            $fromstr = get_string('fromdate') . ' ' . userdate($this->get_instance()->approvalfromdate);
         }
         $tostr = '';
         if ($this->get_instance()->approvaltodate > 0) {
-            $tostr = get_string('until') . ' ' . userdate($this->get_instance()->approvaltodate);
+            $tostr = get_string('todate') . ' ' . userdate($this->get_instance()->approvaltodate);
         }
         return $fromstr . ' ' . $tostr;
     }
