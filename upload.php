@@ -51,6 +51,11 @@ $url = new moodle_url('/mod/publication/upload.php', ['cmid' => $cm->id]);
 if (!empty($id)) {
     $url->param('id', $id);
 }
+
+$instancename = format_string($publication->get_instance()->name);
+$myfiles = get_string('myfiles', 'publication');
+$pagetitle = strip_tags($course->shortname . ': ' . $instancename . ' - ' . $myfiles);
+$PAGE->set_title($pagetitle);
 $PAGE->set_url($url);
 
 if (!$publication->is_open()) {
