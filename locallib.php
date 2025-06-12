@@ -620,7 +620,7 @@ class publication {
      * @return string The HTML output for the all files form.
      */
     public function display_allfilesform() {
-        global $CFG, $DB;
+        global $CFG, $DB, $PAGE;
         $output = '';
 
         $cm = $this->coursemodule;
@@ -742,39 +742,29 @@ class publication {
                 $buttons = '';
             }
 
-            $output .= html_writer::start_div('withselection col-7').
-                 html_writer::span(get_string('withselected', 'publication')).
-                 html_writer::select($options, 'action').
-                 html_writer::empty_tag('input', [
+            $output .= html_writer::start_div('withselection col-7') .
+                html_writer::span(get_string('withselected', 'publication')) .
+                html_writer::select($options, 'action', '', [], [
+                    'id' => 'withselect-action',
+                    'disabled' => 'disabled',
+                ]) .
+                html_writer::empty_tag('input', [
                     'type' => 'submit',
                     'name' => 'submitgo',
                     'value' => get_string('go', 'publication'),
                     'class' => 'btn btn-primary',
-                 ]).html_writer::end_div().
-                 html_writer::div($buttons, 'col');
-
+                    'id' => 'withselect-go',
+                    'disabled' => 'disabled',
+                ]) .
+                html_writer::end_div() .
+                html_writer::div($buttons, 'col');
         }
 
-        // Select all/none.
-        $output .= html_writer::start_tag('div', ['class' => 'checkboxcontroller']) . "
-            <script type=\"text/javascript\">
-                function toggle_userselection() {
-                    var checkboxes = document.getElementsByClassName('userselection');
-                    var sel = document.getElementById('selectallnone');
+        $output .= html_writer::end_div() .
+            html_writer::end_tag('fieldset') .
+            html_writer::end_tag('form');
 
-                    if (checkboxes.length > 0) {
-                        checkboxes[0].checked = sel.checked;
-
-                        for(var i = 1; i < checkboxes.length;i++) {
-                            checkboxes[i].checked = checkboxes[0].checked;
-                        }
-                    }
-                }
-            </script>" .
-                html_writer::end_div() .
-                html_writer::end_div() .
-                html_writer::end_tag('fieldset') .
-                html_writer::end_tag('form');
+        $PAGE->requires->js_call_amd('mod_publication/bulkuseractions', 'init');
 
         // Mini form for setting user preference.
         $formaction = new moodle_url('/mod/publication/view.php',
