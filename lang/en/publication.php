@@ -128,7 +128,7 @@ $string['mode_help'] = 'Choose whether students can upload documents here or the
 $string['modeimport'] = 'Import files from an assignment activity';
 $string['modeupload'] = 'Upload files directly in the current activity';
 $string['modulename'] = 'Student folder';
-$string['modulename_help'] = 'The student folder offers the following features:<br><ul><li>Students can upload files or import them from an assignment activity.</li><li>The files will be published (will be made visible to everyone) automatically or after students and/ or teachers approval for publishing.</li><li>Students and/or teachers will receive a notification when students upload or change a file or when a file is imported or updated from an assignment activity. Furthermore students and/ or teachers will receive a notification about any changes of the publication status.</li></ul>';
+$string['modulename_help'] = 'The student folder offers the following features:<br><ul><li>Students can upload files or import them from an assignment activity.</li><li>The files will be published (will be made visible to everyone) automatically or after students and/ or teachers approval for publishing.</li><li>Students and/or teachers will receive a notification when students upload or change a file or when a file is imported or updated from an assignment activity. Furthermore students and/ or teachers will receive a notification about any changes of the publication status.</li></ul><p><a href="https://academic-moodle-cooperation.org/anleitungen/studierendenordner-einsetzen/?lng=en" target="_blank">Student Folder: Use the student folder</a></p>';
 $string['modulenameplural'] = 'Student folders';
 $string['myfiles'] = 'Own files';
 $string['mygroupfiles'] = 'My group\'s files';
