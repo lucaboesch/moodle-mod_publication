@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+5.0.0 (2025-XX-XX)
+-------------------
+* [FEATURE] #8116 - Admin settings for default dates added
+
 4.5.3 (2025-03-05)
 -------------------
 * [BUG] #8249 - further fix for AMOS to be able to manage language strings of the current version
