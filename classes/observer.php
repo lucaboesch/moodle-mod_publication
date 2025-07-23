@@ -62,7 +62,7 @@ class observer {
     /**
      * Event observer for \mod_assign\event\assessable_submitted
      *
-     * @param \mod_assign\event\assessable_submitted $e Event object containing useful data
+     * @param \mod_assign\event\base $e Event object containing useful data
      * @return bool true if success
      */
     public static function import_assessable(\mod_assign\event\base $e) {
