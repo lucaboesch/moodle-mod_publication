@@ -4,6 +4,7 @@ CHANGELOG
 5.0.0 (2025-XX-XX)
 -------------------
 * [FEATURE] #8116 - Admin settings for default dates added
+* [BUG] #8427 - fix assign submission submit/remove event observer
 
 4.5.3 (2025-03-05)
 -------------------
