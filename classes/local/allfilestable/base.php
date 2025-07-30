@@ -769,7 +769,12 @@ class base extends \table_sql {
                 // Null if none found, DB-entry otherwise!
                 $checked = ($checked === false || $checked === null) ? "" : $checked;
 
-                $sel = \html_writer::select($this->options, 'files[' . $file->get_id() . ']', (string)$checked);
+                $sel = \html_writer::select($this->options,
+                    'files[' . $file->get_id() . ']',
+                    (string)$checked,
+                    ['' => 'choosedots'],
+                    ['class' => 'd-inline-block']
+                );
                 $table->data[] = [$sel];
             }
         }
@@ -835,7 +840,12 @@ class base extends \table_sql {
                 // Null if none found, DB-entry otherwise!
                 $checked = ($checked === false || $checked === null) ? "" : $checked;
 
-                $sel = \html_writer::select($this->options, 'files[' . $file->get_id() . ']', (string)$checked);
+                $sel = \html_writer::select($this->options,
+                    'files[' . $file->get_id() . ']',
+                    (string)$checked,
+                    ['' => 'choosedots'],
+                    ['class' => 'd-inline-block']
+                );
                 $row[] = $sel;
             }
             // Visible for students.

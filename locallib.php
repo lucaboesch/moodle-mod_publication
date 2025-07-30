@@ -742,11 +742,12 @@ class publication {
                 $buttons = '';
             }
 
-            $output .= html_writer::start_div('withselection col-7') .
+            $output .= html_writer::start_div('withselection col-7', ['class' => 'mt-2']) .
                 html_writer::span(get_string('withselected', 'publication')) .
                 html_writer::select($options, 'action', '', [], [
                     'id' => 'withselect-action',
                     'disabled' => 'disabled',
+                    'class' => 'd-inline-block',
                 ]) .
                 html_writer::empty_tag('input', [
                     'type' => 'submit',
