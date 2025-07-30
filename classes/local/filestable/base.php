@@ -172,7 +172,12 @@ class base extends \html_table {
             } else {
                 if ($this->publication->is_approval_open()) {
                     $this->changepossible = true;
-                    return \html_writer::select($this->options, 'studentapproval[' . $file->get_id() . ']', $studentapproval);
+                    return \html_writer::select($this->options,
+                        'studentapproval[' . $file->get_id() . ']',
+                        $studentapproval,
+                        ['' => 'choosedots'],
+                        ['class' => 'd-inline-block']
+                    );
                 }
                 $studentpending = true;
                 $hint = get_string('student_pending', 'publication');
