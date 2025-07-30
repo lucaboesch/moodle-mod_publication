@@ -110,7 +110,12 @@ class group extends base {
                 if (empty($rejectedstudents)) {
                     if ($this->publication->is_approval_open()) {
                         $this->changepossible = true;
-                        return \html_writer::select($this->options, 'studentapproval[' . $file->get_id() . ']', '0');
+                        return \html_writer::select($this->options,
+                            'studentapproval[' . $file->get_id() . ']',
+                            '0',
+                            ['' => 'choosedots'],
+                            ['class' => 'd-inline-block']
+                        );
                     }
                 }
             }

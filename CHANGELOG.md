@@ -6,6 +6,7 @@ CHANGELOG
 * Moodle 5.0.0 compatible version
 * [FEATURE] #8116 - Admin settings for default dates added
 * [FEATURE] #8286 - Accessibility improvements
+* [BUG] #8427 - fix assign submission submit/remove event observer
 
 4.5.3 (2025-03-05)
 -------------------

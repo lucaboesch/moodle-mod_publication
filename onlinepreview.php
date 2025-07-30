@@ -45,7 +45,7 @@ require_capability('mod/publication:view', $context);
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(get_string('preview') . ' ' . get_string('onlinetextfilename', 'assignsubmission_onlinetext') .
-        ($itemname ? ' ' . strtolower(get_string('from')) . ' ' . $itemname : ''));
+        ($itemname ? ' ' . strtolower(get_string('fromdate')) . ' ' . $itemname : ''));
 
 echo publication::export_onlinetext_for_preview($itemid, $cm->instance, $context->id);
 
