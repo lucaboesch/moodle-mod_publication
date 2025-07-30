@@ -135,6 +135,12 @@
     background-color: transparent;
 }
 
+#page-mod-publication-view table.statustable tbody,
+#page-mod-publication-view table.permissionstable tbody,
+#page-mod-publication-view table.filetable tbody {
+    border-width: 0 !important; /* stylelint-disable-line declaration-no-important */
+}
+
 #page-mod-publication-view table.statustable td,
 #page-mod-publication-view table.filetable td {
     height: 30px;
