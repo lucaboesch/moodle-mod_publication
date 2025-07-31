@@ -7,6 +7,7 @@ CHANGELOG
 * [BUG] #8091 - fix for changed publication settings with group submissions of imported assignment activities
 * [BUG] #8427 - fix for automatic updating of removed submissions of imported assignment activities
 * [FEATURE] #8116 - implemented admin settings for default dates
+* [FEATURE] #8311 - Accessibility improvement: add a meaningful tab title for upload page
 * [FEATURE] #8337 - implement check to dropdown for multi actions when no file submissions are chosen
 
 4.5.3 (2025-03-05)
