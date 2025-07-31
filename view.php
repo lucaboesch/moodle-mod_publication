@@ -201,6 +201,10 @@ if ($data = $filesform->get_data()) {
     }
 }
 
+if ($publication->get_mode() == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+    $publication->check_and_update_group_approval();
+}
+
 $filesform = new mod_publication_files_form(null,
     ['publication' => $publication, 'sid' => $submissionid, 'filearea' => 'attachment']);
 
