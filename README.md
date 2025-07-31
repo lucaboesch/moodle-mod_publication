@@ -3,7 +3,7 @@ Student Folder
 
 This file is part of the mod_publication plugin for Moodle - <http://moodle.org/>
 
-*Author:*    Hannes Laimer, Philipp Hager, Andreas Windbichler, Simeon Naydenov
+*Author:*    Hannes Laimer, Philipp Hager, Andreas Windbichler, Simeon Naydenov, Clemens Marx
 
 *Copyright:* [Academic Moodle Cooperation](http://www.academic-moodle-cooperation.org)
 
