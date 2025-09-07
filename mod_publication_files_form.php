@@ -46,7 +46,7 @@ class mod_publication_files_form extends moodleform {
      * Form definition method_exists
      */
     public function definition() {
-        global $DB, $PAGE, $OUTPUT, $USER;
+        global $PAGE, $OUTPUT, $USER;
 
         $publication = &$this->_customdata['publication'];
 

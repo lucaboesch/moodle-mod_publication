@@ -98,7 +98,7 @@ class base extends \table_sql {
      * @param string $filter filter for this table
      */
     public function __construct($uniqueid, \publication $publication, $filter) {
-        global $CFG, $OUTPUT;
+        global $CFG;
 
         $this->allfilespage = $publication->get_allfilespage();
         parent::__construct($uniqueid);

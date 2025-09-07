@@ -137,88 +137,6 @@ class publication {
     }
 
     /**
-     * Whether or not to show intro text right now
-     *
-     * @return bool
-     */
-    public function show_intro() {
-        if ($this->get_instance()->alwaysshowdescription ||
-                time() > $this->get_instance()->allowsubmissionsfromdate) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Display the intro text if available
-     */
-    public function display_intro() {
-        global $OUTPUT;
-
-        if ($this->show_intro()) {
-            if ($this->instance->intro) {
-                echo $OUTPUT->box_start('generalbox boxaligncenter', 'intro');
-                echo format_module_intro('publication', $this->instance, $this->coursemodule->id);
-                echo $OUTPUT->box_end();
-            }
-        } else {
-            if ($this->alwaysshowdescription) {
-                $message = get_string('allowsubmissionsfromdatesummary',
-                        'publication', userdate($this->instance->allowsubmissionsfromdate));
-            } else {
-                $message = get_string('allowsubmissionsanddescriptionfromdatesummary',
-                        'publication', userdate($this->instance->allowsubmissionsfromdate));
-            }
-            echo html_writer::div($message, '', ['id' => 'intro']);
-        }
-    }
-
-    /**
-     * Display dates which limit submission timespan
-     */
-    public function display_availability() {
-        global $USER, $OUTPUT;
-
-        // Display availability dates.
-        $textsuffix = ($this->instance->mode == PUBLICATION_MODE_IMPORT) ? "_import" : "_upload";
-
-        echo $OUTPUT->box_start('generalbox boxaligncenter', 'dates');
-        echo '<table>';
-        if ($this->instance->allowsubmissionsfromdate) {
-            echo '<tr><td class="c0">' . get_string('datefrom' . $textsuffix, 'publication') . ':</td>';
-            echo '    <td class="c1">' . userdate($this->instance->allowsubmissionsfromdate) . '</td></tr>';
-        }
-        if ($this->instance->duedate) {
-            echo '<tr><td class="c0">' . get_string('dateto' . $textsuffix, 'publication') . ':</td>';
-            echo '    <td class="c1">' . userdate($this->instance->duedate) . '</td></tr>';
-        }
-
-        $extensionduedate = $this->user_extensionduedate($USER->id);
-
-        if ($extensionduedate) {
-            echo '<tr><td class="c0">' . get_string('extensionto', 'publication') . ':</td>';
-            echo '    <td class="c1">' . userdate($extensionduedate) . '</td></tr>';
-        }
-
-        $override = $this->override_get_currentuserorgroup();
-        if ($override) {
-            if ($override->approvaloverride) {
-                echo '<tr><td class="c0">' . get_string('approvaloverride', 'publication') . ':</td>';
-                echo '    <td class="c1">' . $override->approvaloverride . '</td></tr>';
-            }
-            if ($override->submissionoverride) {
-                echo '<tr><td class="c0">' . get_string('submissionoverride', 'publication') . ':</td>';
-                echo '    <td class="c1">' . $override->submissionoverride . '</td></tr>';
-            }
-        }
-
-        echo '</table>';
-
-        echo $OUTPUT->box_end();
-    }
-
-    /**
      * If the mode is set to import then the link to the corresponding
      * assignment will be displayed
      */
@@ -253,33 +171,6 @@ class publication {
             return $context;
         }
         return null;
-    }
-
-    /**
-     * Display Link to upload form if submission date is open
-     * and the user has the capability to upload files
-     *
-     * @return string HTML snippet with upload link (single button or plain text if not allowed)
-     */
-    public function display_uploadlink() {
-        global $OUTPUT;
-
-        if ($this->instance->mode == PUBLICATION_MODE_UPLOAD) {
-            if (has_capability('mod/publication:upload', $this->context)) {
-                if ($this->is_open()) {
-                    $url = new moodle_url('/mod/publication/upload.php',
-                            ['id' => $this->instance->id, 'cmid' => $this->coursemodule->id]);
-                    $label = get_string('edit_uploads', 'publication');
-                    $editbutton = $OUTPUT->single_button($url, $label);
-
-                    return $editbutton;
-                } else {
-                    return get_string('edit_timeover', 'publication');
-                }
-            } else {
-                return get_string('edit_notcapable', 'publication');
-            }
-        }
     }
 
     /**
@@ -1135,7 +1026,7 @@ class publication {
     /**
      * Creates a zip of all uploaded files and sends a zip to the browser
      *
-     * @param unknown $uploaders false => empty zip, true all users, array files from uploaders (users/groups) in array
+     * @param array|bool $uploaders false => empty zip, true all users, array files from uploaders (users/groups) in array
      */
     public function download_zip($uploaders = []) {
         global $CFG, $DB, $USER;
@@ -1228,7 +1119,7 @@ class publication {
      * Pack files in ZIP
      *
      * @param object[] $filesforzipping Files for zipping
-     * @return object zipped files
+     * @return string|bool zipped files
      */
     private function pack_files($filesforzipping) {
         global $CFG;
@@ -2100,8 +1991,8 @@ class publication {
                     0,
                     'u.*',
                     null,
-                    null,
-                    null,
+                    0,
+                    0,
                     true);
         $graders = [];
         if (groups_get_activity_groupmode($this->coursemodule) == SEPARATEGROUPS) {
