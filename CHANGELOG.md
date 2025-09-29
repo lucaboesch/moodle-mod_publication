@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+
+5.0.1 (2025-09-29)
+-------------------
+* [BUG] #8534 - fix incorrect usage of deprecated.txt
+* [BUG] #8535 - Add missing privacy provider table coverage for table publication_overrides
+
 5.0.0 (2025-06-11)
 -------------------
 * Moodle 5.0.0 compatible version
