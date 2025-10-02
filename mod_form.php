@@ -45,10 +45,6 @@ class mod_publication_mod_form extends moodleform_mod {
      * @var array List of assignment IDs that have team submissions enabled.
      */
     private $_teamassigns;
-    /**
-     * @var array List of assignment IDs that do not have team submissions enabled.
-     */
-    private $_notteamassigns;
 
     /**
      * Define this form - called by the parent constructor
@@ -119,7 +115,6 @@ class mod_publication_mod_form extends moodleform_mod {
             $select->addOption($assigninstance->name, $assigninstance->id, $attributes);
         }
         $this->_teamassigns = $teamassigns;
-        $this->_notteamassigns = $notteamassigns;
         $mform->addElement($select);
         $mform->addHelpButton('importfrom', 'assignment', 'publication');
         $mform->hideIf('importfrom', 'mode', 'neq', PUBLICATION_MODE_IMPORT);

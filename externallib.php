@@ -39,7 +39,6 @@ require_once($CFG->dirroot . "/mod/publication/locallib.php");
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_publication_external extends external_api {
-
     /**
      * Returns description of method parameters
      *
@@ -56,7 +55,6 @@ class mod_publication_external extends external_api {
                 ]
         );
     }
-
 
     /**
      * The function itself

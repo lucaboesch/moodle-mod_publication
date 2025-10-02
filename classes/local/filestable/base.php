@@ -160,7 +160,6 @@ class base extends \html_table {
 
         $studentapproved = false;
         $studentdenied = false;
-        $studentpending = false;
         $hint = '';
         if ($obtainstudentapproval == 1) {
             if ($studentapproval == 1) {
@@ -179,7 +178,6 @@ class base extends \html_table {
                         ['class' => 'd-inline-block']
                     );
                 }
-                $studentpending = true;
                 $hint = get_string('student_pending', 'publication');
             }
         } else {
@@ -191,7 +189,6 @@ class base extends \html_table {
 
         $teacherapproved = false;
         $teacherdenied = false;
-        $teacherpending = false;
 
         if ($obtainteacherapproval == 1) {
             if ($teacherapproval == 1) {
@@ -201,7 +198,6 @@ class base extends \html_table {
                 $teacherdenied = true;
                 $hint .= get_string('teacher_rejected', 'publication');
             } else {
-                $teacherpending = true;
                 $hint .= get_string('teacher_pending', 'publication');
             }
         } else {

@@ -60,7 +60,6 @@ class group extends base {
 
         $studentapproved = false;
         $studentdenied = false;
-        $studentpending = false;
         $hint = '';
 
         if ($obtainstudentapproval == 1) {
@@ -129,7 +128,6 @@ class group extends base {
 
         $teacherapproved = false;
         $teacherdenied = false;
-        $teacherpending = false;
 
         if ($obtainteacherapproval == 1) {
             if ($teacherapproval == 1) {

@@ -255,16 +255,15 @@ function publication_reset_userdata($data) {
 
 }
 
-
 /**
- * extend an assigment navigation settings
+ * Extend an assignment navigation settings
  *
  * @param settings_navigation $settings
  * @param navigation_node $navref
  * @return void
  */
 function publication_extend_settings_navigation(settings_navigation $settings, navigation_node $navref) {
-    global $DB, $CFG;
+    global $CFG;
 
     require_once($CFG->dirroot . '/mod/publication/locallib.php');
 
@@ -346,7 +345,8 @@ function mod_publication_pluginfile($course, $cm, context $context, $filearea, $
 
     $fullpath = "/{$context->id}/mod_publication/$filearea/$itemid/$relativepath";
     $fs = get_file_storage();
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
+    $file = $fs->get_file_by_hash(sha1($fullpath));
+    if (!$file || $file->is_directory()) {
         return false;
     }
 

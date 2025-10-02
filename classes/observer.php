@@ -46,7 +46,6 @@ class observer {
      * @param \core\event\base $event The event data for the created course module.
      */
     public static function course_module_created(\core\event\base $event) {
-        global $DB;
         $eventdata = $event->get_data();
         if (isset($eventdata['other']) &&
             isset($eventdata['other']['modulename']) && $eventdata['other']['modulename'] == 'publication') {
@@ -66,7 +65,7 @@ class observer {
      * @return bool true if success
      */
     public static function import_assessable(\mod_assign\event\base $e) {
-        global $DB, $CFG, $OUTPUT;
+        global $DB, $CFG;
 
         // Keep other page calls slimmed down!
         require_once($CFG->dirroot . '/mod/publication/locallib.php');
@@ -88,7 +87,6 @@ class observer {
                 'module' => $assignmoduleid,
                 'instance' => $assignid,
         ]);
-        $assigncontext = \context_module::instance($assigncm->id);
 
         $sql = "SELECT pub.*
                   FROM {publication} pub
