@@ -4,6 +4,14 @@ CHANGELOG
 
 5.0.1 (2025-09-29)
 -------------------
+* Moodle 5.1.0 compatible version
+* [BUG] #8440 - fix resetting of filters after applying changes on All files table
+* [FEATURE] #8332 - add support for text filters in course name, activity name and group name when saving zip file
+* [BUG] #8092 - only show students/teachers who have mod/publication:upload in the table
+* [FEATURE] #8441 - use original filenames in zip file
+
+5.0.1 (2025-09-29)
+-------------------
 * [BUG] #8534 - fix incorrect usage of deprecated.txt
 * [BUG] #8535 - add missing privacy provider table coverage for table publication_overrides
 * [BUG] #8551 - remove table borders in Moodle ≥ 5.0 - github pull request #102 - lucaboesch

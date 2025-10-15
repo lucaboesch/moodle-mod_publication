@@ -376,7 +376,7 @@ class publication {
         $currentgroup = groups_get_activity_group($this->get_coursemodule(), true);
 
         // Get all ppl that are allowed to submit assignments.
-        list($esql, $params) = get_enrolled_sql($this->context, 'mod/publication:view', $currentgroup);
+        list($esql, $params) = get_enrolled_sql($this->context, 'mod/publication:upload', $currentgroup);
 
         $allfilespage = $ignoreallfilespage || $this->allfilespage;
 
@@ -494,7 +494,7 @@ class publication {
      * @return string The HTML output for the all files form.
      */
     public function display_allfilesform() {
-        global $CFG, $DB, $PAGE;
+        global $CFG, $DB, $PAGE, $USER, $SESSION;
         $output = '';
 
         $cm = $this->coursemodule;
@@ -510,7 +510,16 @@ class publication {
         // Next we get perpage param from database!
         $perpage = get_user_preferences('mod-publication-perpage-' . $this->instance->id, 10);
 
-        $filter = optional_param('filter', PUBLICATION_FILTER_NOFILTER, PARAM_ALPHANUMEXT);
+        if (!isset($SESSION->modpublicationfilters)) {
+            $SESSION->modpublicationfilters = [];
+        }
+        if (!isset($SESSION->modpublicationfilters[$this->instance->id])) {
+            $SESSION->modpublicationfilters[$this->instance->id] = PUBLICATION_FILTER_NOFILTER;
+        }
+        $filter = optional_param('filter',
+            $SESSION->modpublicationfilters[$this->instance->id],
+            PARAM_ALPHANUMEXT);
+        $SESSION->modpublicationfilters[$this->instance->id] = $filter;
 
         $page = optional_param('page', 0, PARAM_INT);
 
@@ -1060,19 +1069,23 @@ class publication {
             $uploaders = $this->get_groups(0, $uploaders);
         }
 
-        $filename = str_replace(' ', '_', clean_filename($this->course->shortname . '-' .
-                $this->get_instance()->name . '-' . $groupname . $this->get_instance()->id . '.zip')); // Name of new zip file.
+        $coursename = format_string($this->course->shortname);
+        $instancename = format_string($this->get_instance()->name);
+        $groupname = format_string($groupname);
+        $filename = str_replace(' ', '_', clean_filename($coursename . '-' .
+            $instancename . '-' . $groupname . $this->get_instance()->id . '.zip')); // Name of new zip file.
 
         $userfields = \core_user\fields::get_name_fields();
         $userfields['id'] = 'id';
         $userfields['username'] = 'username';
         $userfields = implode(', ', $userfields);
+        $filenamescounters = [];
 
         // Get all files from each user/group.
         foreach ($uploaders as $uploader) {
             $conditions['userid'] = $uploader;
             $records = $DB->get_records('publication_file', $conditions);
-
+            // Not sure if the code below is used anywhere..
             if (!$teamsubmission) {
                 // Get user firstname/lastname.
                 $auser = $DB->get_record('user', ['id' => $uploader], $userfields);
@@ -1086,6 +1099,7 @@ class publication {
                 }
                 $itemunique = '';
             }
+            // Up to here.
 
             foreach ($records as $record) {
                 if ($canapprove || $this->has_filepermission($record->fileid, $USER->id)) {
@@ -1095,8 +1109,16 @@ class publication {
 
                     // Get files new name.
                     $fileext = strstr($file->get_filename(), '.');
-                    $fileoriginal = str_replace($fileext, '', $file->get_filename());
-                    $fileforzipname = clean_filename($itemname . '_' . $fileoriginal . '_' . $itemunique . $fileext);
+                    $fileoriginalname = $file->get_filename();
+                    if (isset($filenamescounters[$fileoriginalname])) {
+                        $filenamescounters[$fileoriginalname]++;
+                        $fileoriginal = str_replace($fileext, '', $file->get_filename());
+                        $fileoriginal .= ' (' . $filenamescounters[$fileoriginalname] . ')';
+                        $fileforzipname = clean_filename($fileoriginal . $fileext);
+                    } else {
+                        $filenamescounters[$fileoriginalname] = 0;
+                        $fileforzipname = clean_filename($fileoriginalname);
+                    }
                     if (key_exists($fileforzipname, $filesforzipping)) {
                         throw new coding_exception('Can\'t overwrite ' . $fileforzipname . '!');
                     }

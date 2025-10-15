@@ -275,13 +275,15 @@ if (has_capability('mod/publication:approve', $context)) {
 }
 
 $mode = $publication->get_mode();
-$templatecontext->myfilestitle = $mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION ?
-    get_string('mygroupfiles', 'publication') : get_string('myfiles', 'publication');
-$filestable = $publication->get_filestable();
-$filestable->init();
-$templatecontext->myfiles = $filestable->data;
-$templatecontext->hasmyfiles = count($templatecontext->myfiles) > 0;
-$templatecontext->myfilesform = $filesform->render();
+if (has_capability('mod/publication:upload', $context, $USER, false)) {
+    $templatecontext->myfilestitle = $mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION ?
+        get_string('mygroupfiles', 'publication') : get_string('myfiles', 'publication');
+    $filestable = $publication->get_filestable();
+    $filestable->init();
+    $templatecontext->myfiles = $filestable->data;
+    $templatecontext->hasmyfiles = count($templatecontext->myfiles) > 0;
+    $templatecontext->myfilesform = $filesform->render();
+}
 if (!$allfilespage) {
     echo $OUTPUT->render_from_template('mod_publication/overview', $templatecontext);
 }
