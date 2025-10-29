@@ -176,7 +176,8 @@ function publication_get_coursemodule_info($coursemodule) {
     global $DB;
 
     $dbparams = ['id' => $coursemodule->instance];
-    $fields = 'id, name, alwaysshowdescription, allowsubmissionsfromdate, intro, introformat, completionupload';
+    $fields = 'id, name, alwaysshowdescription, allowsubmissionsfromdate, intro, introformat,' .
+              'completionupload, completionassignsubmission';
     if (!$publication = $DB->get_record('publication', $dbparams, $fields)) {
         return false;
     }
@@ -193,6 +194,7 @@ function publication_get_coursemodule_info($coursemodule) {
     // Populate the custom completion rules as key => value pairs, but only if the completion mode is 'automatic'.
     if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
         $result->customdata['customcompletionrules']['completionupload'] = $publication->completionupload;
+        $result->customdata['customcompletionrules']['completionassignsubmission'] = $publication->completionassignsubmission;
     }
 
     return $result;
@@ -408,6 +410,11 @@ function mod_publication_get_completion_active_rule_descriptions($cm) {
             case 'completionupload':
                 if (!empty($val)) {
                     $descriptions[] = get_string('completionupload', 'publication');
+                }
+                break;
+            case 'completionassignsubmission':
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionassignsubmission', 'publication');
                 }
                 break;
             default:

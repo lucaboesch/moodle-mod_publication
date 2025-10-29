@@ -110,6 +110,31 @@
             <td>{{lastmodified}}</td>
         </tr>
     {{/hasmyfiles}}
+    {{#hasmygroupsinfo}}
+        {{#hasgroupsnames}}
+            <tr>
+                <th>{{#str}}group{{/str}}</th>
+                <td>{{#groupsnames}}<div>{{.}}</div>{{/groupsnames}}</td>
+            </tr>
+        {{/hasgroupsnames}}
+        {{#hasgroupsmembers}}
+            <tr>
+                <th>{{#str}}groupmembers,group{{/str}}</th>
+                <td>
+                    {{#groupsmembers}}
+                            <div>{{{.}}}</div>
+                    {{/groupsmembers}}
+                </td>
+            </tr>
+        {{/hasgroupsmembers}}
+        {{^hasgroupsnames}}
+            <tr>
+                <th>{{#str}}group{{/str}}</th>
+                <td><div class="alert alert-danger">{{#str}}noteam,assign{{/str}}</div></td>
+            </tr>
+        {{/hasgroupsnames}}
+
+    {{/hasmygroupsinfo}}
     <tr>
         <th>{{myfilestitle}}</th>
         <td>

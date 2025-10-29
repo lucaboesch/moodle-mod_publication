@@ -56,7 +56,6 @@ define('PUBLICATION_NOTIFY_ALL', 3);
 define('PUBLICATION_NOTIFY_STATUSCHANGE', 'status');
 define('PUBLICATION_NOTIFY_FILECHANGE', 'file');
 
-require_once($CFG->dirroot . '/mod/publication/mod_publication_allfiles_form.php');
 
 /**
  * publication class contains much logic used in mod_publication
@@ -355,6 +354,24 @@ class publication {
     }
 
     /**
+     * Get groupingid to filter groups for
+     *
+     * @return int groupingid
+     */
+    public function get_groupingid() {
+        global $DB;
+        static $groupingid = null;
+        if ($groupingid !== null) {
+            return $groupingid;
+        }
+        if ($this->mode != PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+            return 0;
+        }
+        $groupingid = $DB->get_field('assign', 'teamsubmissiongroupingid', ['id' => $this->instance->importfrom]);
+        return $groupingid;
+    }
+
+    /**
      * Get userids to fetch files for, when displaying all submitted files or downloading them as ZIP
      *
      * @param int[] $users (optional) user ids for which the returned user ids have to filter
@@ -495,6 +512,8 @@ class publication {
      */
     public function display_allfilesform() {
         global $CFG, $DB, $PAGE, $USER, $SESSION;
+
+        require_once(__DIR__ . '/mod_publication_allfiles_form.php');
         $output = '';
 
         $cm = $this->coursemodule;
@@ -1343,6 +1362,47 @@ class publication {
             $this->import_assign_files($assigncm, $assigncontext);
             $this->import_assign_onlinetexts($assigncm, $assigncontext);
 
+            $completion = new completion_info($this->course);
+            $cm = $this->coursemodule;
+            if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC && $this->instance->completionassignsubmission) {
+
+                $sql = 'SELECT userid, publication FROM {publication_file}
+                            WHERE publication = :pubid GROUP BY userid';
+                $dbfiles = $DB->get_records_sql($sql, ['pubid' => $this->instance->id]);
+                if ($this->mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+                    $groups = $this->get_groups($this->get_groupingid());
+                    $users = [];
+                    foreach ($groups as $groupid) {
+                        $members = $this->get_submissionmembers($groupid);
+                        $status = isset($dbfiles[$groupid]);
+                        foreach ($members as $member) {
+                            if (isset($users[$member->id])) {
+                                // If one of the group members has submission, all have.
+                                $users[$member->id] = $users[$member->id] || $status;
+                            } else {
+                                $users[$member->id] = $status;
+                            }
+                        }
+                    }
+                    foreach ($users as $userid => $status) {
+                        if ($status) {
+                            $completion->update_state($cm, COMPLETION_COMPLETE, $userid, false, true);
+                        } else {
+                            $completion->update_state($cm, COMPLETION_INCOMPLETE, $userid, false, true);
+                        }
+                    }
+                } else {
+                    $userids = $this->get_users([], true);
+                    foreach ($userids as $userid) {
+                        if (isset($dbfiles[$userid])) {
+                            $completion->update_state($cm, COMPLETION_COMPLETE, $userid, false, true);
+                        } else {
+                            $completion->update_state($cm, COMPLETION_INCOMPLETE, $userid, false, true);
+                        }
+
+                    }
+                }
+            }
             return true;
         }
 

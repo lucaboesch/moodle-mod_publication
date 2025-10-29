@@ -255,10 +255,18 @@ if ($publicationinstance->duedate > 0) {
         $templatecontext->timeremaining = get_string('overdue', 'publication');
     }
 }
+$mode = $publication->get_mode();
+
 $templatecontext->isteacher = false;
 if (has_capability('mod/publication:approve', $context)) {
     $templatecontext->isteacher = true;
-    $templatecontext->studentcount = count($publication->get_users([], true));
+    if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+        $templatecontext->studentcounttitle = get_string('groups');
+        $templatecontext->studentcount = count($publication->get_groups($publication->get_groupingid()));
+    } else {
+        $templatecontext->studentcounttitle = get_string('participants');
+        $templatecontext->studentcount = count($publication->get_users([], true));
+    }
     $allfilestable = $publication->get_allfilestable(PUBLICATION_FILTER_ALLFILES, true);
     $templatecontext->allfilescount = $allfilestable->get_count();
     $templatecontext->allfiles_url = (new moodle_url('/mod/publication/view.php',
@@ -274,7 +282,6 @@ if (has_capability('mod/publication:approve', $context)) {
     }
 }
 
-$mode = $publication->get_mode();
 if (has_capability('mod/publication:upload', $context, $USER, false)) {
     $templatecontext->myfilestitle = $mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION ?
         get_string('mygroupfiles', 'publication') : get_string('myfiles', 'publication');

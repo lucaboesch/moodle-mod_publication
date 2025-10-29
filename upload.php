@@ -180,7 +180,7 @@ if ($mform->is_cancelled()) {
     // Update competion status - if filescount == 0 => activity not completed, else => activity completed !
 
     $completion = new completion_info($course);
-    if ($completion->is_enabled($cm) && $publication->get_instance()->completionupload) {
+    if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC && $publication->get_instance()->completionupload) {
         if ($filescount == 0) {
             $completion->update_state($cm, COMPLETION_INCOMPLETE, $USER->id);
         } else {

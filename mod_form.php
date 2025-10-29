@@ -249,7 +249,13 @@ class mod_publication_mod_form extends moodleform_mod {
         // Enable this completion rule by default.
         $mform->setDefault($completionuploadlabel, 1);
         $mform->hideIf($completionuploadlabel, 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
-        return [$completionuploadlabel];
+
+        $completionassignsubmission = 'completionassignsubmission' . $suffix;
+        $mform->addElement('advcheckbox', $completionassignsubmission, '', get_string('completionassignsubmission', 'publication'));
+        // Enable this completion rule by default.
+        $mform->setDefault($completionassignsubmission, 1);
+        $mform->hideIf($completionassignsubmission, 'mode', 'neq', PUBLICATION_MODE_IMPORT);
+        return [$completionuploadlabel, $completionassignsubmission];
     }
 
     /**
@@ -261,7 +267,9 @@ class mod_publication_mod_form extends moodleform_mod {
     public function completion_rule_enabled($data) {
         $suffix = $this->get_suffix();
         $completionuploadlabel = 'completionupload' . $suffix;
-        if ($data['mode'] == PUBLICATION_MODE_UPLOAD && !empty($data[$completionuploadlabel])) {
+        $completionassignsubmissionlabel = 'completionassignsubmission' . $suffix;
+        if (($data['mode'] == PUBLICATION_MODE_UPLOAD && !empty($data[$completionuploadlabel])) ||
+            ($data['mode'] == PUBLICATION_MODE_IMPORT && !empty($data[$completionassignsubmissionlabel]))) {
             return true;
         }
         return false;
@@ -280,6 +288,10 @@ class mod_publication_mod_form extends moodleform_mod {
         $completionuploadlabel = 'completionupload' . $suffix;
         if (!isset($data->mode) || $data->mode != PUBLICATION_MODE_UPLOAD) {
             $data->{$completionuploadlabel} = 0;
+        }
+        $completionassignsubmissionlabel = 'completionassignsubmission' . $suffix;
+        if (!isset($data->mode) || $data->mode != PUBLICATION_MODE_IMPORT) {
+            $data->{$completionassignsubmissionlabel} = 0;
         }
 
         $data->groupapproval = 0;
