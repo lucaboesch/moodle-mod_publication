@@ -202,10 +202,11 @@ class mod_publication_files_form extends moodleform {
                     $userfieldsapi = \core_user\fields::for_userpic();
                     $userfields = $userfieldsapi->get_sql('u', false, '', '', false)->selects;
                     $groupsmembers = array_keys($groupsmembers);
-                    list($sqlin, $params) = $DB->get_in_or_equal($groupsmembers, SQL_PARAMS_NAMED);
+                    [$sqlin, $params] = $DB->get_in_or_equal($groupsmembers, SQL_PARAMS_NAMED);
                     $groupsmembers = $DB->get_records_sql(
                         "SELECT DISTINCT $userfields FROM {user} u WHERE u.id $sqlin ORDER BY u.firstname, u.lastname",
-                        $params);
+                        $params
+                    );
                     foreach ($groupsmembers as $uid => $user) {
                         $url = "$CFG->wwwroot/user/view.php?id=$user->id";
                         $userpic = $OUTPUT->user_picture($user, ['size' => 35, 'link' => false]);
@@ -223,9 +224,8 @@ class mod_publication_files_form extends moodleform {
                 $tablecontext['hasgroupsmembers'] = !empty($groupsmembers);
                 $tablecontext['hasgroupsnames'] = !empty($groupsnames);
             } else {
-                //$groupslist = [];
+                // $groupslist = [];
             }
-
         }
         $myfilestable = $OUTPUT->render_from_template('mod_publication/myfiles', $tablecontext);
         $mform->addElement('html', $myfilestable);
@@ -237,10 +237,18 @@ class mod_publication_files_form extends moodleform {
 
                 $onclick = 'return confirm("' . get_string('savestudentapprovalwarning', 'publication') . '")';
 
-                $buttonarray[] = &$mform->createElement('submit', 'submitbutton',
-                    get_string('savechanges'), ['onClick' => $onclick]);
-                $buttonarray[] = &$mform->createElement('reset', 'resetbutton', get_string('revert'),
-                    ['class' => 'btn btn-secondary']);
+                $buttonarray[] = &$mform->createElement(
+                    'submit',
+                    'submitbutton',
+                    get_string('savechanges'),
+                    ['onClick' => $onclick]
+                );
+                $buttonarray[] = &$mform->createElement(
+                    'reset',
+                    'resetbutton',
+                    get_string('revert'),
+                    ['class' => 'btn btn-secondary']
+                );
 
                 $mform->addGroup($buttonarray, 'submitgrp', '', [' '], false);
             } else {
@@ -248,8 +256,10 @@ class mod_publication_files_form extends moodleform {
             }
         }
 
-        if ($publication->get_instance()->mode == PUBLICATION_MODE_UPLOAD
-            && has_capability('mod/publication:upload', $publication->get_context())) {
+        if (
+            $publication->get_instance()->mode == PUBLICATION_MODE_UPLOAD
+            && has_capability('mod/publication:upload', $publication->get_context())
+        ) {
             if ($publication->is_open()) {
                 $buttonarray = [];
 

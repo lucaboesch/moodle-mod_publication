@@ -47,8 +47,10 @@ class observer {
      */
     public static function course_module_created(\core\event\base $event) {
         $eventdata = $event->get_data();
-        if (isset($eventdata['other']) &&
-            isset($eventdata['other']['modulename']) && $eventdata['other']['modulename'] == 'publication') {
+        if (
+            isset($eventdata['other']) &&
+            isset($eventdata['other']['modulename']) && $eventdata['other']['modulename'] == 'publication'
+        ) {
             $cm = get_coursemodule_from_instance('publication', $eventdata['other']['instanceid'], 0, false, MUST_EXIST);
             $publication = new publication($cm);
             if ($publication->get_instance()->mode == PUBLICATION_MODE_IMPORT) {
@@ -143,13 +145,15 @@ class observer {
                     if (empty($checkgroupids)) {
                         $completion->update_state($cm, COMPLETION_INCOMPLETE, $userid);
                     }
-                    list ($sqlin, $params) = $DB->get_in_or_equal($checkgroupids, SQL_PARAMS_NAMED);
+                     [$sqlin, $params] = $DB->get_in_or_equal($checkgroupids, SQL_PARAMS_NAMED);
                     $params['publication'] = $pub->id;
 
-                    $dbfiles = $DB->get_records_sql('SELECT f.*
+                    $dbfiles = $DB->get_records_sql(
+                        'SELECT f.*
                                                       FROM {publication_file} f
                                                      WHERE f.publication = :publication AND f.userid ' . $sqlin,
-                        $params);
+                        $params
+                    );
                     $filescount = count($dbfiles);
                     if ($filescount > 0) {
                         $completion->update_state($cm, COMPLETION_COMPLETE, $userid);
