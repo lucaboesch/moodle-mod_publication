@@ -223,8 +223,6 @@ class mod_publication_files_form extends moodleform {
                 }
                 $tablecontext['hasgroupsmembers'] = !empty($groupsmembers);
                 $tablecontext['hasgroupsnames'] = !empty($groupsnames);
-            } else {
-                // $groupslist = [];
             }
         }
         $myfilestable = $OUTPUT->render_from_template('mod_publication/myfiles', $tablecontext);

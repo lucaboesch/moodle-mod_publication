@@ -147,7 +147,7 @@ class group extends base {
         $params = new \stdClass();
         $params->id = $uniqueid;
         switch ($publication->get_instance()->groupapproval) {
-            case PUBLICATION_APPROVAL_ALL;
+            case PUBLICATION_APPROVAL_ALL:
                 $params->mode = get_string('obtaingroupapproval_all', 'mod_publication');
                 break;
             case PUBLICATION_APPROVAL_SINGLE:
