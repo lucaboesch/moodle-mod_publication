@@ -29,6 +29,10 @@ require_once($CFG->dirroot . '/mod/publication/locallib.php');
 
 $id = required_param('id', PARAM_INT);   // We need a course!
 
+if ($CFG->version > 2025041400) {
+    \core_courseformat\activityoverviewbase::redirect_to_overview_page($id, 'publication');
+}
+
 if (!$course = $DB->get_record('course', ['id' => $id])) {
     throw new \moodle_exception('coursemisconf');
 }
