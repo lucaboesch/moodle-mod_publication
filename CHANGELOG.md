@@ -2,7 +2,7 @@ CHANGELOG
 =========
 
 
-5.0.1 (2025-09-29)
+5.1.0 (2026-01-14)
 -------------------
 * Moodle 5.1.0 compatible version
 * [BUG] #8440 - fix resetting of filters after applying changes on All files table
@@ -12,6 +12,7 @@ CHANGELOG
 * [BUG] #8567 - fix incorrect participants count and title in group mode
 * [FEATURE] #8094 - implement new completion criteria for imported files from assignment activities
 * [FEAUTRE] #8581 - show which group the user belongs to, and also groups members
+* [FEATURE] #8617 - Implement Overview class
 
 5.0.1 (2025-09-29)
 -------------------
