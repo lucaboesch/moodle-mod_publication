@@ -16,8 +16,8 @@ CHANGELOG
 
 5.0.1 (2025-09-29)
 -------------------
-* [BUG] #8534 - fix incorrect usage of deprecated.txt
-* [BUG] #8535 - add missing privacy provider table coverage for table publication_overrides
+* [BUG] #8534 - fix incorrect usage of deprecated.txt - github #100
+* [BUG] #8535 - add missing privacy provider table coverage for table publication_overrides - github #101
 * [BUG] #8551 - remove table borders in Moodle ≥ 5.0 - github pull request #102 - lucaboesch
 
 5.0.0 (2025-06-11)
