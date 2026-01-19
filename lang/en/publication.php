@@ -223,6 +223,7 @@ $string['overview'] = 'Overview';
 $string['pending'] = 'Pending';
 $string['pluginadministration'] = 'Student folder administration';
 $string['pluginname'] = 'Student folder';
+$string['privacy:extensionduedate'] = 'Extension due date';
 $string['privacy:metadata:approval'] = 'Whether the group member has approved or rejected for publication.';
 $string['privacy:metadata:contenthash'] = 'SHA1 hash of the file\'s content, used to determine if the file changed.';
 $string['privacy:metadata:extduedates'] = 'Stores information about overridden/extended due dates for mod_publication.';
