@@ -2,10 +2,22 @@ CHANGELOG
 =========
 
 
+5.1.0 (2026-01-14)
+-------------------
+* Moodle 5.1.0 compatible version
+* [BUG] #8440 - fix resetting of filters after applying changes on All files table - github #104
+* [FEATURE] #8332 - add support for multilang filter v2 in course name, activity name and group name when saving zip file
+* [BUG] #8092 - only show students/teachers who have mod/publication:upload in the table
+* [FEATURE] #8441 - use original filenames in zip file
+* [BUG] #8567 - fix incorrect count and title in group mode
+* [FEATURE] #8094 - implement new completion criteria for imported files from assignment activities
+* [FEAUTRE] #8581 - show which group the user belongs to, and also groups members
+* [FEATURE] #8617 - implement overview class - github #105
+
 5.0.1 (2025-09-29)
 -------------------
-* [BUG] #8534 - fix incorrect usage of deprecated.txt
-* [BUG] #8535 - add missing privacy provider table coverage for table publication_overrides
+* [BUG] #8534 - fix incorrect usage of deprecated.txt - github #100
+* [BUG] #8535 - add missing privacy provider table coverage for table publication_overrides - github #101
 * [BUG] #8551 - remove table borders in Moodle ≥ 5.0 - github pull request #102 - lucaboesch
 
 5.0.0 (2025-06-11)

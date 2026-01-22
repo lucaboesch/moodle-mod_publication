@@ -47,8 +47,10 @@ class observer {
      */
     public static function course_module_created(\core\event\base $event) {
         $eventdata = $event->get_data();
-        if (isset($eventdata['other']) &&
-            isset($eventdata['other']['modulename']) && $eventdata['other']['modulename'] == 'publication') {
+        if (
+            isset($eventdata['other']) &&
+            isset($eventdata['other']['modulename']) && $eventdata['other']['modulename'] == 'publication'
+        ) {
             $cm = get_coursemodule_from_instance('publication', $eventdata['other']['instanceid'], 0, false, MUST_EXIST);
             $publication = new publication($cm);
             if ($publication->get_instance()->mode == PUBLICATION_MODE_IMPORT) {
@@ -106,6 +108,61 @@ class observer {
         }
 
         publication::send_all_pending_notifications();
+        return true;
+    }
+
+    /**
+     * Event observer for core\event\group_member_changed
+     *
+     * @param \core\event\base $event The event object containing group membership data
+     * @return bool true if success
+     */
+    public static function import_group_member_changed(\core\event\base $event) {
+        global $DB;
+        require_once(__DIR__ . '/../locallib.php');
+        $courseid = $event->courseid;
+        $groupid = $event->objectid;
+        $userid = $event->relateduserid;
+        $usergroups = \groups_get_user_groups($courseid, $userid);
+        $groupids = [];
+        if (!empty($usergroups[0])) {
+            $groupids = $usergroups[0];
+        }
+        $publications = $DB->get_records('publication', ['course' => $courseid,
+            'mode' => PUBLICATION_MODE_IMPORT]);
+        $course = $DB->get_record('course', ['id' => $courseid]);
+        $completion = new \completion_info($course);
+        foreach ($publications as $pub) {
+            $cm = get_coursemodule_from_instance('publication', $pub->id);
+            if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC && $pub->completionassignsubmission) {
+                $teamsubmission = $DB->get_field('assign', 'teamsubmission', ['id' => $pub->importfrom]);
+                if ($teamsubmission) {
+                    $requiregroup = $DB->get_field('assign', 'preventsubmissionnotingroup', ['id' => $pub->importfrom]);
+                    $checkgroupids = $groupids;
+                    if (empty($checkgroupids) && !$requiregroup) {
+                        $checkgroupids[] = 0; // Use groupid 0 for users without groups.
+                    }
+                    if (empty($checkgroupids)) {
+                        $completion->update_state($cm, COMPLETION_INCOMPLETE, $userid);
+                    }
+                     [$sqlin, $params] = $DB->get_in_or_equal($checkgroupids, SQL_PARAMS_NAMED);
+                    $params['publication'] = $pub->id;
+
+                    $dbfiles = $DB->get_records_sql(
+                        'SELECT f.*
+                                                      FROM {publication_file} f
+                                                     WHERE f.publication = :publication AND f.userid ' . $sqlin,
+                        $params
+                    );
+                    $filescount = count($dbfiles);
+                    if ($filescount > 0) {
+                        $completion->update_state($cm, COMPLETION_COMPLETE, $userid);
+                    } else {
+                        $completion->update_state($cm, COMPLETION_INCOMPLETE, $userid);
+                    }
+                }
+            }
+        }
         return true;
     }
 }

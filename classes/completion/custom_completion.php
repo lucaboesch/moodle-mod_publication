@@ -29,7 +29,6 @@ use core_completion\activity_custom_completion;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class custom_completion extends activity_custom_completion {
-
     /**
      * Fetches the completion state for a given completion rule.
      *
@@ -38,26 +37,62 @@ class custom_completion extends activity_custom_completion {
      */
     public function get_state(string $rule): int {
         global $CFG, $DB;
+        require_once($CFG->dirroot . '/mod/publication/locallib.php');
+        require_once($CFG->libdir . '/grouplib.php');
 
         $this->validate_rule($rule);
 
-        $userid = $this->userid;
         $cm = $this->cm;
 
-        require_once($CFG->dirroot . '/mod/publication/locallib.php');
+        $userid = $this->userid;
 
         $publication = new \publication($cm, $cm->course, \context_module::instance($cm->id));
-        $status = false;
-        if ($publication->get_mode() == PUBLICATION_MODE_FILEUPLOAD) {
-            $filescount = $DB->count_records('publication_file', [
-                'publication' => $publication->get_instance()->id,
-                'userid' => $userid,
-            ]);
-            $status = $filescount > 0;
-        } else {
-            $status = true;
+        $mode = $publication->get_mode();
+        $status = COMPLETION_UNKNOWN;
+        if ($rule == 'completionupload' && $publication->get_instance()->completionupload) {
+            if ($mode == PUBLICATION_MODE_FILEUPLOAD) {
+                $filescount = $DB->count_records('publication_file', [
+                    'publication' => $publication->get_instance()->id,
+                    'userid' => $userid,
+                ]);
+                $status = $filescount > 0 ? COMPLETION_COMPLETE : COMPLETION_INCOMPLETE;
+            } else {
+                $status = COMPLETION_COMPLETE;
+            }
+        } else if ($rule == 'completionassignsubmission'  && $publication->get_instance()->completionassignsubmission) {
+            if ($mode == PUBLICATION_MODE_FILEUPLOAD) {
+                $status = COMPLETION_COMPLETE;
+            } else if ($mode == PUBLICATION_MODE_ASSIGN_IMPORT) {
+                $filescount = $DB->count_records('publication_file', [
+                    'publication' => $publication->get_instance()->id,
+                    'userid' => $userid,
+                ]);
+                $status = $filescount > 0 ? COMPLETION_COMPLETE : COMPLETION_INCOMPLETE;
+            } else if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+                $status = COMPLETION_INCOMPLETE;
+                $groups = \groups_get_user_groups($cm->course, $userid);
+                $groupids = [];
+                if (!empty($groups[0])) {
+                    $groupids = $groups[0];
+                } else if (!$publication->requiregroup()) {
+                    $groupids[] = 0; // Use groupid 0 for users without groups.
+                }
+                if (empty($groupids)) {
+                    return $status; // User is not in any group and groups are required.
+                }
+                foreach ($groupids as $groupid) { // Iterate over all groups of the user.
+                    $filescount = $DB->count_records('publication_file', [
+                        'publication' => $publication->get_instance()->id,
+                        'userid' => $groupid,
+                    ]);
+                    if ($filescount > 0) {
+                        $status = COMPLETION_COMPLETE;
+                        break;
+                    }
+                }
+            }
         }
-        return $status ? COMPLETION_COMPLETE : COMPLETION_INCOMPLETE;
+        return $status;
     }
 
     /**
@@ -66,7 +101,7 @@ class custom_completion extends activity_custom_completion {
      * @return array
      */
     public static function get_defined_custom_rules(): array {
-        return ['completionupload'];
+        return ['completionupload', 'completionassignsubmission'];
     }
 
     /**
@@ -77,6 +112,7 @@ class custom_completion extends activity_custom_completion {
     public function get_custom_rule_descriptions(): array {
         return [
             'completionupload' => get_string('completiondetail:upload', 'publication'),
+            'completionassignsubmission' => get_string('completiondetail:assignsubmission', 'publication'),
         ];
     }
 
@@ -89,6 +125,7 @@ class custom_completion extends activity_custom_completion {
         return [
             'completionview',
             'completionupload',
+            'completionassignsubmission',
         ];
     }
 }

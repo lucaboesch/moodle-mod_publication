@@ -47,4 +47,18 @@ $observers = [
                 'priority' => 0,
                 'internal' => true,
         ],
+        [
+            'eventname' => 'core\event\group_member_added',
+            'callback' => 'mod_publication\observer::import_group_member_changed',
+            'includefile' => '/mod/publication/classes/observer.php',
+            'priority' => 0,
+            'internal' => true,
+        ],
+        [
+            'eventname' => 'core\event\group_member_removed',
+            'callback' => 'mod_publication\observer::import_group_member_changed',
+            'includefile' => '/mod/publication/classes/observer.php',
+            'priority' => 0,
+            'internal' => true,
+        ],
 ];

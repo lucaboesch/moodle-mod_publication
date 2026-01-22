@@ -28,8 +28,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2025061101;
-$plugin->requires = 2025041400;
+$plugin->version  = 2025103000.01;
+$plugin->requires = 2025100600;
 $plugin->component = 'mod_publication';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release  = "v5.0.1";
+$plugin->release  = "v5.1.0";

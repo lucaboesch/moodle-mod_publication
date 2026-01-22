@@ -89,8 +89,15 @@ $attachmentoptions = [
 ];
 
 $entry = file_prepare_standard_editor($entry, 'definition', $definitionoptions, $context, 'mod_publication', 'entry', $entry->id);
-$entry = file_prepare_standard_filemanager($entry, 'attachment', $attachmentoptions, $context, 'mod_publication',
-        'attachment', $entry->id);
+$entry = file_prepare_standard_filemanager(
+    $entry,
+    'attachment',
+    $attachmentoptions,
+    $context,
+    'mod_publication',
+    'attachment',
+    $entry->id
+);
 
 $entry->cmid = $cm->id;
 
@@ -105,15 +112,28 @@ $mform = new mod_publication_upload_form(null, [
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/mod/publication/view.php', ['id' => $cm->id]));
-
 } else if ($data = $mform->get_data()) {
     // Store updated set of files.
 
     // Save and relink embedded images and save attachments.
-    $entry = file_postupdate_standard_editor($entry, 'definition', $definitionoptions,
-            $context, 'mod_publication', 'entry', $entry->id);
-    $entry = file_postupdate_standard_filemanager($entry, 'attachment', $attachmentoptions,
-            $context, 'mod_publication', 'attachment', $entry->id);
+    $entry = file_postupdate_standard_editor(
+        $entry,
+        'definition',
+        $definitionoptions,
+        $context,
+        'mod_publication',
+        'entry',
+        $entry->id
+    );
+    $entry = file_postupdate_standard_filemanager(
+        $entry,
+        'attachment',
+        $attachmentoptions,
+        $context,
+        'mod_publication',
+        'attachment',
+        $entry->id
+    );
 
     $filearea = 'attachment';
     $sid = $USER->id;
@@ -180,7 +200,7 @@ if ($mform->is_cancelled()) {
     // Update competion status - if filescount == 0 => activity not completed, else => activity completed !
 
     $completion = new completion_info($course);
-    if ($completion->is_enabled($cm) && $publication->get_instance()->completionupload) {
+    if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC && $publication->get_instance()->completionupload) {
         if ($filescount == 0) {
             $completion->update_state($cm, COMPLETION_INCOMPLETE, $USER->id);
         } else {
