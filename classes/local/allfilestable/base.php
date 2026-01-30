@@ -177,7 +177,7 @@ class base extends \table_sql {
 
         $this->print_initials_bar();
 
-        echo $OUTPUT->box(get_string('nofilestodisplay', 'publication'), 'font-italic');
+        echo $OUTPUT->box(get_string('nofilestodisplay', 'publication'), 'fst-italic');
     }
 
     /**

@@ -236,6 +236,7 @@ final class privacy_test extends base {
         // There should be no difference between the contexts.
         $this->assertEmpty(array_diff($usercontextids, $contextlist->get_contextids()));
 
+        // phpcs:disable moodle.Commenting.TodoComment
         // TODO: test for group approvals and extended due dates!
     }
 
@@ -293,6 +294,7 @@ final class privacy_test extends base {
         self::assertFalse(in_array($this->user2->id, $teamuserids));
         self::assertTrue(in_array($this->user3->id, $teamuserids));
 
+        // phpcs:disable moodle.Commenting.TodoComment
         // TODO: check for extended due dates and groupapprovals!
     }
 

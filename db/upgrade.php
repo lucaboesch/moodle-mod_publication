@@ -378,7 +378,16 @@ function xmldb_publication_upgrade($oldversion) {
     if ($oldversion < 2025102900) {
         // Define field completionassignsubmission to be added to publication.
         $table = new xmldb_table('publication');
-        $field = new xmldb_field('completionassignsubmission', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'completionupload');
+        $field = new xmldb_field(
+            'completionassignsubmission',
+            XMLDB_TYPE_INTEGER,
+            '2',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'completionupload'
+        );
 
         // Conditionally launch add field completionassignsubmission.
         if (!$dbman->field_exists($table, $field)) {

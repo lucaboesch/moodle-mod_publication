@@ -42,7 +42,7 @@ class publication_overrides_form extends moodleform {
     /**
      * @var publication The publication instance used to retrieve context and settings.
      */
-    private $_publication;
+    private $publication;
 
     /**
      * Defines the form elements for the overrides form.
@@ -61,10 +61,10 @@ class publication_overrides_form extends moodleform {
         $mform->addElement('hidden', 'overrideid');
         $mform->setType('overrideid', PARAM_INT);
 
-        $this->_publication = $this->_customdata['publication'];
-        $mode = $this->_publication->get_mode();
+        $this->publication = $this->_customdata['publication'];
+        $mode = $this->publication->get_mode();
         if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
-            $groupids = $this->_publication->get_groups();
+            $groupids = $this->publication->get_groups();
             $groups = $DB->get_records_list('groups', 'id', $groupids);
 
             $mform->addElement('hidden', 'userid');
@@ -81,7 +81,7 @@ class publication_overrides_form extends moodleform {
             $mform->addElement('autocomplete', 'groupid', get_string('group'), $groupsclean, $options);
             $mform->addRule('groupid', null, 'required', null, 'client');
         } else {
-            $userids = $this->_publication->get_users([], true);
+            $userids = $this->publication->get_users([], true);
             $users = $DB->get_records_list('user', 'id', $userids);
 
             $mform->addElement('hidden', 'groupid');
@@ -123,7 +123,7 @@ class publication_overrides_form extends moodleform {
             $itemsadded = true;
         }
 
-        if ($this->_publication->get_instance()->obtainstudentapproval == 1) {
+        if ($this->publication->get_instance()->obtainstudentapproval == 1) {
             $mform->addElement('header', 'approvalsettings', get_string('approvalsettings', 'publication'));
             $mform->setExpanded('approvalsettings', true);
 
