@@ -24,8 +24,6 @@
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 define('PUBLICATION_MODE_UPLOAD', 0);
 define('PUBLICATION_MODE_IMPORT', 1);
 // Used in DB to mark online-text-files!
@@ -568,7 +566,7 @@ class publication {
         $allfiles = get_string('allfiles', 'publication');
         $publicfiles = get_string('publicfiles', 'publication');
         $title = (has_capability('mod/publication:approve', $context)  && $this->allfilespage) ? $allfiles : $publicfiles;
-        $output .= html_writer::tag('legend', $title, ['class' => 'ftoggler h3']);
+        $output .= html_writer::tag('legend', $title, ['class' => 'ftoggler h3 fw-bold']);
         $output .= html_writer::start_div('fcontainer clearfix mb-3');
 
         $f = groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
@@ -1831,6 +1829,7 @@ class publication {
                 $posttext = $publication->email_statuschange_text($info, $receiver->lang, $includeheader);
                 $posthtml = $publication->email_statuschange_html($info, $receiver->lang, $includeheader);
 
+                // phpcs:disable moodle.Commenting.TodoComment
                 // TODO maybe add check here is receiver is the same as user from. Unless already checked in get_graders().
                 if (!isset(self::$pendingnotifications[PUBLICATION_NOTIFY_STATUSCHANGE][$cm->id][$receiver->id])) {
                     $message = new \core\message\message();
@@ -1921,6 +1920,7 @@ class publication {
                 $posttext = $publication->email_filechange_text($info, $receiver->lang, $stridentifier, $includeheader);
                 $posthtml = $publication->email_filechange_html($info, $receiver->lang, $stridentifier, $includeheader);
 
+                // phpcs:disable moodle.Commenting.TodoComment
                 // TODO maybe add check here is receiver is the same as user from. Unless already checked in get_graders().
 
                 if (!isset(self::$pendingnotifications[PUBLICATION_NOTIFY_FILECHANGE][$cm->id][$receiver->id])) {
@@ -2008,6 +2008,7 @@ class publication {
             false
         );
         foreach ($resources as $resource) {
+            // phpcs:disable moodle.Commenting.TodoComment
             // TODO watch the encoding of the file's names, in the event of core changing it, we have to change too!
             $filename = rawurlencode($resource->get_filename());
             $search = './resources/' . $filename;

@@ -1,3 +1,5 @@
+[![Moodle Plugin CI](https://github.com/academic-moodle-cooperation/moodle-mod_publication/actions/workflows/moodle-plugin-ci.yml/badge.svg)](https://github.com/academic-moodle-cooperation/moodle-mod_publication/actions/workflows/moodle-plugin-ci.yml)
+
 Student Folder 
 =====================
 
