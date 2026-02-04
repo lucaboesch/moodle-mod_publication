@@ -13,6 +13,7 @@ CHANGELOG
 * [FEATURE] #8094 - implement new completion criteria for imported files from assignment activities
 * [FEAUTRE] #8581 - show which group the user belongs to, and also groups members
 * [FEATURE] #8617 - implement overview class - github #105
+* [BUG] #8676 - Use the correct notification setting for status changes
 
 5.0.1 (2025-09-29)
 -------------------
