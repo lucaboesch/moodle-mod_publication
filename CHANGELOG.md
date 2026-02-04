@@ -14,6 +14,8 @@ CHANGELOG
 * [FEAUTRE] #8581 - show which group the user belongs to, and also groups members
 * [FEATURE] #8617 - implement overview class - github #105
 * [BUG] #8676 - Use the correct notification setting for status changes
+* [FEATURE] #8677 - Support Moodle Plugin CI and adhere to Moodle coding guidelines
+* 
 
 5.0.1 (2025-09-29)
 -------------------
