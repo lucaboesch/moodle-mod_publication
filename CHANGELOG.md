@@ -5,14 +5,17 @@ CHANGELOG
 5.1.0 (2026-01-14)
 -------------------
 * Moodle 5.1.0 compatible version
-* [BUG] #8440 - fix resetting of filters after applying changes on All files table - github #104
-* [FEATURE] #8332 - add support for multilang filter v2 in course name, activity name and group name when saving zip file
 * [BUG] #8092 - only show students/teachers who have mod/publication:upload in the table
-* [FEATURE] #8441 - use original filenames in zip file
+* [BUG] #8440 - fix resetting of filters after applying changes on All files table - github #104
 * [BUG] #8567 - fix incorrect count and title in group mode
+* [BUG] #8676 - use the correct notification setting for status changes - github #94 & github pull request #110 - pleboucherenssib
 * [FEATURE] #8094 - implement new completion criteria for imported files from assignment activities
-* [FEAUTRE] #8581 - show which group the user belongs to, and also groups members
-* [FEATURE] #8617 - implement overview class - github #105
+* [FEATURE] #8332 - add support for multilang filter v2 in course name, activity name and group name when saving zip file
+* [FEATURE] #8441 - use original filenames in zip file
+* [FEATURE] #8581 - show which group the user belongs to, and also groups members
+* [FEATURE] #8617 - support further information in the activity overview
+* [FEATURE] #8677 - support Moodle Plugin CI and adhere to Moodle coding guidelines - github pull request #111 - lucaboesch
+* [FEATURE] #8678 - implement overview class - github #105 & github pull request #106 - lucaboesch
 
 5.0.1 (2025-09-29)
 -------------------
