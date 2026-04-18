@@ -287,7 +287,7 @@ class base extends \table_sql {
         } else if ($this->filter == PUBLICATION_FILTER_NOFILES) {
             $from = '{user} u ' .
                 'LEFT JOIN {publication_file} files ON u.id = files.userid AND files.publication = :publication ';
-            $having = ' HAVING timemodified IS NULL ';
+            $having = ' HAVING MAX(files.timecreated) IS NULL ';
         }
 
         $where = "u.id " . $sqluserids;
