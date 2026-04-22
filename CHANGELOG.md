@@ -2,6 +2,10 @@ CHANGELOG
 =========
 
 
+5.1.1 (2026-04-22)
+-------------------
+* [BUG] #8703 - Fix bug with Postgresql - pull request #114 - lucaboesch
+
 5.1.0 (2026-01-14)
 -------------------
 * Moodle 5.1.0 compatible version
