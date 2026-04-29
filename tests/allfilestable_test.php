@@ -150,7 +150,6 @@ final class allfilestable_test extends base {
             'preventsubmissionnotingroup' => false,
             'requireallteammemberssubmit' => false,
             'groupmode' => 1,
-            'status' => 'submitted',
         ];
 
         $assign = $this->getDataGenerator()->create_module('assign', $params);
@@ -168,6 +167,7 @@ final class allfilestable_test extends base {
                 'userid' => $user->id,
                 'cmid' => $cm->id,
                 'file' => implode(',', $files),
+                'status' => 'submitted',
             ]);
         }
 
