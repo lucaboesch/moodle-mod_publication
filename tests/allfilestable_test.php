@@ -180,6 +180,7 @@ final class allfilestable_test extends base {
             'allowsubmissionsfromdate' => 0,
             'duedate' => 0,
             'groupmode' => NOGROUPS,
+            'groupapproval' => PUBLICATION_APPROVAL_GROUPAUTOMATIC,
         ]);
 
         $publication->importfiles();
