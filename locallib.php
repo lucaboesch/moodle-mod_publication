@@ -1454,12 +1454,15 @@ class publication {
             $submission = $DB->get_record('assign_submission', ['id' => $record->submission]);
 
             $assignfileids = [];
-
             $assignfiles = [];
 
-            foreach ($files as $file) {
-                $assignfiles[$file->get_id()] = $file;
-                $assignfileids[$file->get_id()] = $file->get_id();
+            // We only want submissions with status submitted! We keep the rest to clean up draft submissions that
+            // went into publication!
+            if ($submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED) {
+                foreach ($files as $file) {
+                    $assignfiles[$file->get_id()] = $file;
+                    $assignfileids[$file->get_id()] = $file->get_id();
+                }
             }
 
             $conditions = [];
