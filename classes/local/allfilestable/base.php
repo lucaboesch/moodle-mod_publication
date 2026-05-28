@@ -131,8 +131,12 @@ class base extends \table_sql {
         $this->collapsible(true);
         $this->initialbars(true);
 
-        $this->column_suppress('fullname');
-        $this->column_suppress('group');
+        if ($this->allfilespage) {
+            // On the start page ("Published files") every file gets its own row, so the participant's
+            // / group's name must repeat on each row instead of being suppressed.
+            $this->column_suppress('fullname');
+            $this->column_suppress('group');
+        }
 
         $this->column_class('fullname', 'fullname');
         $this->column_class('timemodified', 'timemodified');
@@ -145,7 +149,11 @@ class base extends \table_sql {
         $this->no_sorting('studentapproval');
         $this->no_sorting('selection');
         $this->no_sorting('publicationstatus');
-        $this->no_sorting('files');
+        if ($this->allfilespage) {
+            // In the grouped teacher view the files cell is a nested table and cannot be sorted.
+            // On the start page (one row per file) the "Files" column is sortable by filename.
+            $this->no_sorting('files');
+        }
 
         $this->no_sorting('visibleforstudents');
 
@@ -190,6 +198,15 @@ class base extends \table_sql {
                 'id' => 'selectallnone',
                 'onClick' => 'toggle_userselection()',
         ]);
+
+        if (!$this->allfilespage) {
+            // Start page is file-focused: Files, Last modified, then the participant's name.
+            return [
+                ['selection', 'files', 'timemodified', 'fullname'],
+                [$selectallnone, get_string('files'), get_string('lastmodified'), get_string('fullnameuser')],
+                [null, null, null, null],
+            ];
+        }
 
         $columns = ['selection', 'fullname'];
         $headers = [$selectallnone, get_string('fullnameuser')];
@@ -249,11 +266,22 @@ class base extends \table_sql {
         $fields = \core_user\fields::for_identity($this->context, false);
         $useridentityfields = $fields->get_sql('u')->selects;
 
-        $fields = $ufields . ' ' . $useridentityfields . ', u.username,
-                                COUNT(*) filecount,
-                                SUM(files.studentapproval) AS studentapproval,
-                                SUM(files.teacherapproval) AS teacherapproval,
-                                MAX(files.timecreated) AS timemodified ';
+        if ($this->allfilespage) {
+            // Teacher "File submissions" view: one row per user, files aggregated into a nested table.
+            $fields = $ufields . ' ' . $useridentityfields . ', u.username,
+                                    COUNT(*) filecount,
+                                    SUM(files.studentapproval) AS studentapproval,
+                                    SUM(files.teacherapproval) AS teacherapproval,
+                                    MAX(files.timecreated) AS timemodified ';
+        } else {
+            // Start page "Published files" view: one row per file. files.id (the publication_file id)
+            // is the first column so get_records_sql() keys rows uniquely per file, while u.id (from
+            // $ufields) keeps $values->id pointing at the user for the col_* methods.
+            $fields = 'files.id AS pubfileid, ' . $ufields . ' ' . $useridentityfields . ', u.username,
+                                    files.fileid AS fileid,
+                                    files.filename AS filename,
+                                    files.timecreated AS timemodified ';
+        }
 
         // Also filters out users according to set activitygroupmode & current activitygroup!
         $users = $this->publication->get_users();
@@ -291,6 +319,17 @@ class base extends \table_sql {
         }
 
         $where = "u.id " . $sqluserids;
+
+        if (!$this->allfilespage) {
+            // One row per file: no aggregation, count the matching publication_file rows.
+            $this->set_sql($fields, $from, $where, $params, '');
+            $this->set_count_sql(
+                "SELECT COUNT(a.pubfileid) FROM (SELECT files.id AS pubfileid FROM $from WHERE $where) a",
+                $params
+            );
+            return;
+        }
+
         $groupby = $ufields . ' ' . $useridentityfields . ', u.username ' . $having;
 
         $this->set_sql($fields, $from, $where, $params, $groupby);
@@ -372,6 +411,10 @@ class base extends \table_sql {
         // Fetch the attempts!
         $sort = $this->get_sql_sort();
         $sort = preg_replace('/(?<=\W)?(email)(?=\W)/', 'u.\1', $sort);
+        if (!$this->allfilespage) {
+            // The "Files" column is backed by the filename field in the per-file (start page) query.
+            $sort = preg_replace('/\bfiles\b/', 'filename', $sort);
+        }
         if ($sort) {
             $sort = "ORDER BY $sort";
         }
@@ -545,6 +588,15 @@ class base extends \table_sql {
         // If the data is being downloaded than we don't want to show HTML.
         if ($this->is_downloading()) {
             return '';
+        } else if (!$this->allfilespage) {
+            // Start page: one checkbox per file, selecting individual files for the "zipfiles" action.
+            return \html_writer::checkbox(
+                'selectedfile[' . $values->fileid . ']',
+                'selected',
+                false,
+                null,
+                ['class' => 'userselection']
+            );
         } else {
             return \html_writer::checkbox(
                 'selecteduser[' . $values->id . ']',
@@ -649,6 +701,11 @@ class base extends \table_sql {
     public function col_timemodified($values) {
         global $OUTPUT;
 
+        if (!$this->allfilespage) {
+            // Start page: one row per file, show that file's own modification time.
+            return \html_writer::span(userdate($values->timemodified), 'timemodified');
+        }
+
         [, $files, ] = $this->get_files($values->id);
 
         $filetable = new \html_table();
@@ -688,8 +745,29 @@ class base extends \table_sql {
      * @return string
      */
     public function col_files($values) {
-        [, $files, ] = $this->get_files($values->id);
         global $OUTPUT;
+
+        if (!$this->allfilespage) {
+            // Start page: one row per file, render just this file.
+            $file = $this->fs->get_file_by_id($values->fileid);
+            if (!$file) {
+                return '';
+            }
+            $url = new \moodle_url('/mod/publication/view.php', ['id' => $this->cm->id, 'download' => $values->fileid]);
+            $output = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file)) . ' ' .
+                \html_writer::link($url, $file->get_filename()) .
+                $this->add_onlinetext_preview($values->id, $values->fileid);
+
+            if ($this->totalfiles === null) {
+                $this->totalfiles = 0;
+            }
+            $this->totalfiles++;
+            $this->totalfilescount++;
+
+            return $output;
+        }
+
+        [, $files, ] = $this->get_files($values->id);
         $filetable = new \html_table();
         $filetable->attributes = ['class' => 'filetable table-reboot'];
 

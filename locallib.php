@@ -603,7 +603,12 @@ class publication {
         $output .= $tableoutput;
 
         $options = [];
-        $options['zipusers'] = get_string('zipusers', 'publication');
+        if ($this->allfilespage) {
+            $options['zipusers'] = get_string('zipusers', 'publication');
+        } else {
+            // Start page: selection is per file, so the bulk download zips the selected files.
+            $options['zipfiles'] = get_string('zipusers', 'publication');
+        }
 
         if (has_capability('mod/publication:approve', $context) && $table->totalfiles() > 0  && $this->allfilespage) {
             if ($this->get_instance()->obtainteacherapproval) {
@@ -1130,38 +1135,148 @@ class publication {
             // Up to here.
 
             foreach ($records as $record) {
-                if ($canapprove || $this->has_filepermission($record->fileid, $USER->id)) {
-                    // Is teacher or file is public.
-
-                    $file = $fs->get_file_by_id($record->fileid);
-
-                    // Get files new name.
-                    $fileext = strstr($file->get_filename(), '.');
-                    $fileoriginalname = $file->get_filename();
-                    if (isset($filenamescounters[$fileoriginalname])) {
-                        $filenamescounters[$fileoriginalname]++;
-                        $fileoriginal = str_replace($fileext, '', $file->get_filename());
-                        $fileoriginal .= ' (' . $filenamescounters[$fileoriginalname] . ')';
-                        $fileforzipname = clean_filename($fileoriginal . $fileext);
-                    } else {
-                        $filenamescounters[$fileoriginalname] = 0;
-                        $fileforzipname = clean_filename($fileoriginalname);
-                    }
-                    if (key_exists($fileforzipname, $filesforzipping)) {
-                        throw new coding_exception('Can\'t overwrite ' . $fileforzipname . '!');
-                    }
-                    if ($record->type == PUBLICATION_MODE_ONLINETEXT) {
-                        $this->add_onlinetext_to_zipfiles($filesforzipping, $file, $itemname, $fileforzipname, $fs, $itemunique);
-                    } else {
-                        // Save file name to array for zipping.
-                        $filesforzipping[$fileforzipname] = $file;
-                    }
-                }
+                $this->add_record_to_zipfiles(
+                    $filesforzipping,
+                    $filenamescounters,
+                    $record,
+                    $itemname,
+                    $itemunique,
+                    $fs,
+                    $canapprove
+                );
             }
         } // End of foreach.
 
         if ($zipfile = $this->pack_files($filesforzipping)) {
             send_temp_file($zipfile, $filename); // Send file and delete after sending.
+        }
+    }
+
+    /**
+     * Zip and send the specified files (used by the per-file selection on the start page).
+     *
+     * @param int[] $fileids Moodle file IDs (publication_file.fileid) to include in the ZIP
+     */
+    public function download_selectedfiles_zip(array $fileids) {
+        global $CFG, $DB, $USER;
+        require_once($CFG->libdir . '/filelib.php');
+
+        $canapprove = has_capability('mod/publication:approve', $this->get_context());
+        $fs = get_file_storage();
+
+        if ($this->get_instance()->importfrom == -1) {
+            $teamsubmission = false;
+        } else {
+            $teamsubmission = $this->teamsubmission;
+        }
+
+        $cm = $this->get_coursemodule();
+        $groupname = '';
+        $currentgroup = groups_get_activity_group($cm, true);
+        if (!empty($currentgroup)) {
+            $groupname = $DB->get_field('groups', 'name', ['id' => $currentgroup]) . '-';
+        }
+
+        $coursename = format_string($this->course->shortname);
+        $instancename = format_string($this->get_instance()->name);
+        $groupname = format_string($groupname);
+        $filename = str_replace(' ', '_', clean_filename($coursename . '-' .
+            $instancename . '-' . $groupname . $this->get_instance()->id . '.zip')); // Name of new zip file.
+
+        $filesforzipping = [];
+        $filenamescounters = [];
+
+        foreach ($fileids as $fileid) {
+            $record = $DB->get_record('publication_file', [
+                'publication' => $this->get_instance()->id,
+                'fileid' => $fileid,
+            ]);
+            if (!$record) {
+                continue;
+            }
+
+            // Resolve the uploader's name for online-text resource-folder naming.
+            if (!$teamsubmission) {
+                $auser = $DB->get_record('user', ['id' => $record->userid]);
+                $itemname = $auser ? fullname($auser) : '';
+                $itemunique = $record->userid;
+            } else {
+                if (empty($record->userid)) {
+                    $itemname = get_string('defaultteam', 'assign');
+                } else {
+                    $itemname = $DB->get_field('groups', 'name', ['id' => $record->userid]);
+                }
+                $itemunique = '';
+            }
+
+            $this->add_record_to_zipfiles(
+                $filesforzipping,
+                $filenamescounters,
+                $record,
+                $itemname,
+                $itemunique,
+                $fs,
+                $canapprove
+            );
+        }
+
+        if ($zipfile = $this->pack_files($filesforzipping)) {
+            send_temp_file($zipfile, $filename); // Send file and delete after sending.
+        }
+    }
+
+    /**
+     * Adds a single publication_file record's file to the zipping array (with name-collision handling
+     * and online-text/resource support). Shared by download_zip() and download_selectedfiles_zip().
+     *
+     * @param array $filesforzipping array of files for zipping, indexed by zip filename (by reference)
+     * @param array $filenamescounters counters used to deduplicate identical filenames (by reference)
+     * @param \stdClass $record publication_file DB record
+     * @param string $itemname uploader's (user or group) name, used for online-text resource folders
+     * @param string $itemunique user ID for individual submissions, empty string for team submissions
+     * @param \file_storage $fs file storage instance
+     * @param bool $canapprove whether the current user may approve (and thus see all) files
+     */
+    protected function add_record_to_zipfiles(
+        array &$filesforzipping,
+        array &$filenamescounters,
+        $record,
+        $itemname,
+        $itemunique,
+        \file_storage $fs,
+        $canapprove
+    ) {
+        global $USER;
+
+        if (!($canapprove || $this->has_filepermission($record->fileid, $USER->id))) {
+            return;
+        }
+
+        $file = $fs->get_file_by_id($record->fileid);
+        if (!$file) {
+            return;
+        }
+
+        // Get files new name.
+        $fileext = strstr($file->get_filename(), '.');
+        $fileoriginalname = $file->get_filename();
+        if (isset($filenamescounters[$fileoriginalname])) {
+            $filenamescounters[$fileoriginalname]++;
+            $fileoriginal = str_replace($fileext, '', $file->get_filename());
+            $fileoriginal .= ' (' . $filenamescounters[$fileoriginalname] . ')';
+            $fileforzipname = clean_filename($fileoriginal . $fileext);
+        } else {
+            $filenamescounters[$fileoriginalname] = 0;
+            $fileforzipname = clean_filename($fileoriginalname);
+        }
+        if (key_exists($fileforzipname, $filesforzipping)) {
+            throw new coding_exception('Can\'t overwrite ' . $fileforzipname . '!');
+        }
+        if ($record->type == PUBLICATION_MODE_ONLINETEXT) {
+            $this->add_onlinetext_to_zipfiles($filesforzipping, $file, $itemname, $fileforzipname, $fs, $itemunique);
+        } else {
+            // Save file name to array for zipping.
+            $filesforzipping[$fileforzipname] = $file;
         }
     }
 

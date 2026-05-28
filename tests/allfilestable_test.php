@@ -231,4 +231,41 @@ final class allfilestable_test extends base {
         // Teardown fixture!
         $publication = null;
     }
+
+    /**
+     * The start-page ("Published files") view must show one row per file, while the teacher
+     * "File submissions" view keeps grouping files by participant.
+     *
+     * @covers \mod_publication\local\allfilestable\base::init_sql
+     */
+    public function test_allfilestable_startpage_one_row_per_file(): void {
+        $publication = $this->create_instance([
+            'mode' => PUBLICATION_MODE_UPLOAD,
+            'obtainteacherapproval' => 0,
+            'obtainstudentapproval' => 0,
+        ]);
+        $pubid = $publication->get_instance()->id;
+
+        // Two files for one participant and one for another => 3 files / 2 participants.
+        $this->create_upload($this->students[0]->id, $pubid, 'file1.txt', 'content 1');
+        $this->create_upload($this->students[0]->id, $pubid, 'file2.txt', 'content 2');
+        $this->create_upload($this->students[1]->id, $pubid, 'file3.txt', 'content 3');
+
+        // Start page: one row per file.
+        self::assertFalse($publication->get_allfilespage());
+        $startpagetable = $publication->get_allfilestable(PUBLICATION_FILTER_NOFILTER);
+        self::assertEquals(3, $startpagetable->get_count());
+
+        ob_start();
+        $startpagetable->out(100, true); // Render so the per-row file counters get populated.
+        ob_end_clean();
+        self::assertEquals(3, $startpagetable->get_totalfilescount());
+
+        // Teacher "File submissions" view: still grouped by participant (2 rows).
+        $teachertable = $publication->get_allfilestable(PUBLICATION_FILTER_ALLFILES, true);
+        self::assertEquals(2, $teachertable->get_count());
+
+        // Teardown fixture!
+        $publication = null;
+    }
 }

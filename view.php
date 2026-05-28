@@ -92,6 +92,15 @@ if ($savevisibility) {
     }
     $users = array_keys($users);
     $publication->download_zip($users);
+} else if ($action == 'zipfiles') {
+    $fileids = optional_param_array('selectedfile', false, PARAM_INT);
+    if (!$fileids) {
+        // No files selected.
+        header('Location: view.php?id=' . $id);
+        die();
+    }
+    $fileids = array_keys($fileids);
+    $publication->download_selectedfiles_zip($fileids);
 } else if ($action == 'import') {
     require_capability('mod/publication:approve', $context);
     require_sesskey();
