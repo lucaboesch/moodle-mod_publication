@@ -34,6 +34,7 @@ defined('MOODLE_INTERNAL') || die();
 // Make sure the code being tested is accessible.
 global $CFG;
 require_once($CFG->dirroot . '/mod/publication/locallib.php'); // Include the code to test!
+require_once($CFG->dirroot . '/mod/assign/locallib.php'); // For ASSIGN_SUBMISSION_STATUS_SUBMITTED.
 
 /**
  * This class contains the test cases for the formular validation.
@@ -170,6 +171,21 @@ final class allfilestable_test extends base {
             ]);
         }
 
+        // assign::save_submission() ignores the status passed by create_submission and writes
+        // ASSIGN_SUBMISSION_STATUS_DRAFT because the assign instance has submissiondrafts=1 (the
+        // generator's default). Promote two of the three group submissions to "submitted" directly
+        // so the import filter (which only takes ASSIGN_SUBMISSION_STATUS_SUBMITTED) has work to do
+        // and group3 stays draft to verify drafts are excluded.
+        global $DB;
+        $DB->set_field('assign_submission', 'status', ASSIGN_SUBMISSION_STATUS_SUBMITTED, [
+            'assignment' => $assign->id,
+            'groupid'    => $groups['group1']->id,
+        ]);
+        $DB->set_field('assign_submission', 'status', ASSIGN_SUBMISSION_STATUS_SUBMITTED, [
+            'assignment' => $assign->id,
+            'groupid'    => $groups['group2']->id,
+        ]);
+
         $this->setAdminUser();
         $publication = $this->create_instance([
             'mode' => PUBLICATION_MODE_IMPORT,
@@ -179,6 +195,7 @@ final class allfilestable_test extends base {
             'allowsubmissionsfromdate' => 0,
             'duedate' => 0,
             'groupmode' => NOGROUPS,
+            'groupapproval' => PUBLICATION_APPROVAL_GROUPAUTOMATIC,
         ]);
 
         $publication->importfiles();
@@ -192,6 +209,24 @@ final class allfilestable_test extends base {
         $nofilesfound = $allfilestable->get_totalfilescount() == 0;
         self::assertFalse($norowsfound);
         self::assertFalse($nofilesfound);
+
+        // Files from the two submitted group submissions must have been imported.
+        self::assertTrue($DB->record_exists('publication_file', [
+            'publication' => $publication->get_instance()->id,
+            'userid'      => $groups['group1']->id,
+            'type'        => PUBLICATION_MODE_IMPORT,
+        ]));
+        self::assertTrue($DB->record_exists('publication_file', [
+            'publication' => $publication->get_instance()->id,
+            'userid'      => $groups['group2']->id,
+            'type'        => PUBLICATION_MODE_IMPORT,
+        ]));
+        // Group3's submission is still a draft, so its files must NOT have been imported.
+        self::assertFalse($DB->record_exists('publication_file', [
+            'publication' => $publication->get_instance()->id,
+            'userid'      => $groups['group3']->id,
+            'type'        => PUBLICATION_MODE_IMPORT,
+        ]));
 
         // Teardown fixture!
         $publication = null;
