@@ -111,7 +111,7 @@ Only one file area: **`attachment`** (in component `mod_publication`). `mod_publ
 | File | Purpose | Who |
 |------|---------|-----|
 | `index.php` | List all publication instances in a course | All |
-| `view.php` | Main view. Dispatches `action`: `zip`, `zipusers`, `import`, `grantextension`, `approveusers`/`rejectusers`/`resetstudentapproval`; handles `download`, `savevisibility`, and student-approval submit. `allfilespage=1` switches to the teacher all-files view (needs `:approve`) | All (capability-gated branches) |
+| `view.php` | Main view. Dispatches `action`: `zip`, `zipusers`, `zipfiles`, `import`, `grantextension`, `approveusers`/`rejectusers`/`resetstudentapproval`; handles `download`, `savevisibility`, and student-approval submit. `allfilespage=1` switches to the teacher all-files view (needs `:approve`). On the teacher view the bulk file actions (`zipfiles` + `approveusers`/`rejectusers`/`resetstudentapproval`) operate on the **per-file** checkboxes (`selectedfile[<fileid>]`) — not whole users/groups; only `grantextension` still reads `selecteduser[]`. | All (capability-gated branches) |
 | `upload.php` | Student file upload | Students |
 | `grantextension.php` | Grant extension form | Teachers |
 | `onlinepreview.php` | Render online-text preview | All |

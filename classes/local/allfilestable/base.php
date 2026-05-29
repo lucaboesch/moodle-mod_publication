@@ -196,7 +196,6 @@ class base extends \table_sql {
     protected function get_columns() {
         $selectallnone = \html_writer::checkbox('selectallnone', false, false, '', [
                 'id' => 'selectallnone',
-                'onClick' => 'toggle_userselection()',
         ]);
 
         if (!$this->allfilespage) {
@@ -603,7 +602,7 @@ class base extends \table_sql {
                 'selected',
                 false,
                 null,
-                ['class' => 'userselection']
+                ['class' => 'userselection', 'data-itemid' => $values->id]
             );
         }
     }
@@ -777,6 +776,17 @@ class base extends \table_sql {
                 || $this->publication->has_filepermission($file->get_id())
             ) {
                 $filerow = [];
+                if (!$this->is_downloading()) {
+                    // Per-file checkbox so bulk actions can target individual files. The data-itemid
+                    // links the file to its owning user/group row for the select-all/row-sync JS.
+                    $filerow[] = \html_writer::checkbox(
+                        'selectedfile[' . $file->get_id() . ']',
+                        'selected',
+                        false,
+                        null,
+                        ['class' => 'fileselection', 'data-itemid' => $values->id]
+                    );
+                }
                 $filerow[] = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file));
 
                 $url = new \moodle_url('/mod/publication/view.php', ['id' => $this->cm->id, 'download' => $file->get_id()]);

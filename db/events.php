@@ -41,6 +41,13 @@ $observers = [
                 'internal' => true,
         ],
         [
+                'eventname' => 'mod_assign\event\submission_status_updated',
+                'callback' => 'mod_publication\observer::import_assessable',
+                'includefile' => '/mod/publication/classes/observer.php',
+                'priority' => 0,
+                'internal' => true,
+        ],
+        [
                 'eventname' => 'core\event\course_module_created',
                 'callback' => 'mod_publication\observer::course_module_created',
                 'includefile' => '/mod/publication/classes/observer.php',

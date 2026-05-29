@@ -141,10 +141,15 @@ if ($savevisibility) {
     require_capability('mod/publication:approve', $context);
     require_sesskey();
 
-    $userorgroupids = optional_param_array('selecteduser', [], PARAM_INT);
-    $userorgroupids = array_keys($userorgroupids);
-    if (count($userorgroupids) > 0) {
-        $publication->update_users_or_groups_teacherapproval($userorgroupids, $action);
+    // These bulk actions operate on the individual files selected via the per-file checkboxes.
+    $fileids = optional_param_array('selectedfile', [], PARAM_INT);
+    $fileids = array_keys($fileids);
+    if (count($fileids) > 0) {
+        $files = [];
+        foreach ($fileids as $fid) {
+            $files[$fid] = $action;
+        }
+        $publication->update_files_teacherapproval($files);
         publication::send_all_pending_notifications();
         redirect($url);
     }
