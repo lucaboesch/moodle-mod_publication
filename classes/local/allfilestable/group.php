@@ -51,9 +51,18 @@ class group extends base {
 
         $params = [];
 
-        $fields = "g.id, g.name AS groupname, NULL AS groupmembers, COUNT(*) AS filecount,
-                   SUM(files.studentapproval) AS studentapproval, SUM(files.teacherapproval) AS teacherapproval,
-                   MAX(files.timecreated) AS timemodified ";
+        if ($this->allfilespage) {
+            // Teacher "File submissions" view: one row per group, files aggregated into a nested table.
+            $fields = "g.id, g.name AS groupname, NULL AS groupmembers, COUNT(*) AS filecount,
+                       SUM(files.studentapproval) AS studentapproval, SUM(files.teacherapproval) AS teacherapproval,
+                       MAX(files.timecreated) AS timemodified ";
+        } else {
+            // Start page "Published files" view: one row per file. files.id (the publication_file id)
+            // is the first column so get_records_sql() keys rows uniquely per file, while g.id keeps
+            // $values->id pointing at the group for the col_* methods.
+            $fields = "files.id AS pubfileid, g.id AS id, g.name AS groupname, NULL AS groupmembers,
+                       files.fileid AS fileid, files.filename AS filename, files.timecreated AS timemodified ";
+        }
 
         $groups = $this->publication->get_groups($this->groupingid);
         if (count($groups) > 0) {
@@ -106,6 +115,17 @@ class group extends base {
         }
 
         $where = "g.id " . $sqlgroupids;
+
+        if (!$this->allfilespage) {
+            // One row per file: no aggregation, count the matching publication_file rows.
+            $this->set_sql($fields, $from, $where, $params, '');
+            $this->set_count_sql(
+                "SELECT COUNT(a.pubfileid) FROM (SELECT files.id AS pubfileid FROM $from WHERE $where) a",
+                $params
+            );
+            return;
+        }
+
         $groupby = " g.id, g.name " . $having;
 
         $this->set_sql($fields, $from, $where, $params, $groupby);
@@ -187,6 +207,16 @@ class group extends base {
                 'id' => 'selectallnone',
                 'onClick' => 'toggle_userselection()',
         ]);
+
+        if (!$this->allfilespage) {
+            // Start page is file-focused: Files, Last modified, then the group and its members.
+            return [
+                ['selection', 'files', 'timemodified', 'groupname', 'groupmembers'],
+                [$selectallnone, get_string('files'), get_string('lastmodified'),
+                    get_string('group'), get_string('groupmembers')],
+                [null, null, null, null, null],
+            ];
+        }
 
         $columns = ['selection', 'groupname', 'groupmembers', 'timemodified', 'files'];
         $headers = [$selectallnone, get_string('group'), get_string('groupmembers'),

@@ -2,6 +2,11 @@ CHANGELOG
 =========
 
 
+5.1.1 (2026-04-22)
+-------------------
+* [BUG] #8703 - Fix bug with Postgresql - pull request #114 - lucaboesch
+* [BUG] #8702 - Fix bug when an assignment is submitted, all draft submissions from all students are processed for the student folder, github #113
+
 5.1.0 (2026-01-14)
 -------------------
 * Moodle 5.1.0 compatible version

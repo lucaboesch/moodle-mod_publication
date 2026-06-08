@@ -34,6 +34,7 @@ defined('MOODLE_INTERNAL') || die();
 // Make sure the code being tested is accessible.
 global $CFG;
 require_once($CFG->dirroot . '/mod/publication/locallib.php'); // Include the code to test!
+require_once($CFG->dirroot . '/mod/assign/locallib.php'); // For ASSIGN_SUBMISSION_STATUS_SUBMITTED.
 
 /**
  * This class contains the test cases for the formular validation.
@@ -170,6 +171,21 @@ final class allfilestable_test extends base {
             ]);
         }
 
+        // assign::save_submission() ignores the status passed by create_submission and writes
+        // ASSIGN_SUBMISSION_STATUS_DRAFT because the assign instance has submissiondrafts=1 (the
+        // generator's default). Promote two of the three group submissions to "submitted" directly
+        // so the import filter (which only takes ASSIGN_SUBMISSION_STATUS_SUBMITTED) has work to do
+        // and group3 stays draft to verify drafts are excluded.
+        global $DB;
+        $DB->set_field('assign_submission', 'status', ASSIGN_SUBMISSION_STATUS_SUBMITTED, [
+            'assignment' => $assign->id,
+            'groupid'    => $groups['group1']->id,
+        ]);
+        $DB->set_field('assign_submission', 'status', ASSIGN_SUBMISSION_STATUS_SUBMITTED, [
+            'assignment' => $assign->id,
+            'groupid'    => $groups['group2']->id,
+        ]);
+
         $this->setAdminUser();
         $publication = $this->create_instance([
             'mode' => PUBLICATION_MODE_IMPORT,
@@ -179,6 +195,7 @@ final class allfilestable_test extends base {
             'allowsubmissionsfromdate' => 0,
             'duedate' => 0,
             'groupmode' => NOGROUPS,
+            'groupapproval' => PUBLICATION_APPROVAL_GROUPAUTOMATIC,
         ]);
 
         $publication->importfiles();
@@ -192,6 +209,61 @@ final class allfilestable_test extends base {
         $nofilesfound = $allfilestable->get_totalfilescount() == 0;
         self::assertFalse($norowsfound);
         self::assertFalse($nofilesfound);
+
+        // Files from the two submitted group submissions must have been imported.
+        self::assertTrue($DB->record_exists('publication_file', [
+            'publication' => $publication->get_instance()->id,
+            'userid'      => $groups['group1']->id,
+            'type'        => PUBLICATION_MODE_IMPORT,
+        ]));
+        self::assertTrue($DB->record_exists('publication_file', [
+            'publication' => $publication->get_instance()->id,
+            'userid'      => $groups['group2']->id,
+            'type'        => PUBLICATION_MODE_IMPORT,
+        ]));
+        // Group3's submission is still a draft, so its files must NOT have been imported.
+        self::assertFalse($DB->record_exists('publication_file', [
+            'publication' => $publication->get_instance()->id,
+            'userid'      => $groups['group3']->id,
+            'type'        => PUBLICATION_MODE_IMPORT,
+        ]));
+
+        // Teardown fixture!
+        $publication = null;
+    }
+
+    /**
+     * The start-page ("Published files") view must show one row per file, while the teacher
+     * "File submissions" view keeps grouping files by participant.
+     *
+     * @covers \mod_publication\local\allfilestable\base::init_sql
+     */
+    public function test_allfilestable_startpage_one_row_per_file(): void {
+        $publication = $this->create_instance([
+            'mode' => PUBLICATION_MODE_UPLOAD,
+            'obtainteacherapproval' => 0,
+            'obtainstudentapproval' => 0,
+        ]);
+        $pubid = $publication->get_instance()->id;
+
+        // Two files for one participant and one for another => 3 files / 2 participants.
+        $this->create_upload($this->students[0]->id, $pubid, 'file1.txt', 'content 1');
+        $this->create_upload($this->students[0]->id, $pubid, 'file2.txt', 'content 2');
+        $this->create_upload($this->students[1]->id, $pubid, 'file3.txt', 'content 3');
+
+        // Start page: one row per file.
+        self::assertFalse($publication->get_allfilespage());
+        $startpagetable = $publication->get_allfilestable(PUBLICATION_FILTER_NOFILTER);
+        self::assertEquals(3, $startpagetable->get_count());
+
+        ob_start();
+        $startpagetable->out(100, true); // Render so the per-row file counters get populated.
+        ob_end_clean();
+        self::assertEquals(3, $startpagetable->get_totalfilescount());
+
+        // Teacher "File submissions" view: still grouped by participant (2 rows).
+        $teachertable = $publication->get_allfilestable(PUBLICATION_FILTER_ALLFILES, true);
+        self::assertEquals(2, $teachertable->get_count());
 
         // Teardown fixture!
         $publication = null;
