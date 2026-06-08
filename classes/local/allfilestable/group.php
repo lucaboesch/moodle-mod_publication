@@ -205,7 +205,6 @@ class group extends base {
     protected function get_columns() {
         $selectallnone = \html_writer::checkbox('selectallnone', false, false, '', [
                 'id' => 'selectallnone',
-                'onClick' => 'toggle_userselection()',
         ]);
 
         if (!$this->allfilespage) {

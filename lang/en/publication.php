@@ -23,6 +23,8 @@
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+$string['actionsforfiles'] = 'For selected files';
+$string['actionsforusers'] = 'For selected users/groups';
 $string['add_uploads'] = 'Add files';
 $string['allfiles'] = 'File submissions';
 $string['allowedfiletypes'] = 'Accepted file types';
@@ -54,6 +56,7 @@ $string['availabilityrestriction'] = 'Apply availability restrictions to user li
 $string['availabilityrestriction_admin'] = 'Default setting for availability restrictions to user list';
 $string['availabilityrestriction_admin_desc'] = 'Users who cannot access the activity due to availability restrictions will be removed from the list.<br>This only includes conditions which are marked as being applied to user lists. For example, group conditions are included but date conditions are not included.';
 $string['availabilityrestriction_help'] = 'Users who cannot access the activity due to availability restrictions will be removed from the list.<br>This only includes conditions which are marked as being applied to user lists. For example, group conditions are included but date conditions are not included.';
+$string['bulkactionhelp'] = 'File actions apply to the checked files only. Grant extension applies to the checked users/groups.';
 $string['choose'] = 'Please choose ...';
 $string['completionassignsubmission'] = 'Student or group must make a submission in the linked assignment activity';
 $string['completiondetail:assignsubmission'] = 'Make a submission in the linked assignment activity';

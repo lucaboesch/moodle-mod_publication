@@ -603,25 +603,36 @@ class publication {
         $output .= $tableoutput;
 
         $options = [];
-        if ($this->allfilespage) {
-            $options['zipusers'] = get_string('zipusers', 'publication');
-        } else {
+        if (!$this->allfilespage) {
             // Start page: selection is per file, so the bulk download zips the selected files.
             $options['zipfiles'] = get_string('zipusers', 'publication');
-        }
+        } else {
+            // Teacher view: the dropdown is split into actions that target the selected files and
+            // actions that target the selected users/groups (grant extension).
+            $fileactions = ['zipfiles' => get_string('zipusers', 'publication')];
 
-        if (has_capability('mod/publication:approve', $context) && $table->totalfiles() > 0  && $this->allfilespage) {
-            if ($this->get_instance()->obtainteacherapproval) {
-                $options['approveusers'] = get_string('approveusers', 'publication');
-                $options['rejectusers'] = get_string('rejectusers', 'publication');
+            if (has_capability('mod/publication:approve', $context) && $table->totalfiles() > 0) {
+                if ($this->get_instance()->obtainteacherapproval) {
+                    $fileactions['approveusers'] = get_string('approveusers', 'publication');
+                    $fileactions['rejectusers'] = get_string('rejectusers', 'publication');
+                }
+
+                if ($this->get_instance()->obtainstudentapproval) {
+                    $fileactions['resetstudentapproval'] = get_string('resetstudentapproval', 'publication');
+                }
             }
 
-            if ($this->get_instance()->obtainstudentapproval) {
-                $options['resetstudentapproval'] = get_string('resetstudentapproval', 'publication');
+            $useractions = [];
+            if (has_capability('mod/publication:grantextension', $this->get_context())) {
+                $useractions['grantextension'] = get_string('grantextension', 'publication');
             }
-        }
-        if (has_capability('mod/publication:grantextension', $this->get_context()) && $this->allfilespage) {
-            $options['grantextension'] = get_string('grantextension', 'publication');
+
+            // The html_writer::select() helper renders an <optgroup> for each entry whose value is
+            // an array of the form ['Group label' => [value => label, ...]].
+            $options[] = [get_string('actionsforfiles', 'publication') => $fileactions];
+            if (count($useractions) > 0) {
+                $options[] = [get_string('actionsforusers', 'publication') => $useractions];
+            }
         }
 
         if (count($options) > 0 && !$norowsfound && !$nofilesfound) {
@@ -658,6 +669,9 @@ class publication {
 
             $output .= html_writer::start_div('withselection col-7', ['class' => 'mt-2']) .
                 html_writer::span(get_string('withselected', 'publication')) .
+                ($this->allfilespage
+                    ? html_writer::span(get_string('bulkactionhelp', 'publication'), 'text-muted small d-block')
+                    : '') .
                 html_writer::select($options, 'action', '', [], [
                     'id' => 'withselect-action',
                     'disabled' => 'disabled',
@@ -1388,9 +1402,13 @@ class publication {
         foreach ($files as $fileid => $newfileaction) {
             $file = $DB->get_record(
                 'publication_file',
-                ['fileid' => $fileid],
+                ['fileid' => $fileid, 'publication' => $this->instance->id],
                 "fileid,userid,teacherapproval,id,studentapproval,filename"
             );
+            if (!$file) {
+                // Ignore file ids that do not belong to this publication instance.
+                continue;
+            }
 
             $oldteacherapproval = $file->teacherapproval;
             $oldstudentapproval = $file->studentapproval;
