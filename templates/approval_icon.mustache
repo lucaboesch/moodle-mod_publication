@@ -26,7 +26,8 @@
 
     Context variables required for this template:
     * icon Icon HTML
-    * hint Title text for the icon
+    * hint Status text for the icon, used as both the title (tooltip) and the aria-label
+           so the status is announced by screen readers.
 
     Example context (json):
     {
@@ -35,6 +36,6 @@
     }
 }}
 
-<span class="" title="{{hint}}">
+<span class="" title="{{hint}}" role="img" aria-label="{{hint}}">
     {{{icon}}}
 </span>

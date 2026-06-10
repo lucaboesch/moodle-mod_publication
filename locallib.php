@@ -566,7 +566,10 @@ class publication {
         $allfiles = get_string('allfiles', 'publication');
         $publicfiles = get_string('publicfiles', 'publication');
         $title = (has_capability('mod/publication:approve', $context)  && $this->allfilespage) ? $allfiles : $publicfiles;
-        $output .= html_writer::tag('legend', $title, ['class' => 'ftoggler h3 fw-bold']);
+        // Keep a visually-hidden legend so the <fieldset> remains labelled, and expose the title as a
+        // real <h3> so screen-reader users can reach it via heading navigation (WCAG 2.4.1, BITV 9.2.4.1).
+        $output .= html_writer::tag('legend', $title, ['class' => 'visually-hidden']);
+        $output .= html_writer::tag('h3', $title, ['class' => 'fw-bold']);
         $output .= html_writer::start_div('fcontainer clearfix mb-3');
 
         $f = groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
@@ -668,7 +671,7 @@ class publication {
             }
 
             $output .= html_writer::start_div('withselection col-7', ['class' => 'mt-2']) .
-                html_writer::span(get_string('withselected', 'publication')) .
+                html_writer::span(get_string('withselected', 'publication'), '', ['id' => 'withselect-label']) .
                 ($this->allfilespage
                     ? html_writer::span(get_string('bulkactionhelp', 'publication'), 'text-muted small d-block')
                     : '') .
@@ -676,6 +679,7 @@ class publication {
                     'id' => 'withselect-action',
                     'disabled' => 'disabled',
                     'class' => 'd-inline-block',
+                    'aria-labelledby' => 'withselect-label',
                 ]) .
                 html_writer::empty_tag('input', [
                     'type' => 'submit',

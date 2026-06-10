@@ -101,11 +101,11 @@ class group extends base {
                 $from .= ' AND files.studentapproval = 1 ';
             }
         } else if ($this->filter == PUBLICATION_FILTER_REJECTED) {
-            $from = $grouptable . " LEFT JOIN {publication_file} files
+            $from = $grouptable . " JOIN {publication_file} files
                 ON g.id = files.userid AND files.publication = :publication " .
                 "AND files.teacherapproval = 2 ";
         } else if ($this->filter == PUBLICATION_FILTER_APPROVALREQUIRED) {
-            $from = $grouptable . " LEFT JOIN {publication_file} files
+            $from = $grouptable . " JOIN {publication_file} files
                 ON g.id = files.userid AND files.publication = :publication " .
                 "AND (files.teacherapproval = 3 OR files.teacherapproval IS NULL OR files.teacherapproval = 0) ";
         } else if ($this->filter == PUBLICATION_FILTER_NOFILES) {
@@ -205,6 +205,7 @@ class group extends base {
     protected function get_columns() {
         $selectallnone = \html_writer::checkbox('selectallnone', false, false, '', [
                 'id' => 'selectallnone',
+                'aria-label' => get_string('selectall'),
         ]);
 
         if (!$this->allfilespage) {

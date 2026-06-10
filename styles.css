@@ -263,3 +263,9 @@
 #page-mod-publication-view.allfilespage .activity-header {
     display: none;
 }
+
+/* Pending ("?") approval/release status icon: dark gray for sufficient contrast (about 9:1)
+   instead of the low-contrast warning yellow (about 1.8:1). */
+.publication-status-pending {
+    color: #444;
+}

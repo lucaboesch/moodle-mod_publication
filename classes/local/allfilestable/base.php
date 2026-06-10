@@ -163,7 +163,11 @@ class base extends \table_sql {
         $this->is_persistent(true);
 
         $this->valid = self::approval_icon('check', 'text-success', get_string('student_approved', 'publication'));
-        $this->questionmark = self::approval_icon('question', 'text-warning', get_string('student_pending', 'publication'));
+        $this->questionmark = self::approval_icon(
+            'question',
+            'publication-status-pending',
+            get_string('student_pending', 'publication')
+        );
         $this->invalid = self::approval_icon('times', 'text-danger', get_string('student_rejected', 'publication'));
 
         $this->studvisibleyes = self::approval_icon('check', 'text-success', get_string('visibleforstudents_yes', 'publication'));
@@ -196,6 +200,7 @@ class base extends \table_sql {
     protected function get_columns() {
         $selectallnone = \html_writer::checkbox('selectallnone', false, false, '', [
                 'id' => 'selectallnone',
+                'aria-label' => get_string('selectall'),
         ]);
 
         if (!$this->allfilespage) {
@@ -589,20 +594,26 @@ class base extends \table_sql {
             return '';
         } else if (!$this->allfilespage) {
             // Start page: one checkbox per file, selecting individual files for the "zipfiles" action.
+            // Label with the filename and its owner/group so screen-reader users can tell rows apart.
+            $owner = isset($values->groupname) ? $values->groupname : fullname($values);
+            $filelabel = get_string('selectitem', 'moodle', $values->filename) . ' (' . $owner . ')';
             return \html_writer::checkbox(
                 'selectedfile[' . $values->fileid . ']',
                 'selected',
                 false,
                 null,
-                ['class' => 'userselection']
+                ['class' => 'userselection', 'aria-label' => $filelabel]
             );
         } else {
+            // Teacher view: one checkbox per user (or group) row. Label it with that name.
+            $rowname = isset($values->groupname) ? $values->groupname : fullname($values);
             return \html_writer::checkbox(
                 'selecteduser[' . $values->id . ']',
                 'selected',
                 false,
                 null,
-                ['class' => 'userselection', 'data-itemid' => $values->id]
+                ['class' => 'userselection', 'data-itemid' => $values->id,
+                    'aria-label' => get_string('selectitem', 'moodle', $rowname)]
             );
         }
     }
@@ -639,7 +650,17 @@ class base extends \table_sql {
         if ($this->is_downloading()) {
             return strip_tags(parent::col_fullname($values) . $extensiontxt);
         } else {
-            return  $OUTPUT->user_picture($values) .  parent::col_fullname($values) . $extensiontxt;
+            // Render the avatar as a decorative image inside a profile link labelled generically, so a
+            // screen reader announces "User picture" here instead of repeating the user's name (already
+            // announced by the adjacent name link), while keeping the picture reachable by keyboard.
+            $picture = $OUTPUT->user_picture($values, ['link' => false]);
+            $profileurl = new \moodle_url('/user/view.php', ['id' => $values->id, 'course' => $this->cm->course]);
+            $picturelink = \html_writer::link(
+                $profileurl,
+                \html_writer::span($picture, '', ['aria-hidden' => 'true']),
+                ['class' => 'd-inline-block aabtn', 'aria-label' => get_string('userpic')]
+            );
+            return $picturelink . parent::col_fullname($values) . $extensiontxt;
         }
     }
 
@@ -753,8 +774,13 @@ class base extends \table_sql {
                 return '';
             }
             $url = new \moodle_url('/mod/publication/view.php', ['id' => $this->cm->id, 'download' => $values->fileid]);
-            $output = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file)) . ' ' .
-                \html_writer::link($url, $file->get_filename()) .
+            // Icon is decorative; the file type is exposed via the link's accessible name so screen-reader
+            // users get it in the tab order (WCAG 1.1.1 / 4.1.2).
+            $output = $OUTPUT->pix_icon(file_file_icon($file), '') . ' ' .
+                \html_writer::link(
+                    $url,
+                    $file->get_filename() . \html_writer::span(' ' . get_mimetype_description($file), 'visually-hidden')
+                ) .
                 $this->add_onlinetext_preview($values->id, $values->fileid);
 
             if ($this->totalfiles === null) {
@@ -784,14 +810,19 @@ class base extends \table_sql {
                         'selected',
                         false,
                         null,
-                        ['class' => 'fileselection', 'data-itemid' => $values->id]
+                        ['class' => 'fileselection', 'data-itemid' => $values->id,
+                            'aria-label' => get_string('selectitem', 'moodle', $file->get_filename())]
                     );
                 }
-                $filerow[] = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file));
+                // Icon is decorative; the file type is exposed via the link's accessible name so screen-reader
+                // users get it in the tab order (WCAG 1.1.1 / 4.1.2).
+                $filerow[] = $OUTPUT->pix_icon(file_file_icon($file), '');
 
                 $url = new \moodle_url('/mod/publication/view.php', ['id' => $this->cm->id, 'download' => $file->get_id()]);
-                $filerow[] = \html_writer::link($url, $file->get_filename()) .
-                    $this->add_onlinetext_preview($values->id, $file->get_id());
+                $filerow[] = \html_writer::link(
+                    $url,
+                    $file->get_filename() . \html_writer::span(' ' . get_mimetype_description($file), 'visually-hidden')
+                ) . $this->add_onlinetext_preview($values->id, $file->get_id());
 
                 $filetable->data[] = $filerow;
             }

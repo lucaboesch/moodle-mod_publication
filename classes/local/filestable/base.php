@@ -78,7 +78,11 @@ class base extends \html_table {
         $this->fs = get_file_storage();
 
         $this->valid = \mod_publication\local\allfilestable\base::approval_icon('check', 'text-success', false);
-        $this->questionmark = \mod_publication\local\allfilestable\base::approval_icon('question', 'text-warning', false);
+        $this->questionmark = \mod_publication\local\allfilestable\base::approval_icon(
+            'question',
+            'publication-status-pending',
+            false
+        );
         $this->invalid = \mod_publication\local\allfilestable\base::approval_icon('times', 'text-danger', false);
     }
 

@@ -1,6 +1,22 @@
 CHANGELOG
 =========
 
+5.2.0 (2026-05-27)
+-------------------
+* Moodle 5.2.0 compatible version
+* [FEATURE] #8583 - add checkboxes for each file in file submissions page
+* [FEATURE] #8564 - split the content of the table "Published files" into separate rows per file
+* [FEATURE] #8579 - allow bulk download per file and not per user
+* [FEATURE] #8563 - change the order of the columns at "Published files"
+* [BUG] #8336 - fix accessibility - publication status
+* [BUG] #8685 - fix count about pending decision data is not correct with linked group submissions
+* [BUG] #8310 - fix accessibility - ? status contrast
+* [BUG] #8309 - fix accessibility - heading of published files
+* [BUG] #8312 - fix accessibility - add labels to checkboxes and dropdowns
+* [BUG] #8590 - fix accessibility: make information on file type available for screenreader users
+* [BUG] #8591 - fix accessibility: adapt information on profile for screenreader users
+* 
+
 
 5.1.1 (2026-04-22)
 -------------------
