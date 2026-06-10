@@ -59,7 +59,7 @@ function publication_add_instance($publication) {
     $context = context_module::instance($cm->id);
     $instance = new publication($cm, $course, $context);
 
-    $instance->update_calendar_event();
+    $instance->update_calendar_events();
 
     return $record->id;
 }
@@ -119,7 +119,7 @@ function publication_update_instance($publication) {
     $context = context_module::instance($cm->id);
     $instance = new publication($cm, $course, $context);
 
-    $instance->update_calendar_event();
+    $instance->update_calendar_events();
 
     if ($instance->get_instance()->mode == PUBLICATION_MODE_IMPORT) {
         // Fetch all files right now!
@@ -377,7 +377,20 @@ function mod_publication_core_calendar_provide_event_action(calendar_event $even
     $courseinstance = get_fast_modinfo($event->courseid)->instances['publication'][$event->instance];
     $instance = new publication($courseinstance);
 
-    // Only show this instance if it's open.
+    // Approval/release deadline event: offer a "Give approval" action while the approval window is open.
+    if ($event->eventtype == PUBLICATION_EVENT_TYPE_APPROVAL) {
+        if (!$instance->is_approval_open()) {
+            return null;
+        }
+        return $factory->create_instance(
+            get_string('giveapproval', 'publication'), // Name of the action button.
+            new \moodle_url('/mod/publication/view.php', ['id' => $courseinstance->id]), // URL of the instance.
+            1, // Count of necessary actions.
+            true // Whether the user can take action on this folder.
+        );
+    }
+
+    // Upload deadline event: only show this instance if it's open.
     if ($instance->is_open()) {
         // Also don't show this instance when the user already uploaded one or more files.
         $files = $DB->count_records('publication_file', ['publication' => $event->instance, 'userid' => $USER->id]);

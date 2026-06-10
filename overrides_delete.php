@@ -55,6 +55,8 @@ if (!$override) {
 if ($confirm) {
     require_sesskey();
     $publication->override_delete($overrideid);
+    // Remove the calendar events for this override; the base event reappears for the user/group.
+    $publication->delete_override_calendar_events($override);
     $eventparams = [
         'context' => $context,
         'other' => [

@@ -57,6 +57,7 @@ $string['availabilityrestriction_admin'] = 'Default setting for availability res
 $string['availabilityrestriction_admin_desc'] = 'Users who cannot access the activity due to availability restrictions will be removed from the list.<br>This only includes conditions which are marked as being applied to user lists. For example, group conditions are included but date conditions are not included.';
 $string['availabilityrestriction_help'] = 'Users who cannot access the activity due to availability restrictions will be removed from the list.<br>This only includes conditions which are marked as being applied to user lists. For example, group conditions are included but date conditions are not included.';
 $string['bulkactionhelp'] = 'File actions apply to the checked files only. Grant extension applies to the checked users/groups.';
+$string['calendarapprovaltitle'] = '{$a} (Deadline for approval)';
 $string['choose'] = 'Please choose ...';
 $string['completionassignsubmission'] = 'Student or group must make a submission in the linked assignment activity';
 $string['completiondetail:assignsubmission'] = 'Make a submission in the linked assignment activity';

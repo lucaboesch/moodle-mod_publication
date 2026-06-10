@@ -84,6 +84,12 @@ if ($overridesform->is_cancelled()) {
     // Trigger the override updated event.
     $event->trigger();
 
+    // Refresh the calendar events for this override so the affected user/group sees their dates.
+    $savedoverride = $DB->get_record('publication_overrides', ['id' => $overrideresult->overrideid]);
+    if ($savedoverride) {
+        $publication->update_calendar_events($savedoverride);
+    }
+
     redirect($backurl, get_string('override:save:success', 'mod_publication'));
 }
 $formdata = $publication->override_getformdata($overrideid);

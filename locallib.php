@@ -34,6 +34,7 @@ define('PUBLICATION_APPROVAL_ALL', 0);
 define('PUBLICATION_APPROVAL_SINGLE', 1);
 
 define('PUBLICATION_EVENT_TYPE_DUE', 'due');
+define('PUBLICATION_EVENT_TYPE_APPROVAL', 'approval');
 
 
 define('PUBLICATION_FILTER_NOFILTER', 'nofilter');
@@ -2402,47 +2403,194 @@ class publication {
     }
 
     /**
-     * Handles calendar events for publications with a due date
-     * This will create, update and delete an event when necessary
+     * Create/update/delete the calendar events for this publication's deadlines, override-aware.
+     *
+     * There are two deadlines: the upload due date ('due' event, title = activity name) and the
+     * approval/release deadline ('approval' event, only when student approval is required). Mirrors
+     * quiz_update_events(): a base course-level event per deadline (priority null) plus per-user and
+     * per-group override events whose lower priority makes core's calendar show only the overridden
+     * event to the affected users (it keeps the MIN(priority) event per module/instance/eventtype).
+     *
+     * @param stdClass|null $override A single publication_overrides row to (re)build events for, or null
+     *                                to rebuild the base events and every override of this instance.
      */
-    public function update_calendar_event() {
+    public function update_calendar_events($override = null) {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/calendar/lib.php');
 
         $instance = $this->get_instance();
 
-        // Check whether the publication already has a event.
-        $result = $DB->get_record('event', ['modulename' => 'publication', 'instance' => $instance->id]);
-
-        if ($result) {
-            // Check whether the publication still has a due date, if not delete the event.
-            if ($instance->duedate == null || $instance->duedate == 0) {
-                $DB->delete_records('event', ['modulename' => 'publication', 'instance' => $instance->id]);
-            } else {
-                $result->name = $instance->name;
-                $result->timestart = $instance->duedate;
-                $result->timesort = $instance->duedate;
-
-                $DB->update_record('event', $result);
-            }
-        } else if ($instance->duedate != null && $instance->duedate != 0) {
-            $event = new stdClass();
-            $event->eventtype = PUBLICATION_EVENT_TYPE_DUE;
-            $event->type = CALENDAR_EVENT_TYPE_ACTION; // Necessary to enable this event in block_myoverview.
-            $event->name = $instance->name;
-            $event->description = "";
-            $event->courseid = $instance->course;
-            $event->groupid = 0;
-            $event->userid = 0;
-            $event->modulename = 'publication';
-            $event->instance = $instance->id;
-            $event->visible = instance_is_visible('publication', $this->instance);
-            $event->timestart = $instance->duedate;
-            $event->timesort = $instance->duedate; // Necessary for block_myoverview.
-            $event->timeduration = 0;
-
-            calendar_event::create($event);
+        if ($override === null) {
+            // Full refresh: drop everything for this instance and rebuild the base plus all overrides.
+            $DB->delete_records('event', ['modulename' => 'publication', 'instance' => $instance->id]);
+            $overrides = array_values(
+                $DB->get_records('publication_overrides', ['publication' => $instance->id], 'id ASC')
+            );
+            // The leading null entry represents the base (non-override) events.
+            $scopes = array_merge([null], $overrides);
+        } else {
+            // Single override: drop just its events and rebuild them.
+            $this->delete_override_calendar_events($override);
+            $scopes = [$override];
         }
+
+        $grouppriorities = $this->get_group_override_priorities();
+        $visible = instance_is_visible('publication', $this->instance);
+
+        foreach ($scopes as $scope) {
+            $groupid = (!empty($scope) && !empty($scope->groupid)) ? $scope->groupid : 0;
+            $userid = (!empty($scope) && !empty($scope->userid)) ? $scope->userid : 0;
+
+            // A group override whose group no longer exists must be skipped.
+            if ($groupid && groups_get_group_name($groupid) === false) {
+                continue;
+            }
+
+            // Effective deadlines for this scope: an override only carries the fields that were set.
+            if ($scope === null) {
+                $duedate = $instance->duedate;
+                $approvaltodate = $instance->approvaltodate;
+            } else {
+                $duedate = !empty($scope->duedate) ? $scope->duedate : 0;
+                $approvaltodate = !empty($scope->approvaltodate) ? $scope->approvaltodate : 0;
+            }
+
+            // Upload deadline event (title unchanged: the activity name).
+            if ($duedate) {
+                $this->create_deadline_event(
+                    PUBLICATION_EVENT_TYPE_DUE,
+                    $instance->name,
+                    $duedate,
+                    $userid,
+                    $groupid,
+                    ($grouppriorities !== null) ? $grouppriorities['duedate'] : null,
+                    $visible
+                );
+            }
+
+            // Approval/release deadline event (only when student approval is required).
+            if ($instance->obtainstudentapproval && $approvaltodate) {
+                $this->create_deadline_event(
+                    PUBLICATION_EVENT_TYPE_APPROVAL,
+                    get_string('calendarapprovaltitle', 'publication', $instance->name),
+                    $approvaltodate,
+                    $userid,
+                    $groupid,
+                    ($grouppriorities !== null) ? $grouppriorities['approvaltodate'] : null,
+                    $visible
+                );
+            }
+        }
+    }
+
+    /**
+     * Create a single deadline calendar event with the correct override priority.
+     *
+     * @param string $eventtype PUBLICATION_EVENT_TYPE_DUE or PUBLICATION_EVENT_TYPE_APPROVAL.
+     * @param string $name Event title.
+     * @param int $timestamp Deadline time.
+     * @param int $userid User id for a user override, or 0 for the base/group event.
+     * @param int $groupid Group id for a group override, or 0.
+     * @param array|null $grouptimepriorities Map of timestamp => priority for group overrides of this kind.
+     * @param bool $visible Event visibility.
+     */
+    private function create_deadline_event($eventtype, $name, $timestamp, $userid, $groupid, $grouptimepriorities, $visible) {
+        $instance = $this->get_instance();
+
+        $event = new stdClass();
+        $event->eventtype = $eventtype;
+        $event->type = CALENDAR_EVENT_TYPE_ACTION; // Necessary to enable this event in block_myoverview.
+        $event->name = $name;
+        $event->description = '';
+        // The events module won't show user events when the courseid is nonzero.
+        $event->courseid = $userid ? 0 : $instance->course;
+        $event->groupid = $groupid;
+        $event->userid = $userid;
+        $event->modulename = 'publication';
+        $event->instance = $instance->id;
+        $event->visible = $visible;
+        $event->timestart = $timestamp;
+        $event->timesort = $timestamp; // Necessary for block_myoverview.
+        $event->timeduration = 0;
+
+        if ($userid) {
+            $event->priority = CALENDAR_EVENT_USER_OVERRIDE_PRIORITY;
+        } else if ($groupid && $grouptimepriorities !== null && isset($grouptimepriorities[$timestamp])) {
+            $event->priority = $grouptimepriorities[$timestamp];
+        } else {
+            $event->priority = null;
+        }
+
+        calendar_event::create($event, false);
+    }
+
+    /**
+     * Compute calendar-event priorities for this instance's group overrides.
+     *
+     * Mirrors quiz_get_group_override_priorities() for deadlines: the later a deadline, the lower (=
+     * stronger, since core keeps MIN(priority)) its priority number, so a member of several overridden
+     * groups sees the latest deadline.
+     *
+     * @return array|null ['duedate' => [ts => priority], 'approvaltodate' => [ts => priority]] or null if none.
+     */
+    public function get_group_override_priorities() {
+        global $DB;
+
+        $overrides = $DB->get_records_select(
+            'publication_overrides',
+            'publication = :publication AND groupid IS NOT NULL',
+            ['publication' => $this->get_instance()->id],
+            '',
+            'id, duedate, approvaltodate'
+        );
+        if (!$overrides) {
+            return null;
+        }
+
+        $duedates = [];
+        $approvaltodates = [];
+        foreach ($overrides as $override) {
+            if (!empty($override->duedate) && !in_array($override->duedate, $duedates)) {
+                $duedates[] = $override->duedate;
+            }
+            if (!empty($override->approvaltodate) && !in_array($override->approvaltodate, $approvaltodates)) {
+                $approvaltodates[] = $override->approvaltodate;
+            }
+        }
+
+        // Later deadline => stronger priority. Core keeps the MIN(priority) event, so the latest
+        // deadline must get the smallest number: sort descending and number from 1.
+        rsort($duedates);
+        rsort($approvaltodates);
+        $priorities = ['duedate' => [], 'approvaltodate' => []];
+        $priority = 1;
+        foreach ($duedates as $timestamp) {
+            $priorities['duedate'][$timestamp] = $priority++;
+        }
+        $priority = 1;
+        foreach ($approvaltodates as $timestamp) {
+            $priorities['approvaltodate'][$timestamp] = $priority++;
+        }
+        return $priorities;
+    }
+
+    /**
+     * Delete the calendar events belonging to a single override scope (user or group).
+     *
+     * @param stdClass $override A publication_overrides row (with userid or groupid set).
+     */
+    public function delete_override_calendar_events($override) {
+        global $DB;
+
+        $conds = ['modulename' => 'publication', 'instance' => $this->get_instance()->id];
+        if (!empty($override->userid)) {
+            $conds['userid'] = $override->userid;
+        } else if (!empty($override->groupid)) {
+            $conds['groupid'] = $override->groupid;
+        } else {
+            return;
+        }
+        $DB->delete_records('event', $conds);
     }
 
     /**
