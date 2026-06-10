@@ -110,7 +110,9 @@ class mod_publication_mod_form extends moodleform_mod {
         $choices[-1] = get_string('choose', 'publication');
         $assigninstances = $DB->get_records('assign', ['course' => $COURSE->id], 'name ASC');
         $module = $DB->get_record('modules', ['name' => 'assign']);
-        $select = $mform->createElement('select', 'importfrom', get_string('assignment', 'publication'), $choices, $disabled);
+        // The Assignment select is intentionally not disabled (unlike the Mode radios), so a restored or
+        // stale link to a missing assignment can be repaired even when files already exist.
+        $select = $mform->createElement('select', 'importfrom', get_string('assignment', 'publication'), $choices);
         $notteamassigns = [-1];
         $teamassigns = [];
         foreach ($assigninstances as $assigninstance) {
@@ -127,6 +129,17 @@ class mod_publication_mod_form extends moodleform_mod {
             $select->addOption($assigninstance->name, $assigninstance->id, $attributes);
         }
         $this->teamassigns = $teamassigns;
+        // If the stored assignment no longer exists in this course (e.g. after a restore where the source
+        // assignment was not part of the backup), keep it as a selected but clearly-flagged option so the
+        // field is neither empty nor locked and the teacher can relink to an existing assignment.
+        $selectableids = array_merge($teamassigns, $notteamassigns); // Includes the -1 placeholder.
+        if (
+            !empty($this->current->importfrom)
+            && $this->current->importfrom > 0
+            && !in_array($this->current->importfrom, $selectableids)
+        ) {
+            $select->addOption(get_string('assignment_notfound', 'publication'), $this->current->importfrom);
+        }
         $mform->addElement($select);
         $mform->addHelpButton('importfrom', 'assignment', 'publication');
         $mform->hideIf('importfrom', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
@@ -337,8 +350,9 @@ class mod_publication_mod_form extends moodleform_mod {
 
         $data->groupapproval = 0;
         if ($data->mode == PUBLICATION_MODE_IMPORT && $data->importfrom != -1) {
-            $assigninstance = $DB->get_record('assign', ['id' => $data->importfrom], '*', MUST_EXIST);
-            if ($assigninstance->teamsubmission) {
+            // The assignment may no longer exist (e.g. an unrepaired link after a restore); tolerate that.
+            $assigninstance = $DB->get_record('assign', ['id' => $data->importfrom]);
+            if ($assigninstance && $assigninstance->teamsubmission) {
                 if ($data->obtaingroupapproval == PUBLICATION_APPROVAL_GROUPAUTOMATIC) {
                     $data->groupapproval = 0;
                     $data->obtainstudentapproval = 0;

@@ -15,7 +15,7 @@ CHANGELOG
 * [BUG] #8312 - fix accessibility - add labels to checkboxes and dropdowns
 * [BUG] #8590 - fix accessibility: make information on file type available for screenreader users
 * [BUG] #8591 - fix accessibility: adapt information on profile for screenreader users
-* 
+* [BUG] #8217 - fix bug with behaviour with restored student folder linked to assignment including user data 
 
 
 5.1.1 (2026-04-22)

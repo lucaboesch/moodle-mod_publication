@@ -1504,7 +1504,12 @@ class publication {
         global $DB;
 
         if ($this->instance->mode == PUBLICATION_MODE_IMPORT) {
-            $assign = $DB->get_record('assign', ['id' => $this->instance->importfrom]);
+            $assign = $DB->get_record('assign', ['id' => $this->instance->importfrom, 'course' => $this->course->id]);
+            if (!$assign) {
+                // Linked assignment no longer exists (e.g. after a restore where it wasn't included);
+                // nothing to import. Any already-imported files are kept.
+                return false;
+            }
             $assignmoduleid = $DB->get_field('modules', 'id', ['name' => 'assign']);
             $assigncm = $DB->get_record('course_modules', [
                     'course' => $assign->course,

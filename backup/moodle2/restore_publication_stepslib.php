@@ -99,9 +99,9 @@ class restore_publication_activity_structure_step extends restore_activity_struc
             $data->approvaltodate = $this->apply_date_offset($data->approvaltodate);
         }
 
-        // Delete importfrom after restore.
-        $data->importfrom = -1;
-
+        // Keep the original importfrom; after_restore() remaps it to the restored assignment when that
+        // assignment was part of this backup, otherwise it stays referencing a non-existent assignment
+        // which the (now unlocked) settings field lets the teacher repair.
         $newitemid = $DB->insert_record('publication', $data);
 
         $this->apply_activity_instance($newitemid);
@@ -210,6 +210,17 @@ class restore_publication_activity_structure_step extends restore_activity_struc
         // Get set new fileids after restoring.
 
         $pubid = $this->get_new_parentid('publication');
+
+        // Remap the linked assignment now that all activities (and their id mappings) have been restored.
+        // If the source assignment was part of this backup it gets relinked; otherwise the original id is
+        // kept, referencing a non-existent assignment the teacher can repair via the (now unlocked) field.
+        $pub = $DB->get_record('publication', ['id' => $pubid], 'id, importfrom');
+        if ($pub && $pub->importfrom > 0) {
+            $mapped = $this->get_mappingid('assign', $pub->importfrom, $pub->importfrom);
+            if ($mapped != $pub->importfrom) {
+                $DB->set_field('publication', 'importfrom', $mapped, ['id' => $pubid]);
+            }
+        }
 
         $coursemodule = get_coursemodule_from_instance('publication', $pubid);
 
