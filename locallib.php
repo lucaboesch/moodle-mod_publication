@@ -506,6 +506,95 @@ class publication {
     }
 
     /**
+     * Effective value of an anonymization display setting.
+     *
+     * When teachers may not change the setting (the admin checkbox "allowshow<X>" is unchecked),
+     * the site-wide default is enforced for every instance; otherwise the instance value applies.
+     *
+     * @param string $setting one of 'showparticipantnames', 'showgroupnames' or 'showlastmodified'
+     * @return bool whether the information is shown to other participants
+     */
+    public function get_effective_show_setting($setting) {
+        if (empty(get_config('publication', 'allow' . $setting))) {
+            return !empty(get_config('publication', $setting));
+        }
+        return !empty($this->instance->{$setting});
+    }
+
+    /**
+     * Build the blue info box explaining how (and when) files get published, including the
+     * anonymization notice when names and/or the last modified date are hidden from students.
+     *
+     * Used on the start page ("My files" panel) and on the upload page.
+     *
+     * @return string HTML of the notice box
+     */
+    public function get_notice_html() {
+        $mode = $this->get_mode();
+        $instance = $this->get_instance();
+
+        if ($mode == PUBLICATION_MODE_FILEUPLOAD) {
+            $noticemode = 'upload';
+        } else {
+            $noticemode = 'import';
+        }
+
+        if ($instance->obtainstudentapproval) {
+            if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+                if ($instance->groupapproval == PUBLICATION_APPROVAL_ALL) {
+                    $noticestudentstringid = 'all';
+                } else {
+                    $noticestudentstringid = 'one';
+                }
+                $noticemode = 'group';
+            } else {
+                $noticestudentstringid = 'studentrequired';
+            }
+        } else {
+            $noticestudentstringid = 'studentnotrequired';
+        }
+
+        if ($instance->obtainteacherapproval) {
+            $noticeteacherid = 'teacherrequired';
+        } else {
+            $noticeteacherid = 'teachernotrequired';
+        }
+
+        $notice = get_string('notice_' . $noticemode . '_' . $noticestudentstringid . '_' . $noticeteacherid, 'publication');
+
+        if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+            $notice = get_string('notice_files_imported_group', 'publication') . ' ' . $notice;
+        } else if ($mode == PUBLICATION_MODE_ASSIGN_IMPORT) {
+            $notice = get_string('notice_files_imported', 'publication') . ' ' . $notice;
+        }
+
+        if ($mode != PUBLICATION_MODE_FILEUPLOAD) {
+            $notice .= '<br />' . get_string('notice_changes_possible_in_original', 'publication');
+        }
+
+        // Anonymization notice: tell the owner which of their details other participants won't see.
+        if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+            $namehidden = !$this->get_effective_show_setting('showgroupnames');
+        } else {
+            $namehidden = !$this->get_effective_show_setting('showparticipantnames');
+        }
+        $datehidden = !$this->get_effective_show_setting('showlastmodified');
+        if ($namehidden && $datehidden) {
+            $notice .= ' ' . get_string('notice_hidden_namedate', 'publication');
+        } else if ($namehidden) {
+            $notice .= ' ' . get_string('notice_hidden_name', 'publication');
+        } else if ($datehidden) {
+            $notice .= ' ' . get_string('notice_hidden_date', 'publication');
+        }
+
+        return html_writer::tag(
+            'div',
+            get_string('notice', 'publication') . ' ' . $notice,
+            ['class' => 'alert alert-info']
+        );
+    }
+
+    /**
      * Display the form with the table containing all files.
      *
      * This method generates the HTML output for the all files form, including the table
@@ -1133,6 +1222,14 @@ class publication {
         $userfields = implode(', ', $userfields);
         $filenamescounters = [];
 
+        // When names are hidden from students, online-text resource folders inside the ZIP must not
+        // embed the owner's/group's name either (regular zip entries carry the plain filename only).
+        if ($teamsubmission) {
+            $shownames = $canapprove || $this->get_effective_show_setting('showgroupnames');
+        } else {
+            $shownames = $canapprove || $this->get_effective_show_setting('showparticipantnames');
+        }
+
         // Get all files from each user/group.
         foreach ($uploaders as $uploader) {
             $conditions['userid'] = $uploader;
@@ -1152,6 +1249,9 @@ class publication {
                 $itemunique = '';
             }
             // Up to here.
+            if (!$shownames) {
+                $itemname = '';
+            }
 
             foreach ($records as $record) {
                 $this->add_record_to_zipfiles(
@@ -1205,6 +1305,14 @@ class publication {
         $filesforzipping = [];
         $filenamescounters = [];
 
+        // When names are hidden from students, online-text resource folders inside the ZIP must not
+        // embed the owner's/group's name either (regular zip entries carry the plain filename only).
+        if ($teamsubmission) {
+            $shownames = $canapprove || $this->get_effective_show_setting('showgroupnames');
+        } else {
+            $shownames = $canapprove || $this->get_effective_show_setting('showparticipantnames');
+        }
+
         foreach ($fileids as $fileid) {
             $record = $DB->get_record('publication_file', [
                 'publication' => $this->get_instance()->id,
@@ -1226,6 +1334,9 @@ class publication {
                     $itemname = $DB->get_field('groups', 'name', ['id' => $record->userid]);
                 }
                 $itemunique = '';
+            }
+            if (!$shownames) {
+                $itemname = '';
             }
 
             $this->add_record_to_zipfiles(

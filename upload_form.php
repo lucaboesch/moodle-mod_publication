@@ -57,6 +57,9 @@ class mod_publication_upload_form extends moodleform {
 
         $mform->addElement('header', 'myfiles', get_string('myfiles', 'publication'));
 
+        // Same info box about publication/approval (and hidden name/date) as on the activity start page.
+        $mform->addElement('html', $publication->get_notice_html());
+
         $mform->addElement('static', 'guideline', get_string('guideline', 'publication'), $text);
 
         $mform->addElement('filemanager', 'attachment_filemanager', get_string('myfiles', 'publication'), null, $attachmentoptions);

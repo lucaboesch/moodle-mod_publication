@@ -54,56 +54,10 @@ class mod_publication_files_form extends moodleform {
 
         $mode = $publication->get_mode();
 
-        $publicationinstance = $publication->get_instance();
-
-        $noticestudentstringid = '';
-        $noticeteacherid = '';
-        $noticemode = '';
-
-        if ($mode == PUBLICATION_MODE_FILEUPLOAD) {
-            $noticemode = 'upload';
-        } else {
-            $noticemode = 'import';
-        }
-
-        if ($publicationinstance->obtainstudentapproval) {
-            if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
-                if ($publicationinstance->groupapproval == PUBLICATION_APPROVAL_ALL) {
-                    $noticestudentstringid = 'all';
-                } else {
-                    $noticestudentstringid = 'one';
-                }
-                $noticemode = 'group';
-            } else {
-                $noticestudentstringid = 'studentrequired';
-            }
-        } else {
-            $noticestudentstringid = 'studentnotrequired';
-        }
-
-        if ($publicationinstance->obtainteacherapproval) {
-            $noticeteacherid = 'teacherrequired';
-        } else {
-            $noticeteacherid = 'teachernotrequired';
-        }
-
-        $stringid = 'notice_' . $noticemode . '_' . $noticestudentstringid . '_' . $noticeteacherid;
-
         if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
             $headertext = get_string('mygroupfiles', 'publication');
         } else {
             $headertext = get_string('myfiles', 'publication');
-        }
-        $notice = get_string($stringid, 'publication');
-
-        if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
-            $notice = get_string('notice_files_imported_group', 'publication') . ' ' . $notice;
-        } else if ($mode == PUBLICATION_MODE_ASSIGN_IMPORT) {
-            $notice = get_string('notice_files_imported', 'publication') . ' ' . $notice;
-        }
-
-        if ($mode != PUBLICATION_MODE_FILEUPLOAD) {
-            $notice .= '<br />' . get_string('notice_changes_possible_in_original', 'publication');
         }
 
         $table = $publication->get_filestable();
@@ -114,11 +68,7 @@ class mod_publication_files_form extends moodleform {
         $PAGE->requires->js_call_amd('mod_publication/filesform', 'initializer', []);
         $PAGE->requires->js_call_amd('mod_publication/alignrows', 'initializer', []);
 
-        $noticehtml = html_writer::start_tag('div', ['class' => 'alert alert-info']);
-        $noticehtml .= get_string('notice', 'publication') . ' ' . $notice;
-        $noticehtml .= html_writer::end_tag('div');
-
-        $mform->addElement('html', $noticehtml);
+        $mform->addElement('html', $publication->get_notice_html());
 
         // Now we do all the table work and return 0 if there's no files to show!
         $table->init();

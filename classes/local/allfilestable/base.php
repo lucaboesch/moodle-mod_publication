@@ -83,6 +83,10 @@ class base extends \table_sql {
     protected $filter = PUBLICATION_FILTER_NOFILTER;
     /** @var bool flag for file submissions tab */
     protected $allfilespage = false;
+    /** @var bool whether the name column (participant or group) is shown to the current user */
+    protected $shownamecol = true;
+    /** @var bool whether the "Last modified" column is shown to the current user */
+    protected $showtimemodifiedcol = true;
     /** @var bool whether teacher approval is required */
     protected $obtainteacherapproval;
     /** @var bool whether student approval is required */
@@ -127,9 +131,15 @@ class base extends \table_sql {
         $this->define_baseurl($CFG->wwwroot . '/mod/publication/view.php?id=' . $this->cm->id . '&amp;currentgroup=' .
                 $this->currentgroup . '&amp;filter=' . $this->filter . '&amp;allfilespage=' . intval($this->allfilespage));
 
-        $this->sortable(true, 'lastname'); // Sorted by lastname by default.
+        if (!$this->allfilespage && !$this->shownamecol) {
+            // Names are hidden on the start page: don't sort by (or filter on) them.
+            $this->sortable(true, 'filename');
+            $this->initialbars(false);
+        } else {
+            $this->sortable(true, 'lastname'); // Sorted by lastname by default.
+            $this->initialbars(true);
+        }
         $this->collapsible(true);
-        $this->initialbars(true);
 
         if ($this->allfilespage) {
             // On the start page ("Published files") every file gets its own row, so the participant's
@@ -205,11 +215,26 @@ class base extends \table_sql {
 
         if (!$this->allfilespage) {
             // Start page is file-focused: Files, Last modified, then the participant's name.
-            return [
-                ['selection', 'files', 'timemodified', 'fullname'],
-                [$selectallnone, get_string('files'), get_string('lastmodified'), get_string('fullnameuser')],
-                [null, null, null, null],
-            ];
+            // Name and date columns can be hidden from students by the instance settings;
+            // teachers always see them.
+            $isteacher = has_capability('mod/publication:approve', $this->context);
+            $this->shownamecol = $isteacher || $this->publication->get_effective_show_setting('showparticipantnames');
+            $this->showtimemodifiedcol = $isteacher || $this->publication->get_effective_show_setting('showlastmodified');
+
+            $columns = ['selection', 'files'];
+            $headers = [$selectallnone, get_string('files')];
+            $helpicons = [null, null];
+            if ($this->showtimemodifiedcol) {
+                $columns[] = 'timemodified';
+                $headers[] = get_string('lastmodified');
+                $helpicons[] = null;
+            }
+            if ($this->shownamecol) {
+                $columns[] = 'fullname';
+                $headers[] = get_string('fullnameuser');
+                $helpicons[] = null;
+            }
+            return [$columns, $headers, $helpicons];
         }
 
         $columns = ['selection', 'fullname'];
@@ -595,8 +620,12 @@ class base extends \table_sql {
         } else if (!$this->allfilespage) {
             // Start page: one checkbox per file, selecting individual files for the "zipfiles" action.
             // Label with the filename and its owner/group so screen-reader users can tell rows apart.
-            $owner = isset($values->groupname) ? $values->groupname : fullname($values);
-            $filelabel = get_string('selectitem', 'moodle', $values->filename) . ' (' . $owner . ')';
+            // When the name column is hidden from this user, the label must not leak the owner either.
+            $filelabel = get_string('selectitem', 'moodle', $values->filename);
+            if ($this->shownamecol) {
+                $owner = isset($values->groupname) ? $values->groupname : fullname($values);
+                $filelabel .= ' (' . $owner . ')';
+            }
             return \html_writer::checkbox(
                 'selectedfile[' . $values->fileid . ']',
                 'selected',

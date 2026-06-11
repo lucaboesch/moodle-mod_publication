@@ -70,6 +70,9 @@ class backup_publication_activity_structure_step extends backup_activity_structu
                 'notifystatuschange',
                 'notifyfilechange',
                 'availabilityrestriction',
+                'showparticipantnames',
+                'showgroupnames',
+                'showlastmodified',
         ]);
 
         $extduedates = new backup_nested_element('extduedates');

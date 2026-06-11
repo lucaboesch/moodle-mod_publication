@@ -27,6 +27,8 @@ define(['jquery'], function($) {
     const FITEM_APPROVALTO = '#fitem_id_approvaltodate';
     const FITEM_OBTAINSTUDENTAPPROVAL = '#fitem_id_obtainstudentapproval';
     const FITEM_OBTAINGROUPAPPROVAL = '#fitem_id_obtaingroupapproval';
+    const FITEM_SHOWPARTICIPANTNAMES = '#fitem_id_showparticipantnames';
+    const FITEM_SHOWGROUPNAMES = '#fitem_id_showgroupnames';
     const SELECT_OBTAINSTUDENTAPPROVAL = '#id_obtainstudentapproval';
     const SELECT_OBTAINGROUPAPPROVAL = '#id_obtaingroupapproval';
     const SELECT_IMPORTFROM = '#id_importfrom';
@@ -42,6 +44,8 @@ define(['jquery'], function($) {
     const $approvalToDate = $(FITEM_APPROVALTO);
     const $obtainStudentApproval = $(FITEM_OBTAINSTUDENTAPPROVAL);
     const $obtainGroupApproval = $(FITEM_OBTAINGROUPAPPROVAL);
+    const $showParticipantNames = $(FITEM_SHOWPARTICIPANTNAMES);
+    const $showGroupNames = $(FITEM_SHOWGROUPNAMES);
     const $selectObtainStudentApproval = $(SELECT_OBTAINSTUDENTAPPROVAL);
     const $selectObtainGroupApproval = $(SELECT_OBTAINGROUPAPPROVAL);
     const $selectImportFrom = $(SELECT_IMPORTFROM);
@@ -55,13 +59,19 @@ define(['jquery'], function($) {
             if (teamAssignIds.indexOf(importFrom) !== -1) {
                 $obtainStudentApproval.attr('hidden', 'hidden').css('display', 'none');
                 $obtainGroupApproval.removeAttr('hidden').css('display', 'flex');
+                $showParticipantNames.attr('hidden', 'hidden').css('display', 'none');
+                $showGroupNames.removeAttr('hidden').css('display', 'flex');
             } else {
                 $obtainStudentApproval.removeAttr('hidden').css('display', 'flex');
                 $obtainGroupApproval.attr('hidden', 'hidden').css('display', 'none');
+                $showParticipantNames.removeAttr('hidden').css('display', 'flex');
+                $showGroupNames.attr('hidden', 'hidden').css('display', 'none');
             }
         } else {
             $obtainStudentApproval.removeAttr('hidden').css('display', 'flex');
             $obtainGroupApproval.attr('hidden', 'hidden').css('display', 'none');
+            $showParticipantNames.removeAttr('hidden').css('display', 'flex');
+            $showGroupNames.attr('hidden', 'hidden').css('display', 'none');
         }
         changeObtainStudentApproval();
     };

@@ -104,7 +104,13 @@
     padding-top: 4px;
 }
 
+/* Start page: the "Download all file submissions" button sits on the left, above the table. */
 #page-mod-publication-view div.mod-publication-download-link {
+    text-align: left;
+}
+
+/* Teacher "File submissions" tab keeps the button on the right. */
+#page-mod-publication-view.allfilespage div.mod-publication-download-link {
     text-align: right;
 }
 

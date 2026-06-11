@@ -160,7 +160,12 @@ class group extends base {
 
         parent::__construct($uniqueid, $publication, $filter);
 
-        $this->sortable(true, 'groupname'); // Sorted by group by default.
+        if (!$this->allfilespage && !$this->shownamecol) {
+            // Group names are hidden on the start page: keep the filename sort set by the base class.
+            $this->sortable(true, 'filename');
+        } else {
+            $this->sortable(true, 'groupname'); // Sorted by group by default.
+        }
         $this->no_sorting('groupmembers');
 
         // Init JS!
@@ -209,13 +214,28 @@ class group extends base {
         ]);
 
         if (!$this->allfilespage) {
-            // Start page is file-focused: Files, Last modified, then the group and its members.
-            return [
-                ['selection', 'files', 'timemodified', 'groupname', 'groupmembers'],
-                [$selectallnone, get_string('files'), get_string('lastmodified'),
-                    get_string('group'), get_string('groupmembers')],
-                [null, null, null, null, null],
-            ];
+            // Start page is file-focused: Files, Last modified, then the group. The group name and
+            // date columns can be hidden from students by the instance settings; teachers always see
+            // them. The group-members column is never shown on the start page (only on the teacher's
+            // "File submissions" tab).
+            $isteacher = has_capability('mod/publication:approve', $this->context);
+            $this->shownamecol = $isteacher || $this->publication->get_effective_show_setting('showgroupnames');
+            $this->showtimemodifiedcol = $isteacher || $this->publication->get_effective_show_setting('showlastmodified');
+
+            $columns = ['selection', 'files'];
+            $headers = [$selectallnone, get_string('files')];
+            $helpicons = [null, null];
+            if ($this->showtimemodifiedcol) {
+                $columns[] = 'timemodified';
+                $headers[] = get_string('lastmodified');
+                $helpicons[] = null;
+            }
+            if ($this->shownamecol) {
+                $columns[] = 'groupname';
+                $headers[] = get_string('group');
+                $helpicons[] = null;
+            }
+            return [$columns, $headers, $helpicons];
         }
 
         $columns = ['selection', 'groupname', 'groupmembers', 'timemodified', 'files'];

@@ -231,6 +231,50 @@ class mod_publication_mod_form extends moodleform_mod {
         );
         $mform->addHelpButton('obtaingroupapproval', 'obtaingroupapproval', 'publication');
 
+        // Anonymization settings: visibility of names and last modified date for students.
+        // The participant-names select is shown for individual submissions, the group-names select for
+        // team submissions - toggled client-side in modform.js like the approval selects above.
+        $options = [
+            1 => get_string('yes'),
+            0 => get_string('no'),
+        ];
+
+        $mform->addElement(
+            'select',
+            'showparticipantnames',
+            get_string('showparticipantnames', 'publication'),
+            $options
+        );
+        $mform->addHelpButton('showparticipantnames', 'showparticipantnames', 'publication');
+        if (!get_config('publication', 'allowshowparticipantnames')) {
+            $mform->setConstant('showparticipantnames', get_config('publication', 'showparticipantnames'));
+            $mform->freeze('showparticipantnames');
+        }
+
+        $mform->addElement(
+            'select',
+            'showgroupnames',
+            get_string('showgroupnames', 'publication'),
+            $options
+        );
+        $mform->addHelpButton('showgroupnames', 'showgroupnames', 'publication');
+        if (!get_config('publication', 'allowshowgroupnames')) {
+            $mform->setConstant('showgroupnames', get_config('publication', 'showgroupnames'));
+            $mform->freeze('showgroupnames');
+        }
+
+        $mform->addElement(
+            'select',
+            'showlastmodified',
+            get_string('showlastmodified', 'publication'),
+            $options
+        );
+        $mform->addHelpButton('showlastmodified', 'showlastmodified', 'publication');
+        if (!get_config('publication', 'allowshowlastmodified')) {
+            $mform->setConstant('showlastmodified', get_config('publication', 'showlastmodified'));
+            $mform->freeze('showlastmodified');
+        }
+
         $mform->addElement(
             'date_time_selector',
             'approvalfromdate',

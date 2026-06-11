@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-5.2.0 (2026-05-27)
+5.2.0 (2026-06-10)
 -------------------
 * Moodle 5.2.0 compatible version
 * [FEATURE] #8583 - add checkboxes for each file in file submissions page
@@ -18,6 +18,7 @@ CHANGELOG
 * [BUG] #8217 - fix bug with behavior with restored student folder linked to assignment including user data 
 * [BUG] #8732 - make Moodle Plugin CI pass - pull request #117 - lucaboesch
 * [BUG] #8228 - fix inconsistent behavior with calendar appointments
+* [FEATURE] #6874 - implement option to not display student name and submission time
 
 5.1.1 (2026-04-22)
 -------------------
