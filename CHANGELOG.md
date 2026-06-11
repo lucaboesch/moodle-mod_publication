@@ -19,6 +19,7 @@ CHANGELOG
 * [BUG] #8732 - make Moodle Plugin CI pass - pull request #117 - lucaboesch
 * [BUG] #8228 - fix inconsistent behavior with calendar appointments
 * [FEATURE] #6874 - implement option to not display student name and submission time
+* [FEATURE] #8666 - update module_help and module_tip
 
 5.1.1 (2026-04-22)
 -------------------
