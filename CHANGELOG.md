@@ -20,6 +20,7 @@ CHANGELOG
 * [BUG] #8228 - fix inconsistent behavior with calendar appointments
 * [FEATURE] #6874 - implement option to not display student name and submission time
 * [FEATURE] #8666 - update module_help and module_tip
+* [BUG] #8764 - Remove modal factory - pull request #118 - lucaboesch
 
 5.1.1 (2026-04-22)
 -------------------
