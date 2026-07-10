@@ -53,14 +53,13 @@ define(['jquery', 'core/str', 'core/templates', 'core/log', 'core/modal'], funct
         // Prepare modal object!
         if (!instance.modal) {
             instance.modalpromise = Modal.create({
-                type: Modal.types.DEFAULT,
                 body: '...'
             });
         }
 
         str.get_string('filedetails', 'mod_publication').done(function(s) {
             log.info('Done loading strings...', 'mod_publication');
-            instance.modalpromise.done(function(modal) {
+            instance.modalpromise.then(function(modal) {
                 log.info('Done preparing modal', 'mod_publication');
                 instance.modal = modal;
                 $('.path-mod-publication .statustable .approvaldetails *').click(function(e) {

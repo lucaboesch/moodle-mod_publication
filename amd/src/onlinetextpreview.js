@@ -60,10 +60,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/log', 'core/notification', 'cor
         str.get_strings([
             {key: 'preview', component: 'core'},
             {key: 'onlinetextfilename', component: 'assignsubmission_onlinetext'},
-            {key: 'from', component: 'core'}
+            {key: 'fromdate', component: 'core'}
         ]).done(function(s) {
             log.info('Done loading strings...', 'mod_publication');
-            instance.modalpromise.done(function(modal) {
+            instance.modalpromise.then(function(modal) {
                 log.info('Done preparing modal', 'mod_publication');
                 instance.modal = modal;
                 $('.path-mod-publication table.publications .onlinetextpreview *').click(function(e) {
