@@ -331,7 +331,8 @@ class group extends base {
         }
 
         $detailsattr = [
-                'class' => 'approvaldetails',
+                'type' => 'button',
+                'class' => 'btn btn-link p-0 approvaldetails',
                 'data-pending' => json_encode($pending),
                 'data-approved' => json_encode($approved),
                 'data-rejected' => json_encode($rejected),
@@ -340,7 +341,7 @@ class group extends base {
         ];
 
         $symbol = $symbol . \html_writer::tag(
-            'span',
+            'button',
             $OUTPUT->pix_icon('i/preview', get_string('show_details', 'publication')),
             $detailsattr
         );

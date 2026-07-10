@@ -62,11 +62,10 @@ define(['jquery', 'core/str', 'core/templates', 'core/log', 'core/modal'], funct
             instance.modalpromise.then(function(modal) {
                 log.info('Done preparing modal', 'mod_publication');
                 instance.modal = modal;
-                $('.path-mod-publication .statustable .approvaldetails *').click(function(e) {
+                $('.path-mod-publication .statustable .approvaldetails').click(function(e) {
                     e.stopPropagation();
-                    var element = $(e.target);
 
-                    var dataelement = element.parent();
+                    var dataelement = $(e.currentTarget);
 
                     var approved;
                     try {
