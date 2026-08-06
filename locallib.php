@@ -115,7 +115,6 @@ class publication {
             $this->course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
         }
 
-
         if ($context != null) {
             $this->context = $context;
         } else {
