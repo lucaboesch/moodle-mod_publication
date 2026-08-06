@@ -107,7 +107,8 @@
     {{#hasmyfiles}}
         <tr>
             <th>{{#str}}lastmodified{{/str}}</th>
-            <td>{{lastmodified}}</td>
+            {{! Focusable so keyboard / screen-reader users tabbing through can reach the date. }}
+            <td><span tabindex="0">{{lastmodified}}</span></td>
         </tr>
     {{/hasmyfiles}}
     {{#hasmygroupsinfo}}

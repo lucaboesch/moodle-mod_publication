@@ -79,6 +79,11 @@
     padding-left: 0.5rem;
 }
 
+.path-mod-publication table.publications td.c0,
+.path-mod-publication table.publications th.c0 {
+    width: 0;
+}
+
 /* .. ie */
 .ie#page-mod-publication-view fieldset#id_allfiles {
     display: block;
@@ -281,6 +286,16 @@
 .path-mod-publication span[role="img"][tabindex]:focus,
 .path-mod-publication i[role="img"][tabindex]:focus,
 .path-mod-publication img.icon[tabindex]:focus {
+    border-radius: 2px;
+    outline: 2px solid currentcolor;
+    outline-offset: 1px;
+}
+
+/* Plain-text data cells (last modified, user identity fields, group name) carry tabindex="0"
+   so keyboard / screen-reader users tabbing through the tables can reach them; give them the
+   same explicit focus ring as the icons above (WCAG 2.4.7). */
+.path-mod-publication td div[tabindex]:focus,
+.path-mod-publication td span[tabindex]:focus {
     border-radius: 2px;
     outline: 2px solid currentcolor;
     outline-offset: 1px;

@@ -709,7 +709,12 @@ class base extends \table_sql {
             $this->itemnames[$values->id] = $values->groupname;
         }
 
-        return $values->groupname;
+        if ($this->is_downloading()) {
+            return $values->groupname;
+        }
+
+        // Focusable so keyboard / screen-reader users tabbing through the table can reach it (WCAG 2.1.1).
+        return \html_writer::span($values->groupname, '', ['tabindex' => '0']);
     }
 
 
@@ -754,7 +759,9 @@ class base extends \table_sql {
 
         if (!$this->allfilespage) {
             // Start page: one row per file, show that file's own modification time.
-            return \html_writer::span(userdate($values->timemodified), 'timemodified');
+            // Focusable so keyboard / screen-reader users tabbing through the table reach this
+            // cell like the ones containing links and checkboxes (WCAG 2.1.1).
+            return \html_writer::span(userdate($values->timemodified), 'timemodified', ['tabindex' => '0']);
         }
 
         [, $files, ] = $this->get_files($values->id);
@@ -783,7 +790,9 @@ class base extends \table_sql {
         }
         $lastmodified = '';
         if (count($filetable->data) > 0) {
-            $lastmodified = \html_writer::span(userdate($values->timemodified), "timemodified");
+            // Focusable so keyboard / screen-reader users tabbing through the table reach this
+            // cell like the ones containing links and checkboxes (WCAG 2.1.1).
+            $lastmodified = \html_writer::span(userdate($values->timemodified), "timemodified", ['tabindex' => '0']);
         }
 
         return $lastmodified;
@@ -1056,17 +1065,25 @@ class base extends \table_sql {
             $colname = 'phone1';
         }
         if (in_array($colname, $useridentity)) {
+            // The identity cells are plain text: make them focusable so keyboard / screen-reader
+            // users tabbing through the table can reach them (WCAG 2.1.1).
             if (!empty($values->$colname)) {
                 if ($this->is_downloading()) {
                     return $values->$colname;
                 } else {
-                    return \html_writer::tag('div', $values->$colname, ['id' => 'u' . $colname . $values->id]);
+                    return \html_writer::tag('div', $values->$colname, [
+                            'id' => 'u' . $colname . $values->id,
+                            'tabindex' => '0',
+                    ]);
                 }
             } else {
                 if ($this->is_downloading()) {
                     return '-';
                 } else {
-                    return \html_writer::tag('div', '-', ['id' => 'u' . $colname . $values->id]);
+                    return \html_writer::tag('div', '-', [
+                            'id' => 'u' . $colname . $values->id,
+                            'tabindex' => '0',
+                    ]);
                 }
             }
         }

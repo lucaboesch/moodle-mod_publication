@@ -106,10 +106,15 @@ class publication {
         $this->coursemodule = $cm;
 
         if ($course != null) {
-            $this->course = $course;
+            if (!is_object($course)) {
+                $this->course = $DB->get_record('course', ['id' => $$course], '*', MUST_EXIST);
+            } else {
+                $this->course = $course;
+            }
         } else {
             $this->course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
         }
+
 
         if ($context != null) {
             $this->context = $context;
