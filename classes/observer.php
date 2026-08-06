@@ -92,8 +92,8 @@ class observer {
 
         $sql = "SELECT pub.*
                   FROM {publication} pub
-                 WHERE (pub.mode = ?) AND (pub.importfrom = ?)";
-        $params = [\PUBLICATION_MODE_IMPORT, $assignid];
+                 WHERE (pub.mode = ?) AND (pub.importfrom = ?) AND (pub.course = ?)";
+        $params = [\PUBLICATION_MODE_IMPORT, $assignid, $assign->get_course()->id];
         if (!$publications = $DB->get_records_sql($sql, $params)) {
             return true;
         }
@@ -135,9 +135,12 @@ class observer {
         foreach ($publications as $pub) {
             $cm = get_coursemodule_from_instance('publication', $pub->id);
             if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC && $pub->completionassignsubmission) {
-                $teamsubmission = $DB->get_field('assign', 'teamsubmission', ['id' => $pub->importfrom]);
+                // Course-scoped so a stale importfrom (restore from another course) never pulls in a
+                // foreign assignment's team settings.
+                $assigncond = ['id' => $pub->importfrom, 'course' => $courseid];
+                $teamsubmission = $DB->get_field('assign', 'teamsubmission', $assigncond);
                 if ($teamsubmission) {
-                    $requiregroup = $DB->get_field('assign', 'preventsubmissionnotingroup', ['id' => $pub->importfrom]);
+                    $requiregroup = $DB->get_field('assign', 'preventsubmissionnotingroup', $assigncond);
                     $checkgroupids = $groupids;
                     if (empty($checkgroupids) && !$requiregroup) {
                         $checkgroupids[] = 0; // Use groupid 0 for users without groups.

@@ -120,7 +120,9 @@ class publication {
         $this->instance = $DB->get_record("publication", ["id" => $cm->instance]);
 
         if ($this->instance->mode == PUBLICATION_MODE_IMPORT) {
-            $cond = ['id' => $this->instance->importfrom];
+            // Scoped to the course so a stale importfrom (e.g. after a restore from another course)
+            // never inherits a foreign assignment's team-submission settings.
+            $cond = ['id' => $this->instance->importfrom, 'course' => $this->course->id];
             $this->requiregroup = $DB->get_field('assign', 'preventsubmissionnotingroup', $cond);
             $this->teamsubmission = $DB->get_field('assign', 'teamsubmission', $cond);
         }
@@ -147,7 +149,12 @@ class publication {
             if ($this->get_instance()->importfrom == -1) {
                 $context->notset = true;
             } else {
-                $assign = $DB->get_record('assign', ['id' => $this->instance->importfrom]);
+                // Only link an assignment that belongs to this course: after a restore from another
+                // course the stale importfrom may match an unrelated assignment elsewhere.
+                $assign = $DB->get_record('assign', [
+                        'id' => $this->instance->importfrom,
+                        'course' => $this->instance->course,
+                ]);
                 $assignmoduleid = $DB->get_field('modules', 'id', ['name' => 'assign']);
                 if ($assign) {
                     $assigncm = $DB->get_record('course_modules', [
@@ -2148,7 +2155,10 @@ class publication {
         $stridentifier = $publication->get_instance()->mode == PUBLICATION_MODE_UPLOAD ? 'filechange_upload' : 'filechange_import';
         $assignname = null;
         if ($publication->get_instance()->mode != PUBLICATION_MODE_UPLOAD) {
-            $assign = $DB->get_record('assign', ['id' => $publication->get_instance()->importfrom]);
+            $assign = $DB->get_record('assign', [
+                    'id' => $publication->get_instance()->importfrom,
+                    'course' => $publication->get_instance()->course,
+            ]);
             if ($assign) {
                 $assignname = $assign->name;
             }
