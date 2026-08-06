@@ -131,13 +131,22 @@ class base extends \html_table {
         global $OUTPUT;
 
         $data = [];
-        $data[] = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file));
+        // The icon itself is focusable and labelled with the file type; the type is additionally
+        // part of the link's accessible name, since displayed filenames may lack an extension
+        // (WCAG 1.1.1 / 4.1.2).
+        $data[] = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', [
+                'tabindex' => '0',
+                'aria-label' => get_mimetype_description($file),
+        ]);
 
         $dlurl = new \moodle_url('/mod/publication/view.php', [
                 'id' => $this->publication->get_coursemodule()->id,
                 'download' => $file->get_id(),
         ]);
-        $data[] = \html_writer::link($dlurl, $file->get_filename());
+        $data[] = \html_writer::link(
+            $dlurl,
+            $file->get_filename() . \html_writer::span(' ' . get_mimetype_description($file), 'visually-hidden')
+        );
 
         $data[] = $this->get_approval_status_for_file($file);
 

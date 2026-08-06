@@ -318,7 +318,7 @@ if (has_capability('mod/publication:upload', $context, $USER, false)) {
     $filestable->init();
     $templatecontext->myfiles = $filestable->data;
     $templatecontext->hasmyfiles = count($templatecontext->myfiles) > 0;
-    $templatecontext->myfilesform = $filesform->render();
+    $templatecontext->myfilesform = publication::expose_form_headings($filesform->render());
 }
 if (!$allfilespage) {
     echo $OUTPUT->render_from_template('mod_publication/overview', $templatecontext);

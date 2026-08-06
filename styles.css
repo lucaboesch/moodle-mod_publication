@@ -275,3 +275,13 @@
 .publication-status-pending {
     color: #444;
 }
+
+/* The status and file-type icons are keyboard-focusable (tabindex="0"); the theme suppresses
+   the browser's default focus ring on them, so draw one explicitly (WCAG 2.4.7). */
+.path-mod-publication span[role="img"][tabindex]:focus,
+.path-mod-publication i[role="img"][tabindex]:focus,
+.path-mod-publication img.icon[tabindex]:focus {
+    border-radius: 2px;
+    outline: 2px solid currentcolor;
+    outline-offset: 1px;
+}

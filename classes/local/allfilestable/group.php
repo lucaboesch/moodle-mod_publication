@@ -211,6 +211,8 @@ class group extends base {
         $selectallnone = \html_writer::checkbox('selectallnone', false, false, '', [
                 'id' => 'selectallnone',
                 'aria-label' => get_string('selectall'),
+                'data-selectall-label' => get_string('selectall'),
+                'data-deselectall-label' => get_string('deselectall'),
         ]);
 
         if (!$this->allfilespage) {

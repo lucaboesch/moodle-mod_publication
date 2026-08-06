@@ -838,8 +838,24 @@ class publication {
         }
         $mform->disable_form_change_checker();
 
-        $output .= $mform->toHtml();
+        $output .= self::expose_form_headings($mform->toHtml());
         return $output;
+    }
+
+    /**
+     * Expose form section headings to screen readers in rendered form HTML.
+     *
+     * Core's form header template hard-codes aria-hidden="true" on the <h3> (the fieldset is
+     * named by its visually-hidden legend only), which makes the heading unreachable via
+     * screen-reader heading navigation. Strip it so the heading is exposed (WCAG 2.4.1 / 1.3.1),
+     * matching the real <h3> used for the published-files fieldset. <h3> tags without the
+     * attribute are left untouched.
+     *
+     * @param string $html Rendered form HTML
+     * @return string The same HTML with aria-hidden removed from all <h3> tags
+     */
+    public static function expose_form_headings(string $html): string {
+        return preg_replace('/(<h3\b[^>]*?)\s+aria-hidden="true"/', '$1', $html);
     }
 
     /**

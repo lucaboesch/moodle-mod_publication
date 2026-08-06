@@ -211,6 +211,8 @@ class base extends \table_sql {
         $selectallnone = \html_writer::checkbox('selectallnone', false, false, '', [
                 'id' => 'selectallnone',
                 'aria-label' => get_string('selectall'),
+                'data-selectall-label' => get_string('selectall'),
+                'data-deselectall-label' => get_string('deselectall'),
         ]);
 
         if (!$this->allfilespage) {
@@ -803,9 +805,13 @@ class base extends \table_sql {
                 return '';
             }
             $url = new \moodle_url('/mod/publication/view.php', ['id' => $this->cm->id, 'download' => $values->fileid]);
-            // Icon is decorative; the file type is exposed via the link's accessible name so screen-reader
-            // users get it in the tab order (WCAG 1.1.1 / 4.1.2).
-            $output = $OUTPUT->pix_icon(file_file_icon($file), '') . ' ' .
+            // The icon itself is focusable and labelled with the file type; the type is additionally
+            // part of the link's accessible name, since displayed filenames may lack an extension
+            // (WCAG 1.1.1 / 4.1.2).
+            $output = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', [
+                    'tabindex' => '0',
+                    'aria-label' => get_mimetype_description($file),
+            ]) . ' ' .
                 \html_writer::link(
                     $url,
                     $file->get_filename() . \html_writer::span(' ' . get_mimetype_description($file), 'visually-hidden')
@@ -843,9 +849,13 @@ class base extends \table_sql {
                             'aria-label' => get_string('selectitem', 'moodle', $file->get_filename())]
                     );
                 }
-                // Icon is decorative; the file type is exposed via the link's accessible name so screen-reader
-                // users get it in the tab order (WCAG 1.1.1 / 4.1.2).
-                $filerow[] = $OUTPUT->pix_icon(file_file_icon($file), '');
+                // The icon itself is focusable and labelled with the file type; the type is additionally
+                // part of the link's accessible name, since displayed filenames may lack an extension
+                // (WCAG 1.1.1 / 4.1.2).
+                $filerow[] = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', [
+                        'tabindex' => '0',
+                        'aria-label' => get_mimetype_description($file),
+                ]);
 
                 $url = new \moodle_url('/mod/publication/view.php', ['id' => $this->cm->id, 'download' => $file->get_id()]);
                 $filerow[] = \html_writer::link(

@@ -37,6 +37,17 @@ define(['jquery'], function($) {
         }
 
         /**
+         * Keep the select-all checkbox's accessible name in sync with its state, so screen
+         * readers announce "Select all" when unchecked and "Deselect all" when checked
+         * (same behaviour as the participants table).
+         */
+        function updateSelectAllLabel() {
+            const $master = $('#selectallnone');
+            $master.attr('aria-label',
+                $master.prop('checked') ? $master.data('deselectall-label') : $master.data('selectall-label'));
+        }
+
+        /**
          * Recompute a user/group row checkbox from the state of its file checkboxes:
          * checked if all are checked, indeterminate if some are, unchecked if none.
          *
@@ -73,14 +84,18 @@ define(['jquery'], function($) {
 
         // Select all/none header checkbox toggles every user/group and file checkbox.
         $(document).on('click', '#selectallnone', function() {
-            var checked = $(this).prop('checked');
+            const checked = $(this).prop('checked');
             $('.userselection').prop('checked', checked).prop('indeterminate', false);
             $('.fileselection').prop('checked', checked);
+            updateSelectAllLabel();
             updateWithSelectControls();
         });
 
         // Run once on page load.
-        $(updateWithSelectControls);
+        $(function() {
+            updateSelectAllLabel();
+            updateWithSelectControls();
+        });
     };
     return BulkUserActions;
 });
