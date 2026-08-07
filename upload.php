@@ -215,6 +215,6 @@ if ($mform->is_cancelled()) {
 
 echo $OUTPUT->header();
 
-$mform->display();
+echo publication::expose_form_headings($mform->render());
 
 echo $OUTPUT->footer();

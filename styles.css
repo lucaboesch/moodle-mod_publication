@@ -79,6 +79,11 @@
     padding-left: 0.5rem;
 }
 
+.path-mod-publication table.publications td.c0,
+.path-mod-publication table.publications th.c0 {
+    width: 0;
+}
+
 /* .. ie */
 .ie#page-mod-publication-view fieldset#id_allfiles {
     display: block;
@@ -104,7 +109,13 @@
     padding-top: 4px;
 }
 
+/* Start page: the "Download all file submissions" button sits on the left, above the table. */
 #page-mod-publication-view div.mod-publication-download-link {
+    text-align: left;
+}
+
+/* Teacher "File submissions" tab keeps the button on the right. */
+#page-mod-publication-view.allfilespage div.mod-publication-download-link {
     text-align: right;
 }
 
@@ -262,4 +273,30 @@
 
 #page-mod-publication-view.allfilespage .activity-header {
     display: none;
+}
+
+/* Pending ("?") approval/release status icon: dark gray for sufficient contrast (about 9:1)
+   instead of the low-contrast warning yellow (about 1.8:1). */
+.publication-status-pending {
+    color: #444;
+}
+
+/* The status and file-type icons are keyboard-focusable (tabindex="0"); the theme suppresses
+   the browser's default focus ring on them, so draw one explicitly (WCAG 2.4.7). */
+.path-mod-publication span[role="img"][tabindex]:focus,
+.path-mod-publication i[role="img"][tabindex]:focus,
+.path-mod-publication img.icon[tabindex]:focus {
+    border-radius: 2px;
+    outline: 2px solid currentcolor;
+    outline-offset: 1px;
+}
+
+/* Plain-text data cells (last modified, user identity fields, group name) carry tabindex="0"
+   so keyboard / screen-reader users tabbing through the tables can reach them; give them the
+   same explicit focus ring as the icons above (WCAG 2.4.7). */
+.path-mod-publication td div[tabindex]:focus,
+.path-mod-publication td span[tabindex]:focus {
+    border-radius: 2px;
+    outline: 2px solid currentcolor;
+    outline-offset: 1px;
 }

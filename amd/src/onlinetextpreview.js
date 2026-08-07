@@ -26,8 +26,8 @@
 /**
  * @module mod_publication/onlinetextpreview
  */
-define(['jquery', 'core/modal_factory', 'core/str', 'core/ajax', 'core/log', 'core/notification'], function($,
-        ModalFactory, str, ajax, log, notification) {
+define(['jquery', 'core/str', 'core/ajax', 'core/log', 'core/notification', 'core/modal'], function($,
+        str, ajax, log, notification, Modal) {
 
     /**
      * @constructor
@@ -52,8 +52,7 @@ define(['jquery', 'core/modal_factory', 'core/str', 'core/ajax', 'core/log', 'co
 
         // Prepare modal object!
         if (!instance.modal) {
-            instance.modalpromise = ModalFactory.create({
-                type: ModalFactory.types.DEFAULT,
+            instance.modalpromise = Modal.create({
                 large: true
             });
         }
@@ -61,10 +60,10 @@ define(['jquery', 'core/modal_factory', 'core/str', 'core/ajax', 'core/log', 'co
         str.get_strings([
             {key: 'preview', component: 'core'},
             {key: 'onlinetextfilename', component: 'assignsubmission_onlinetext'},
-            {key: 'from', component: 'core'}
+            {key: 'fromdate', component: 'core'}
         ]).done(function(s) {
             log.info('Done loading strings...', 'mod_publication');
-            instance.modalpromise.done(function(modal) {
+            instance.modalpromise.then(function(modal) {
                 log.info('Done preparing modal', 'mod_publication');
                 instance.modal = modal;
                 $('.path-mod-publication table.publications .onlinetextpreview *').click(function(e) {

@@ -70,6 +70,9 @@ class backup_publication_activity_structure_step extends backup_activity_structu
                 'notifystatuschange',
                 'notifyfilechange',
                 'availabilityrestriction',
+                'showparticipantnames',
+                'showgroupnames',
+                'showlastmodified',
         ]);
 
         $extduedates = new backup_nested_element('extduedates');
@@ -106,6 +109,9 @@ class backup_publication_activity_structure_step extends backup_activity_structu
 
         // Define sources.
         $publication->set_source_table('publication', ['id' => backup::VAR_ACTIVITYID]);
+
+        // Allow the linked assignment to be remapped on restore when it is part of the same backup.
+        $publication->annotate_ids('assign', 'importfrom');
 
         if ($userinfo) {
             // Build the tree.

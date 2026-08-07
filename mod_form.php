@@ -110,7 +110,9 @@ class mod_publication_mod_form extends moodleform_mod {
         $choices[-1] = get_string('choose', 'publication');
         $assigninstances = $DB->get_records('assign', ['course' => $COURSE->id], 'name ASC');
         $module = $DB->get_record('modules', ['name' => 'assign']);
-        $select = $mform->createElement('select', 'importfrom', get_string('assignment', 'publication'), $choices, $disabled);
+        // The Assignment select is intentionally not disabled (unlike the Mode radios), so a restored or
+        // stale link to a missing assignment can be repaired even when files already exist.
+        $select = $mform->createElement('select', 'importfrom', get_string('assignment', 'publication'), $choices);
         $notteamassigns = [-1];
         $teamassigns = [];
         foreach ($assigninstances as $assigninstance) {
@@ -127,6 +129,17 @@ class mod_publication_mod_form extends moodleform_mod {
             $select->addOption($assigninstance->name, $assigninstance->id, $attributes);
         }
         $this->teamassigns = $teamassigns;
+        // If the stored assignment no longer exists in this course (e.g. after a restore where the source
+        // assignment was not part of the backup), keep it as a selected but clearly-flagged option so the
+        // field is neither empty nor locked and the teacher can relink to an existing assignment.
+        $selectableids = array_merge($teamassigns, $notteamassigns); // Includes the -1 placeholder.
+        if (
+            !empty($this->current->importfrom)
+            && $this->current->importfrom > 0
+            && !in_array($this->current->importfrom, $selectableids)
+        ) {
+            $select->addOption(get_string('assignment_notfound', 'publication'), $this->current->importfrom);
+        }
         $mform->addElement($select);
         $mform->addHelpButton('importfrom', 'assignment', 'publication');
         $mform->hideIf('importfrom', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
@@ -217,6 +230,50 @@ class mod_publication_mod_form extends moodleform_mod {
             $attributes
         );
         $mform->addHelpButton('obtaingroupapproval', 'obtaingroupapproval', 'publication');
+
+        // Anonymization settings: visibility of names and last modified date for students.
+        // The participant-names select is shown for individual submissions, the group-names select for
+        // team submissions - toggled client-side in modform.js like the approval selects above.
+        $options = [
+            1 => get_string('yes'),
+            0 => get_string('no'),
+        ];
+
+        $mform->addElement(
+            'select',
+            'showparticipantnames',
+            get_string('showparticipantnames', 'publication'),
+            $options
+        );
+        $mform->addHelpButton('showparticipantnames', 'showparticipantnames', 'publication');
+        if (!get_config('publication', 'allowshowparticipantnames')) {
+            $mform->setConstant('showparticipantnames', get_config('publication', 'showparticipantnames'));
+            $mform->freeze('showparticipantnames');
+        }
+
+        $mform->addElement(
+            'select',
+            'showgroupnames',
+            get_string('showgroupnames', 'publication'),
+            $options
+        );
+        $mform->addHelpButton('showgroupnames', 'showgroupnames', 'publication');
+        if (!get_config('publication', 'allowshowgroupnames')) {
+            $mform->setConstant('showgroupnames', get_config('publication', 'showgroupnames'));
+            $mform->freeze('showgroupnames');
+        }
+
+        $mform->addElement(
+            'select',
+            'showlastmodified',
+            get_string('showlastmodified', 'publication'),
+            $options
+        );
+        $mform->addHelpButton('showlastmodified', 'showlastmodified', 'publication');
+        if (!get_config('publication', 'allowshowlastmodified')) {
+            $mform->setConstant('showlastmodified', get_config('publication', 'showlastmodified'));
+            $mform->freeze('showlastmodified');
+        }
 
         $mform->addElement(
             'date_time_selector',
@@ -323,7 +380,7 @@ class mod_publication_mod_form extends moodleform_mod {
      * @return void
      */
     public function data_postprocessing($data) {
-        global $DB;
+        global $DB, $COURSE;
         parent::data_postprocessing($data);
         $suffix = $this->get_suffix();
         $completionuploadlabel = 'completionupload' . $suffix;
@@ -337,8 +394,10 @@ class mod_publication_mod_form extends moodleform_mod {
 
         $data->groupapproval = 0;
         if ($data->mode == PUBLICATION_MODE_IMPORT && $data->importfrom != -1) {
-            $assigninstance = $DB->get_record('assign', ['id' => $data->importfrom], '*', MUST_EXIST);
-            if ($assigninstance->teamsubmission) {
+            // The assignment may no longer exist in this course (e.g. an unrepaired link after a
+            // restore); tolerate that and never adopt a foreign assignment's team settings.
+            $assigninstance = $DB->get_record('assign', ['id' => $data->importfrom, 'course' => $COURSE->id]);
+            if ($assigninstance && $assigninstance->teamsubmission) {
                 if ($data->obtaingroupapproval == PUBLICATION_APPROVAL_GROUPAUTOMATIC) {
                     $data->groupapproval = 0;
                     $data->obtainstudentapproval = 0;
@@ -357,12 +416,13 @@ class mod_publication_mod_form extends moodleform_mod {
      * @return void
      */
     public function data_preprocessing(&$defaultvalues) {
-        global $DB;
+        global $DB, $COURSE;
         // phpcs:disable moodle.Commenting.TodoComment
         parent::data_preprocessing($defaultvalues); // TODO: Change the autogenerated stub.
 
         if (isset($defaultvalues['mode']) && $defaultvalues['mode'] == PUBLICATION_MODE_IMPORT) {
-            $assign = $DB->get_record('assign', ['id' => $defaultvalues['importfrom']]);
+            // Course-scoped: a stale importfrom (restore from another course) is treated as not found.
+            $assign = $DB->get_record('assign', ['id' => $defaultvalues['importfrom'], 'course' => $COURSE->id]);
             if ($assign && $assign->teamsubmission) {
                 if ($defaultvalues['obtainstudentapproval'] == 0) {
                     $defaultvalues['obtaingroupapproval'] = PUBLICATION_APPROVAL_GROUPAUTOMATIC;

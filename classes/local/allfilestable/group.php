@@ -101,11 +101,11 @@ class group extends base {
                 $from .= ' AND files.studentapproval = 1 ';
             }
         } else if ($this->filter == PUBLICATION_FILTER_REJECTED) {
-            $from = $grouptable . " LEFT JOIN {publication_file} files
+            $from = $grouptable . " JOIN {publication_file} files
                 ON g.id = files.userid AND files.publication = :publication " .
                 "AND files.teacherapproval = 2 ";
         } else if ($this->filter == PUBLICATION_FILTER_APPROVALREQUIRED) {
-            $from = $grouptable . " LEFT JOIN {publication_file} files
+            $from = $grouptable . " JOIN {publication_file} files
                 ON g.id = files.userid AND files.publication = :publication " .
                 "AND (files.teacherapproval = 3 OR files.teacherapproval IS NULL OR files.teacherapproval = 0) ";
         } else if ($this->filter == PUBLICATION_FILTER_NOFILES) {
@@ -160,7 +160,12 @@ class group extends base {
 
         parent::__construct($uniqueid, $publication, $filter);
 
-        $this->sortable(true, 'groupname'); // Sorted by group by default.
+        if (!$this->allfilespage && !$this->shownamecol) {
+            // Group names are hidden on the start page: keep the filename sort set by the base class.
+            $this->sortable(true, 'filename');
+        } else {
+            $this->sortable(true, 'groupname'); // Sorted by group by default.
+        }
         $this->no_sorting('groupmembers');
 
         // Init JS!
@@ -205,16 +210,34 @@ class group extends base {
     protected function get_columns() {
         $selectallnone = \html_writer::checkbox('selectallnone', false, false, '', [
                 'id' => 'selectallnone',
+                'aria-label' => get_string('selectall'),
+                'data-selectall-label' => get_string('selectall'),
+                'data-deselectall-label' => get_string('deselectall'),
         ]);
 
         if (!$this->allfilespage) {
-            // Start page is file-focused: Files, Last modified, then the group and its members.
-            return [
-                ['selection', 'files', 'timemodified', 'groupname', 'groupmembers'],
-                [$selectallnone, get_string('files'), get_string('lastmodified'),
-                    get_string('group'), get_string('groupmembers')],
-                [null, null, null, null, null],
-            ];
+            // Start page is file-focused: Files, Last modified, then the group. The group name and
+            // date columns can be hidden from students by the instance settings; teachers always see
+            // them. The group-members column is never shown on the start page (only on the teacher's
+            // "File submissions" tab).
+            $isteacher = has_capability('mod/publication:approve', $this->context);
+            $this->shownamecol = $isteacher || $this->publication->get_effective_show_setting('showgroupnames');
+            $this->showtimemodifiedcol = $isteacher || $this->publication->get_effective_show_setting('showlastmodified');
+
+            $columns = ['selection', 'files'];
+            $headers = [$selectallnone, get_string('files')];
+            $helpicons = [null, null];
+            if ($this->showtimemodifiedcol) {
+                $columns[] = 'timemodified';
+                $headers[] = get_string('lastmodified');
+                $helpicons[] = null;
+            }
+            if ($this->shownamecol) {
+                $columns[] = 'groupname';
+                $headers[] = get_string('group');
+                $helpicons[] = null;
+            }
+            return [$columns, $headers, $helpicons];
         }
 
         $columns = ['selection', 'groupname', 'groupmembers', 'timemodified', 'files'];
@@ -310,7 +333,8 @@ class group extends base {
         }
 
         $detailsattr = [
-                'class' => 'approvaldetails',
+                'type' => 'button',
+                'class' => 'btn btn-link p-0 approvaldetails',
                 'data-pending' => json_encode($pending),
                 'data-approved' => json_encode($approved),
                 'data-rejected' => json_encode($rejected),
@@ -319,7 +343,7 @@ class group extends base {
         ];
 
         $symbol = $symbol . \html_writer::tag(
-            'span',
+            'button',
             $OUTPUT->pix_icon('i/preview', get_string('show_details', 'publication')),
             $detailsattr
         );

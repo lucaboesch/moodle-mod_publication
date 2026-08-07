@@ -26,7 +26,7 @@
 /**
  * @module mod_publication/groupapprovalstatus
  */
-define(['jquery', 'core/modal_factory', 'core/str', 'core/templates', 'core/log'], function($, ModalFactory, str, templates, log) {
+define(['jquery', 'core/str', 'core/templates', 'core/log', 'core/modal'], function($, str, templates, log, Modal) {
 
     /**
      * @constructor
@@ -52,22 +52,20 @@ define(['jquery', 'core/modal_factory', 'core/str', 'core/templates', 'core/log'
 
         // Prepare modal object!
         if (!instance.modal) {
-            instance.modalpromise = ModalFactory.create({
-                type: ModalFactory.types.DEFAULT,
+            instance.modalpromise = Modal.create({
                 body: '...'
             });
         }
 
         str.get_string('filedetails', 'mod_publication').done(function(s) {
             log.info('Done loading strings...', 'mod_publication');
-            instance.modalpromise.done(function(modal) {
+            instance.modalpromise.then(function(modal) {
                 log.info('Done preparing modal', 'mod_publication');
                 instance.modal = modal;
-                $('.path-mod-publication .statustable .approvaldetails *').click(function(e) {
+                $('.path-mod-publication .statustable .approvaldetails').click(function(e) {
                     e.stopPropagation();
-                    var element = $(e.target);
 
-                    var dataelement = element.parent();
+                    var dataelement = $(e.currentTarget);
 
                     var approved;
                     try {

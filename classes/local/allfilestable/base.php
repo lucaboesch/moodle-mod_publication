@@ -83,6 +83,10 @@ class base extends \table_sql {
     protected $filter = PUBLICATION_FILTER_NOFILTER;
     /** @var bool flag for file submissions tab */
     protected $allfilespage = false;
+    /** @var bool whether the name column (participant or group) is shown to the current user */
+    protected $shownamecol = true;
+    /** @var bool whether the "Last modified" column is shown to the current user */
+    protected $showtimemodifiedcol = true;
     /** @var bool whether teacher approval is required */
     protected $obtainteacherapproval;
     /** @var bool whether student approval is required */
@@ -127,9 +131,15 @@ class base extends \table_sql {
         $this->define_baseurl($CFG->wwwroot . '/mod/publication/view.php?id=' . $this->cm->id . '&amp;currentgroup=' .
                 $this->currentgroup . '&amp;filter=' . $this->filter . '&amp;allfilespage=' . intval($this->allfilespage));
 
-        $this->sortable(true, 'lastname'); // Sorted by lastname by default.
+        if (!$this->allfilespage && !$this->shownamecol) {
+            // Names are hidden on the start page: don't sort by (or filter on) them.
+            $this->sortable(true, 'filename');
+            $this->initialbars(false);
+        } else {
+            $this->sortable(true, 'lastname'); // Sorted by lastname by default.
+            $this->initialbars(true);
+        }
         $this->collapsible(true);
-        $this->initialbars(true);
 
         if ($this->allfilespage) {
             // On the start page ("Published files") every file gets its own row, so the participant's
@@ -163,7 +173,11 @@ class base extends \table_sql {
         $this->is_persistent(true);
 
         $this->valid = self::approval_icon('check', 'text-success', get_string('student_approved', 'publication'));
-        $this->questionmark = self::approval_icon('question', 'text-warning', get_string('student_pending', 'publication'));
+        $this->questionmark = self::approval_icon(
+            'question',
+            'publication-status-pending',
+            get_string('student_pending', 'publication')
+        );
         $this->invalid = self::approval_icon('times', 'text-danger', get_string('student_rejected', 'publication'));
 
         $this->studvisibleyes = self::approval_icon('check', 'text-success', get_string('visibleforstudents_yes', 'publication'));
@@ -196,15 +210,33 @@ class base extends \table_sql {
     protected function get_columns() {
         $selectallnone = \html_writer::checkbox('selectallnone', false, false, '', [
                 'id' => 'selectallnone',
+                'aria-label' => get_string('selectall'),
+                'data-selectall-label' => get_string('selectall'),
+                'data-deselectall-label' => get_string('deselectall'),
         ]);
 
         if (!$this->allfilespage) {
             // Start page is file-focused: Files, Last modified, then the participant's name.
-            return [
-                ['selection', 'files', 'timemodified', 'fullname'],
-                [$selectallnone, get_string('files'), get_string('lastmodified'), get_string('fullnameuser')],
-                [null, null, null, null],
-            ];
+            // Name and date columns can be hidden from students by the instance settings;
+            // teachers always see them.
+            $isteacher = has_capability('mod/publication:approve', $this->context);
+            $this->shownamecol = $isteacher || $this->publication->get_effective_show_setting('showparticipantnames');
+            $this->showtimemodifiedcol = $isteacher || $this->publication->get_effective_show_setting('showlastmodified');
+
+            $columns = ['selection', 'files'];
+            $headers = [$selectallnone, get_string('files')];
+            $helpicons = [null, null];
+            if ($this->showtimemodifiedcol) {
+                $columns[] = 'timemodified';
+                $headers[] = get_string('lastmodified');
+                $helpicons[] = null;
+            }
+            if ($this->shownamecol) {
+                $columns[] = 'fullname';
+                $headers[] = get_string('fullnameuser');
+                $helpicons[] = null;
+            }
+            return [$columns, $headers, $helpicons];
         }
 
         $columns = ['selection', 'fullname'];
@@ -589,20 +621,30 @@ class base extends \table_sql {
             return '';
         } else if (!$this->allfilespage) {
             // Start page: one checkbox per file, selecting individual files for the "zipfiles" action.
+            // Label with the filename and its owner/group so screen-reader users can tell rows apart.
+            // When the name column is hidden from this user, the label must not leak the owner either.
+            $filelabel = get_string('selectitem', 'moodle', $values->filename);
+            if ($this->shownamecol) {
+                $owner = isset($values->groupname) ? $values->groupname : fullname($values);
+                $filelabel .= ' (' . $owner . ')';
+            }
             return \html_writer::checkbox(
                 'selectedfile[' . $values->fileid . ']',
                 'selected',
                 false,
                 null,
-                ['class' => 'userselection']
+                ['class' => 'userselection', 'aria-label' => $filelabel]
             );
         } else {
+            // Teacher view: one checkbox per user (or group) row. Label it with that name.
+            $rowname = isset($values->groupname) ? $values->groupname : fullname($values);
             return \html_writer::checkbox(
                 'selecteduser[' . $values->id . ']',
                 'selected',
                 false,
                 null,
-                ['class' => 'userselection', 'data-itemid' => $values->id]
+                ['class' => 'userselection', 'data-itemid' => $values->id,
+                    'aria-label' => get_string('selectitem', 'moodle', $rowname)]
             );
         }
     }
@@ -639,7 +681,17 @@ class base extends \table_sql {
         if ($this->is_downloading()) {
             return strip_tags(parent::col_fullname($values) . $extensiontxt);
         } else {
-            return  $OUTPUT->user_picture($values) .  parent::col_fullname($values) . $extensiontxt;
+            // Render the avatar as a decorative image inside a profile link labelled generically, so a
+            // screen reader announces "User picture" here instead of repeating the user's name (already
+            // announced by the adjacent name link), while keeping the picture reachable by keyboard.
+            $picture = $OUTPUT->user_picture($values, ['link' => false]);
+            $profileurl = new \moodle_url('/user/view.php', ['id' => $values->id, 'course' => $this->cm->course]);
+            $picturelink = \html_writer::link(
+                $profileurl,
+                \html_writer::span($picture, '', ['aria-hidden' => 'true']),
+                ['class' => 'd-inline-block aabtn', 'aria-label' => get_string('userpic')]
+            );
+            return $picturelink . parent::col_fullname($values) . $extensiontxt;
         }
     }
 
@@ -657,7 +709,12 @@ class base extends \table_sql {
             $this->itemnames[$values->id] = $values->groupname;
         }
 
-        return $values->groupname;
+        if ($this->is_downloading()) {
+            return $values->groupname;
+        }
+
+        // Focusable so keyboard / screen-reader users tabbing through the table can reach it (WCAG 2.1.1).
+        return \html_writer::span($values->groupname, '', ['tabindex' => '0']);
     }
 
 
@@ -702,7 +759,9 @@ class base extends \table_sql {
 
         if (!$this->allfilespage) {
             // Start page: one row per file, show that file's own modification time.
-            return \html_writer::span(userdate($values->timemodified), 'timemodified');
+            // Focusable so keyboard / screen-reader users tabbing through the table reach this
+            // cell like the ones containing links and checkboxes (WCAG 2.1.1).
+            return \html_writer::span(userdate($values->timemodified), 'timemodified', ['tabindex' => '0']);
         }
 
         [, $files, ] = $this->get_files($values->id);
@@ -731,7 +790,9 @@ class base extends \table_sql {
         }
         $lastmodified = '';
         if (count($filetable->data) > 0) {
-            $lastmodified = \html_writer::span(userdate($values->timemodified), "timemodified");
+            // Focusable so keyboard / screen-reader users tabbing through the table reach this
+            // cell like the ones containing links and checkboxes (WCAG 2.1.1).
+            $lastmodified = \html_writer::span(userdate($values->timemodified), "timemodified", ['tabindex' => '0']);
         }
 
         return $lastmodified;
@@ -753,8 +814,17 @@ class base extends \table_sql {
                 return '';
             }
             $url = new \moodle_url('/mod/publication/view.php', ['id' => $this->cm->id, 'download' => $values->fileid]);
-            $output = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file)) . ' ' .
-                \html_writer::link($url, $file->get_filename()) .
+            // The icon itself is focusable and labelled with the file type; the type is additionally
+            // part of the link's accessible name, since displayed filenames may lack an extension
+            // (WCAG 1.1.1 / 4.1.2).
+            $output = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', [
+                    'tabindex' => '0',
+                    'aria-label' => get_mimetype_description($file),
+            ]) . ' ' .
+                \html_writer::link(
+                    $url,
+                    $file->get_filename() . \html_writer::span(' ' . get_mimetype_description($file), 'visually-hidden')
+                ) .
                 $this->add_onlinetext_preview($values->id, $values->fileid);
 
             if ($this->totalfiles === null) {
@@ -784,14 +854,23 @@ class base extends \table_sql {
                         'selected',
                         false,
                         null,
-                        ['class' => 'fileselection', 'data-itemid' => $values->id]
+                        ['class' => 'fileselection', 'data-itemid' => $values->id,
+                            'aria-label' => get_string('selectitem', 'moodle', $file->get_filename())]
                     );
                 }
-                $filerow[] = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file));
+                // The icon itself is focusable and labelled with the file type; the type is additionally
+                // part of the link's accessible name, since displayed filenames may lack an extension
+                // (WCAG 1.1.1 / 4.1.2).
+                $filerow[] = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', [
+                        'tabindex' => '0',
+                        'aria-label' => get_mimetype_description($file),
+                ]);
 
                 $url = new \moodle_url('/mod/publication/view.php', ['id' => $this->cm->id, 'download' => $file->get_id()]);
-                $filerow[] = \html_writer::link($url, $file->get_filename()) .
-                    $this->add_onlinetext_preview($values->id, $file->get_id());
+                $filerow[] = \html_writer::link(
+                    $url,
+                    $file->get_filename() . \html_writer::span(' ' . get_mimetype_description($file), 'visually-hidden')
+                ) . $this->add_onlinetext_preview($values->id, $file->get_id());
 
                 $filetable->data[] = $filerow;
             }
@@ -986,17 +1065,25 @@ class base extends \table_sql {
             $colname = 'phone1';
         }
         if (in_array($colname, $useridentity)) {
+            // The identity cells are plain text: make them focusable so keyboard / screen-reader
+            // users tabbing through the table can reach them (WCAG 2.1.1).
             if (!empty($values->$colname)) {
                 if ($this->is_downloading()) {
                     return $values->$colname;
                 } else {
-                    return \html_writer::tag('div', $values->$colname, ['id' => 'u' . $colname . $values->id]);
+                    return \html_writer::tag('div', $values->$colname, [
+                            'id' => 'u' . $colname . $values->id,
+                            'tabindex' => '0',
+                    ]);
                 }
             } else {
                 if ($this->is_downloading()) {
                     return '-';
                 } else {
-                    return \html_writer::tag('div', '-', ['id' => 'u' . $colname . $values->id]);
+                    return \html_writer::tag('div', '-', [
+                            'id' => 'u' . $colname . $values->id,
+                            'tabindex' => '0',
+                    ]);
                 }
             }
         }

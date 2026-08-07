@@ -75,7 +75,7 @@
                     }}<!-- ({{# str }} approved, mod_publication {{/ str }}) -->{{/approved}}
                     {{#rejected}}<i class="fa fa-times fa-fw text-danger" title="{{# str }} rejected, mod_publication {{/ str }}"></i>{{!
                     }}<!-- ({{# str }} rejected, mod_publication {{/ str }}) -->{{/rejected}}
-                    {{#pending}}<i class="fa fa-question fa-fw text-warning" title="{{# str }} pending, mod_publication {{/ str }}"></i>{{!
+                    {{#pending}}<i class="fa fa-question fa-fw publication-status-pending" title="{{# str }} pending, mod_publication {{/ str }}"></i>{{!
                     }}<!-- ({{# str }} pending, mod_publication {{/ str }}) -->{{/pending}}
                 </td>
             </tr>
@@ -106,7 +106,7 @@
         {{#pending}}
             <tr>
                 <td>{{name}}</td>
-                <td><i class="fa fa-question fa-fw text-warning" title="{{# str }} pending, mod_publication {{/ str }}"></i>{{!
+                <td><i class="fa fa-question fa-fw publication-status-pending" title="{{# str }} pending, mod_publication {{/ str }}"></i>{{!
                 }}<!-- ({{# str }} pending, mod_publication {{/ str }}) -->
                 </td>
             </tr>

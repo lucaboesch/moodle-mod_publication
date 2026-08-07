@@ -64,6 +64,43 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_configselect('publication/obtaingroupapproval', $name, $description, 0, $options);
     $settings->add($setting);
 
+    // Anonymization settings: per-instance visibility of names and last modified date for students,
+    // each with a site-wide default and a checkbox controlling whether teachers may change it.
+    $options = [
+        1 => get_string('yes'),
+        0 => get_string('no'),
+    ];
+
+    $name = new lang_string('allowshowparticipantnames', 'publication');
+    $description = new lang_string('allowshowparticipantnames_desc', 'publication');
+    $setting = new admin_setting_configcheckbox('publication/allowshowparticipantnames', $name, $description, 1);
+    $settings->add($setting);
+
+    $name = new lang_string('showparticipantnames_admin', 'publication');
+    $description = new lang_string('showparticipantnames_admin_desc', 'publication');
+    $setting = new admin_setting_configselect('publication/showparticipantnames', $name, $description, 1, $options);
+    $settings->add($setting);
+
+        $name = new lang_string('allowshowgroupnames', 'publication');
+    $description = new lang_string('allowshowgroupnames_desc', 'publication');
+    $setting = new admin_setting_configcheckbox('publication/allowshowgroupnames', $name, $description, 1);
+    $settings->add($setting);
+
+    $name = new lang_string('showgroupnames_admin', 'publication');
+    $description = new lang_string('showgroupnames_admin_desc', 'publication');
+    $setting = new admin_setting_configselect('publication/showgroupnames', $name, $description, 1, $options);
+    $settings->add($setting);
+
+    $name = new lang_string('allowshowlastmodified', 'publication');
+    $description = new lang_string('allowshowlastmodified_desc', 'publication');
+    $setting = new admin_setting_configcheckbox('publication/allowshowlastmodified', $name, $description, 1);
+    $settings->add($setting);
+
+    $name = new lang_string('showlastmodified_admin', 'publication');
+    $description = new lang_string('showlastmodified_admin_desc', 'publication');
+    $setting = new admin_setting_configselect('publication/showlastmodified', $name, $description, 1, $options);
+    $settings->add($setting);
+
     $options = [
         PUBLICATION_NOTIFY_NONE => get_string('notify:setting:0', 'publication'),
         PUBLICATION_NOTIFY_TEACHER => get_string('notify:setting:1', 'publication'),

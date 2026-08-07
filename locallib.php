@@ -34,6 +34,7 @@ define('PUBLICATION_APPROVAL_ALL', 0);
 define('PUBLICATION_APPROVAL_SINGLE', 1);
 
 define('PUBLICATION_EVENT_TYPE_DUE', 'due');
+define('PUBLICATION_EVENT_TYPE_APPROVAL', 'approval');
 
 
 define('PUBLICATION_FILTER_NOFILTER', 'nofilter');
@@ -105,7 +106,11 @@ class publication {
         $this->coursemodule = $cm;
 
         if ($course != null) {
-            $this->course = $course;
+            if (!is_object($course)) {
+                $this->course = $DB->get_record('course', ['id' => $$course], '*', MUST_EXIST);
+            } else {
+                $this->course = $course;
+            }
         } else {
             $this->course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
         }
@@ -119,7 +124,9 @@ class publication {
         $this->instance = $DB->get_record("publication", ["id" => $cm->instance]);
 
         if ($this->instance->mode == PUBLICATION_MODE_IMPORT) {
-            $cond = ['id' => $this->instance->importfrom];
+            // Scoped to the course so a stale importfrom (e.g. after a restore from another course)
+            // never inherits a foreign assignment's team-submission settings.
+            $cond = ['id' => $this->instance->importfrom, 'course' => $this->course->id];
             $this->requiregroup = $DB->get_field('assign', 'preventsubmissionnotingroup', $cond);
             $this->teamsubmission = $DB->get_field('assign', 'teamsubmission', $cond);
         }
@@ -146,7 +153,12 @@ class publication {
             if ($this->get_instance()->importfrom == -1) {
                 $context->notset = true;
             } else {
-                $assign = $DB->get_record('assign', ['id' => $this->instance->importfrom]);
+                // Only link an assignment that belongs to this course: after a restore from another
+                // course the stale importfrom may match an unrelated assignment elsewhere.
+                $assign = $DB->get_record('assign', [
+                        'id' => $this->instance->importfrom,
+                        'course' => $this->instance->course,
+                ]);
                 $assignmoduleid = $DB->get_field('modules', 'id', ['name' => 'assign']);
                 if ($assign) {
                     $assigncm = $DB->get_record('course_modules', [
@@ -505,6 +517,95 @@ class publication {
     }
 
     /**
+     * Effective value of an anonymization display setting.
+     *
+     * When teachers may not change the setting (the admin checkbox "allowshow<X>" is unchecked),
+     * the site-wide default is enforced for every instance; otherwise the instance value applies.
+     *
+     * @param string $setting one of 'showparticipantnames', 'showgroupnames' or 'showlastmodified'
+     * @return bool whether the information is shown to other participants
+     */
+    public function get_effective_show_setting($setting) {
+        if (empty(get_config('publication', 'allow' . $setting))) {
+            return !empty(get_config('publication', $setting));
+        }
+        return !empty($this->instance->{$setting});
+    }
+
+    /**
+     * Build the blue info box explaining how (and when) files get published, including the
+     * anonymization notice when names and/or the last modified date are hidden from students.
+     *
+     * Used on the start page ("My files" panel) and on the upload page.
+     *
+     * @return string HTML of the notice box
+     */
+    public function get_notice_html() {
+        $mode = $this->get_mode();
+        $instance = $this->get_instance();
+
+        if ($mode == PUBLICATION_MODE_FILEUPLOAD) {
+            $noticemode = 'upload';
+        } else {
+            $noticemode = 'import';
+        }
+
+        if ($instance->obtainstudentapproval) {
+            if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+                if ($instance->groupapproval == PUBLICATION_APPROVAL_ALL) {
+                    $noticestudentstringid = 'all';
+                } else {
+                    $noticestudentstringid = 'one';
+                }
+                $noticemode = 'group';
+            } else {
+                $noticestudentstringid = 'studentrequired';
+            }
+        } else {
+            $noticestudentstringid = 'studentnotrequired';
+        }
+
+        if ($instance->obtainteacherapproval) {
+            $noticeteacherid = 'teacherrequired';
+        } else {
+            $noticeteacherid = 'teachernotrequired';
+        }
+
+        $notice = get_string('notice_' . $noticemode . '_' . $noticestudentstringid . '_' . $noticeteacherid, 'publication');
+
+        if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+            $notice = get_string('notice_files_imported_group', 'publication') . ' ' . $notice;
+        } else if ($mode == PUBLICATION_MODE_ASSIGN_IMPORT) {
+            $notice = get_string('notice_files_imported', 'publication') . ' ' . $notice;
+        }
+
+        if ($mode != PUBLICATION_MODE_FILEUPLOAD) {
+            $notice .= '<br />' . get_string('notice_changes_possible_in_original', 'publication');
+        }
+
+        // Anonymization notice: tell the owner which of their details other participants won't see.
+        if ($mode == PUBLICATION_MODE_ASSIGN_TEAMSUBMISSION) {
+            $namehidden = !$this->get_effective_show_setting('showgroupnames');
+        } else {
+            $namehidden = !$this->get_effective_show_setting('showparticipantnames');
+        }
+        $datehidden = !$this->get_effective_show_setting('showlastmodified');
+        if ($namehidden && $datehidden) {
+            $notice .= ' ' . get_string('notice_hidden_namedate', 'publication');
+        } else if ($namehidden) {
+            $notice .= ' ' . get_string('notice_hidden_name', 'publication');
+        } else if ($datehidden) {
+            $notice .= ' ' . get_string('notice_hidden_date', 'publication');
+        }
+
+        return html_writer::tag(
+            'div',
+            get_string('notice', 'publication') . ' ' . $notice,
+            ['class' => 'alert alert-info']
+        );
+    }
+
+    /**
      * Display the form with the table containing all files.
      *
      * This method generates the HTML output for the all files form, including the table
@@ -566,7 +667,10 @@ class publication {
         $allfiles = get_string('allfiles', 'publication');
         $publicfiles = get_string('publicfiles', 'publication');
         $title = (has_capability('mod/publication:approve', $context)  && $this->allfilespage) ? $allfiles : $publicfiles;
-        $output .= html_writer::tag('legend', $title, ['class' => 'ftoggler h3 fw-bold']);
+        // Keep a visually-hidden legend so the <fieldset> remains labelled, and expose the title as a
+        // real <h3> so screen-reader users can reach it via heading navigation (WCAG 2.4.1, BITV 9.2.4.1).
+        $output .= html_writer::tag('legend', $title, ['class' => 'visually-hidden']);
+        $output .= html_writer::tag('h3', $title, ['class' => 'fw-bold']);
         $output .= html_writer::start_div('fcontainer clearfix mb-3');
 
         $f = groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
@@ -668,7 +772,7 @@ class publication {
             }
 
             $output .= html_writer::start_div('withselection col-7', ['class' => 'mt-2']) .
-                html_writer::span(get_string('withselected', 'publication')) .
+                html_writer::span(get_string('withselected', 'publication'), '', ['id' => 'withselect-label']) .
                 ($this->allfilespage
                     ? html_writer::span(get_string('bulkactionhelp', 'publication'), 'text-muted small d-block')
                     : '') .
@@ -676,6 +780,7 @@ class publication {
                     'id' => 'withselect-action',
                     'disabled' => 'disabled',
                     'class' => 'd-inline-block',
+                    'aria-labelledby' => 'withselect-label',
                 ]) .
                 html_writer::empty_tag('input', [
                     'type' => 'submit',
@@ -744,8 +849,24 @@ class publication {
         }
         $mform->disable_form_change_checker();
 
-        $output .= $mform->toHtml();
+        $output .= self::expose_form_headings($mform->toHtml());
         return $output;
+    }
+
+    /**
+     * Expose form section headings to screen readers in rendered form HTML.
+     *
+     * Core's form header template hard-codes aria-hidden="true" on the <h3> (the fieldset is
+     * named by its visually-hidden legend only), which makes the heading unreachable via
+     * screen-reader heading navigation. Strip it so the heading is exposed (WCAG 2.4.1 / 1.3.1),
+     * matching the real <h3> used for the published-files fieldset. <h3> tags without the
+     * attribute are left untouched.
+     *
+     * @param string $html Rendered form HTML
+     * @return string The same HTML with aria-hidden removed from all <h3> tags
+     */
+    public static function expose_form_headings(string $html): string {
+        return preg_replace('/(<h3\b[^>]*?)\s+aria-hidden="true"/', '$1', $html);
     }
 
     /**
@@ -1128,6 +1249,14 @@ class publication {
         $userfields = implode(', ', $userfields);
         $filenamescounters = [];
 
+        // When names are hidden from students, online-text resource folders inside the ZIP must not
+        // embed the owner's/group's name either (regular zip entries carry the plain filename only).
+        if ($teamsubmission) {
+            $shownames = $canapprove || $this->get_effective_show_setting('showgroupnames');
+        } else {
+            $shownames = $canapprove || $this->get_effective_show_setting('showparticipantnames');
+        }
+
         // Get all files from each user/group.
         foreach ($uploaders as $uploader) {
             $conditions['userid'] = $uploader;
@@ -1147,6 +1276,9 @@ class publication {
                 $itemunique = '';
             }
             // Up to here.
+            if (!$shownames) {
+                $itemname = '';
+            }
 
             foreach ($records as $record) {
                 $this->add_record_to_zipfiles(
@@ -1200,6 +1332,14 @@ class publication {
         $filesforzipping = [];
         $filenamescounters = [];
 
+        // When names are hidden from students, online-text resource folders inside the ZIP must not
+        // embed the owner's/group's name either (regular zip entries carry the plain filename only).
+        if ($teamsubmission) {
+            $shownames = $canapprove || $this->get_effective_show_setting('showgroupnames');
+        } else {
+            $shownames = $canapprove || $this->get_effective_show_setting('showparticipantnames');
+        }
+
         foreach ($fileids as $fileid) {
             $record = $DB->get_record('publication_file', [
                 'publication' => $this->get_instance()->id,
@@ -1221,6 +1361,9 @@ class publication {
                     $itemname = $DB->get_field('groups', 'name', ['id' => $record->userid]);
                 }
                 $itemunique = '';
+            }
+            if (!$shownames) {
+                $itemname = '';
             }
 
             $this->add_record_to_zipfiles(
@@ -1500,7 +1643,12 @@ class publication {
         global $DB;
 
         if ($this->instance->mode == PUBLICATION_MODE_IMPORT) {
-            $assign = $DB->get_record('assign', ['id' => $this->instance->importfrom]);
+            $assign = $DB->get_record('assign', ['id' => $this->instance->importfrom, 'course' => $this->course->id]);
+            if (!$assign) {
+                // Linked assignment no longer exists (e.g. after a restore where it wasn't included);
+                // nothing to import. Any already-imported files are kept.
+                return false;
+            }
             $assignmoduleid = $DB->get_field('modules', 'id', ['name' => 'assign']);
             $assigncm = $DB->get_record('course_modules', [
                     'course' => $assign->course,
@@ -2011,7 +2159,10 @@ class publication {
         $stridentifier = $publication->get_instance()->mode == PUBLICATION_MODE_UPLOAD ? 'filechange_upload' : 'filechange_import';
         $assignname = null;
         if ($publication->get_instance()->mode != PUBLICATION_MODE_UPLOAD) {
-            $assign = $DB->get_record('assign', ['id' => $publication->get_instance()->importfrom]);
+            $assign = $DB->get_record('assign', [
+                    'id' => $publication->get_instance()->importfrom,
+                    'course' => $publication->get_instance()->course,
+            ]);
             if ($assign) {
                 $assignname = $assign->name;
             }
@@ -2393,47 +2544,194 @@ class publication {
     }
 
     /**
-     * Handles calendar events for publications with a due date
-     * This will create, update and delete an event when necessary
+     * Create/update/delete the calendar events for this publication's deadlines, override-aware.
+     *
+     * There are two deadlines: the upload due date ('due' event, title = activity name) and the
+     * approval/release deadline ('approval' event, only when student approval is required). Mirrors
+     * quiz_update_events(): a base course-level event per deadline (priority null) plus per-user and
+     * per-group override events whose lower priority makes core's calendar show only the overridden
+     * event to the affected users (it keeps the MIN(priority) event per module/instance/eventtype).
+     *
+     * @param stdClass|null $override A single publication_overrides row to (re)build events for, or null
+     *                                to rebuild the base events and every override of this instance.
      */
-    public function update_calendar_event() {
+    public function update_calendar_events($override = null) {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/calendar/lib.php');
 
         $instance = $this->get_instance();
 
-        // Check whether the publication already has a event.
-        $result = $DB->get_record('event', ['modulename' => 'publication', 'instance' => $instance->id]);
-
-        if ($result) {
-            // Check whether the publication still has a due date, if not delete the event.
-            if ($instance->duedate == null || $instance->duedate == 0) {
-                $DB->delete_records('event', ['modulename' => 'publication', 'instance' => $instance->id]);
-            } else {
-                $result->name = $instance->name;
-                $result->timestart = $instance->duedate;
-                $result->timesort = $instance->duedate;
-
-                $DB->update_record('event', $result);
-            }
-        } else if ($instance->duedate != null && $instance->duedate != 0) {
-            $event = new stdClass();
-            $event->eventtype = PUBLICATION_EVENT_TYPE_DUE;
-            $event->type = CALENDAR_EVENT_TYPE_ACTION; // Necessary to enable this event in block_myoverview.
-            $event->name = $instance->name;
-            $event->description = "";
-            $event->courseid = $instance->course;
-            $event->groupid = 0;
-            $event->userid = 0;
-            $event->modulename = 'publication';
-            $event->instance = $instance->id;
-            $event->visible = instance_is_visible('publication', $this->instance);
-            $event->timestart = $instance->duedate;
-            $event->timesort = $instance->duedate; // Necessary for block_myoverview.
-            $event->timeduration = 0;
-
-            calendar_event::create($event);
+        if ($override === null) {
+            // Full refresh: drop everything for this instance and rebuild the base plus all overrides.
+            $DB->delete_records('event', ['modulename' => 'publication', 'instance' => $instance->id]);
+            $overrides = array_values(
+                $DB->get_records('publication_overrides', ['publication' => $instance->id], 'id ASC')
+            );
+            // The leading null entry represents the base (non-override) events.
+            $scopes = array_merge([null], $overrides);
+        } else {
+            // Single override: drop just its events and rebuild them.
+            $this->delete_override_calendar_events($override);
+            $scopes = [$override];
         }
+
+        $grouppriorities = $this->get_group_override_priorities();
+        $visible = instance_is_visible('publication', $this->instance);
+
+        foreach ($scopes as $scope) {
+            $groupid = (!empty($scope) && !empty($scope->groupid)) ? $scope->groupid : 0;
+            $userid = (!empty($scope) && !empty($scope->userid)) ? $scope->userid : 0;
+
+            // A group override whose group no longer exists must be skipped.
+            if ($groupid && groups_get_group_name($groupid) === false) {
+                continue;
+            }
+
+            // Effective deadlines for this scope: an override only carries the fields that were set.
+            if ($scope === null) {
+                $duedate = $instance->duedate;
+                $approvaltodate = $instance->approvaltodate;
+            } else {
+                $duedate = !empty($scope->duedate) ? $scope->duedate : 0;
+                $approvaltodate = !empty($scope->approvaltodate) ? $scope->approvaltodate : 0;
+            }
+
+            // Upload deadline event (title unchanged: the activity name).
+            if ($duedate) {
+                $this->create_deadline_event(
+                    PUBLICATION_EVENT_TYPE_DUE,
+                    $instance->name,
+                    $duedate,
+                    $userid,
+                    $groupid,
+                    ($grouppriorities !== null) ? $grouppriorities['duedate'] : null,
+                    $visible
+                );
+            }
+
+            // Approval/release deadline event (only when student approval is required).
+            if ($instance->obtainstudentapproval && $approvaltodate) {
+                $this->create_deadline_event(
+                    PUBLICATION_EVENT_TYPE_APPROVAL,
+                    get_string('calendarapprovaltitle', 'publication', $instance->name),
+                    $approvaltodate,
+                    $userid,
+                    $groupid,
+                    ($grouppriorities !== null) ? $grouppriorities['approvaltodate'] : null,
+                    $visible
+                );
+            }
+        }
+    }
+
+    /**
+     * Create a single deadline calendar event with the correct override priority.
+     *
+     * @param string $eventtype PUBLICATION_EVENT_TYPE_DUE or PUBLICATION_EVENT_TYPE_APPROVAL.
+     * @param string $name Event title.
+     * @param int $timestamp Deadline time.
+     * @param int $userid User id for a user override, or 0 for the base/group event.
+     * @param int $groupid Group id for a group override, or 0.
+     * @param array|null $grouptimepriorities Map of timestamp => priority for group overrides of this kind.
+     * @param bool $visible Event visibility.
+     */
+    private function create_deadline_event($eventtype, $name, $timestamp, $userid, $groupid, $grouptimepriorities, $visible) {
+        $instance = $this->get_instance();
+
+        $event = new stdClass();
+        $event->eventtype = $eventtype;
+        $event->type = CALENDAR_EVENT_TYPE_ACTION; // Necessary to enable this event in block_myoverview.
+        $event->name = $name;
+        $event->description = '';
+        // The events module won't show user events when the courseid is nonzero.
+        $event->courseid = $userid ? 0 : $instance->course;
+        $event->groupid = $groupid;
+        $event->userid = $userid;
+        $event->modulename = 'publication';
+        $event->instance = $instance->id;
+        $event->visible = $visible;
+        $event->timestart = $timestamp;
+        $event->timesort = $timestamp; // Necessary for block_myoverview.
+        $event->timeduration = 0;
+
+        if ($userid) {
+            $event->priority = CALENDAR_EVENT_USER_OVERRIDE_PRIORITY;
+        } else if ($groupid && $grouptimepriorities !== null && isset($grouptimepriorities[$timestamp])) {
+            $event->priority = $grouptimepriorities[$timestamp];
+        } else {
+            $event->priority = null;
+        }
+
+        calendar_event::create($event, false);
+    }
+
+    /**
+     * Compute calendar-event priorities for this instance's group overrides.
+     *
+     * Mirrors quiz_get_group_override_priorities() for deadlines: the later a deadline, the lower (=
+     * stronger, since core keeps MIN(priority)) its priority number, so a member of several overridden
+     * groups sees the latest deadline.
+     *
+     * @return array|null ['duedate' => [ts => priority], 'approvaltodate' => [ts => priority]] or null if none.
+     */
+    public function get_group_override_priorities() {
+        global $DB;
+
+        $overrides = $DB->get_records_select(
+            'publication_overrides',
+            'publication = :publication AND groupid IS NOT NULL',
+            ['publication' => $this->get_instance()->id],
+            '',
+            'id, duedate, approvaltodate'
+        );
+        if (!$overrides) {
+            return null;
+        }
+
+        $duedates = [];
+        $approvaltodates = [];
+        foreach ($overrides as $override) {
+            if (!empty($override->duedate) && !in_array($override->duedate, $duedates)) {
+                $duedates[] = $override->duedate;
+            }
+            if (!empty($override->approvaltodate) && !in_array($override->approvaltodate, $approvaltodates)) {
+                $approvaltodates[] = $override->approvaltodate;
+            }
+        }
+
+        // Later deadline => stronger priority. Core keeps the MIN(priority) event, so the latest
+        // deadline must get the smallest number: sort descending and number from 1.
+        rsort($duedates);
+        rsort($approvaltodates);
+        $priorities = ['duedate' => [], 'approvaltodate' => []];
+        $priority = 1;
+        foreach ($duedates as $timestamp) {
+            $priorities['duedate'][$timestamp] = $priority++;
+        }
+        $priority = 1;
+        foreach ($approvaltodates as $timestamp) {
+            $priorities['approvaltodate'][$timestamp] = $priority++;
+        }
+        return $priorities;
+    }
+
+    /**
+     * Delete the calendar events belonging to a single override scope (user or group).
+     *
+     * @param stdClass $override A publication_overrides row (with userid or groupid set).
+     */
+    public function delete_override_calendar_events($override) {
+        global $DB;
+
+        $conds = ['modulename' => 'publication', 'instance' => $this->get_instance()->id];
+        if (!empty($override->userid)) {
+            $conds['userid'] = $override->userid;
+        } else if (!empty($override->groupid)) {
+            $conds['groupid'] = $override->groupid;
+        } else {
+            return;
+        }
+        $DB->delete_records('event', $conds);
     }
 
     /**
