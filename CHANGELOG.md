@@ -4,23 +4,24 @@ CHANGELOG
 5.2.0 (2026-06-10)
 -------------------
 * Moodle 5.2.0 compatible version
-* [FEATURE] #8583 - add checkboxes for each file in file submissions page
-* [FEATURE] #8564 - split the content of the table "Published files" into separate rows per file
-* [FEATURE] #8579 - allow bulk download per file and not per user
-* [FEATURE] #8563 - change the order of the columns at "Published files"
-* [BUG] #8336 - fix accessibility - publication status
+* [BUG] #8309 - Accessibility: fix heading of published files not declared correctly
+* [BUG] #8310 - Accessibility: fix contrast of publication status
+* [BUG] #8312 - Accessibility: fix missing labels to some checkboxes and dropdowns
+* [BUG] #8336 - Accessibility: fix publication status not accessible for screenreader users
+* [BUG] #8590 - Accessibility: make information on file type available for screenreader users
+* [BUG] #8591 - Accessibility: adapt information on profile for screenreader users
+* [BUG] #8787 - Accessibility: make information on last modified and email address available for screenreader users
 * [BUG] #8685 - fix count about pending decision data is not correct with linked group submissions
-* [BUG] #8310 - fix accessibility - ? status contrast
-* [BUG] #8309 - fix accessibility - heading of published files
-* [BUG] #8312 - fix accessibility - add labels to checkboxes and dropdowns
-* [BUG] #8590 - fix accessibility: make information on file type available for screenreader users
-* [BUG] #8591 - fix accessibility: adapt information on profile for screenreader users
 * [BUG] #8217 - fix bug with behavior with restored student folder linked to assignment including user data 
 * [BUG] #8732 - make Moodle Plugin CI pass - pull request #117 - lucaboesch
-* [BUG] #8228 - fix inconsistent behavior with calendar appointments
-* [FEATURE] #6874 - implement option to not display student name and submission time
-* [FEATURE] #8666 - update module_help and module_tip
+* [BUG] #8728 - fix inconsistent behavior with calendar appointments
 * [BUG] #8764 - Remove modal factory - pull request #118 - lucaboesch
+* [FEATURE] #6874 - implement option to not display student name and/ or latest modified time - github #40
+* [FEATURE] #8563 - change the order of the columns at "Published files"
+* [FEATURE] #8564 - split the content of the table "Published files" into separate rows per file
+* [FEATURE] #8579 - allow bulk download per file and not per user
+* [FEATURE] #8583 - add checkboxes for each file in file submissions page
+* [FEATURE] #8666 - update activity information in activity chooser - github #107
 
 5.1.1 (2026-04-22)
 -------------------
