@@ -63,10 +63,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/log', 'core/notification', 'cor
             {key: 'fromdate', component: 'core'}
         ]).done(function(s) {
             log.info('Done loading strings...', 'mod_publication');
-            instance.modalpromise.then(function(modal) {
+            return instance.modalpromise.then(function(modal) {
                 log.info('Done preparing modal', 'mod_publication');
                 instance.modal = modal;
-                $('.path-mod-publication table.publications .onlinetextpreview *').click(function(e) {
+                return $('.path-mod-publication table.publications .onlinetextpreview *').click(function(e) {
                     e.stopPropagation();
                     e.preventDefault();
                     var element = $(e.target);
